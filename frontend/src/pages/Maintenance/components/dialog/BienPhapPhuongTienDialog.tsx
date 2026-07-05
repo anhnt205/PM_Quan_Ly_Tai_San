@@ -26,10 +26,11 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import { useSelector } from "react-redux";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
-import { useBienPhapPhuongTienMutation } from "../../mutation/bienPhapPhuongTien";
+import { useBienPhapPhuongTienMutation } from "../../mutation/VehicleMeasure";
 import {
   BienPhapPhuongTienData,
   BienPhapPhuongTienChiTietData,
+  VehicleInspectionRecordData,
 } from "../../types";
 import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
@@ -53,16 +54,14 @@ import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 interface Props {
   open: boolean;
   onClose: () => void;
-  idGiamDinhPhuongTien: string;
-  soPhieuGiamDinh?: string;
+  inspectionRecord?: VehicleInspectionRecordData | null;
   initData?: BienPhapPhuongTienData | null;
 }
 
 const BienPhapPhuongTienDialog = ({
   open,
   onClose,
-  idGiamDinhPhuongTien,
-  soPhieuGiamDinh,
+  inspectionRecord,
   initData,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
@@ -80,7 +79,7 @@ const BienPhapPhuongTienDialog = ({
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return (
-      tab?.formData?.[`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`] ?? null
+      tab?.formData?.[`bienPhapPhuongTienDraft_${inspectionRecord?.id}`] ?? null
     );
   });
 
@@ -97,7 +96,7 @@ const BienPhapPhuongTienDialog = ({
   const initialValues: BienPhapPhuongTienData & { nguoiKyList: any[] } = {
     id: "",
     idCongTy: CongTy.CT001,
-    idGiamDinhPhuongTien: idGiamDinhPhuongTien,
+    idGiamDinhPhuongTien: inspectionRecord?.id || "",
     soBienBan: "",
     idTaiSan: "",
     mucDich: "",
@@ -192,10 +191,25 @@ const BienPhapPhuongTienDialog = ({
       return;
     }
 
+    const listInfoFromParent = inspectionRecord
+      ? listSigneInfo(inspectionRecord, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     if (savedDraft) {
       formik.setValues({
         ...initialValues,
-        idGiamDinhPhuongTien,
+        idGiamDinhPhuongTien: inspectionRecord?.id || "",
         soBienBan: savedDraft.soBienBan,
         donViQuanLy: savedDraft.donViQuanLy,
         tienDoTuNgay: savedDraft.tienDoTuNgay,
@@ -209,19 +223,23 @@ const BienPhapPhuongTienDialog = ({
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList,
       });
-      if (idGiamDinhPhuongTien) {
+      if (inspectionRecord?.id) {
         api
-          .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
+          .get(`/giamdinh-phuongtien/${inspectionRecord.id}`)
           .then((res) => setParentInspection(res.data?.data || res.data))
           .catch((err) => console.error(err));
       }
       return;
     }
 
-    formik.setValues({ ...initialValues, idGiamDinhPhuongTien });
-    if (idGiamDinhPhuongTien) {
+    formik.setValues({
+      ...initialValues,
+      idGiamDinhPhuongTien: inspectionRecord?.id || "",
+      nguoiKyList: signersListFromParent,
+    });
+    if (inspectionRecord?.id) {
       api
-        .get(`/giamdinh-phuongtien/${idGiamDinhPhuongTien}`)
+        .get(`/giamdinh-phuongtien/${inspectionRecord.id}`)
         .then((res) => {
           const data = res.data?.data || res.data;
           setParentInspection(data);
@@ -256,7 +274,7 @@ const BienPhapPhuongTienDialog = ({
   }, [
     open,
     initData,
-    idGiamDinhPhuongTien,
+    inspectionRecord,
     apiUsers,
     apiDepartments,
     savedDraft,
@@ -267,7 +285,7 @@ const BienPhapPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`]: null,
+          [`bienPhapPhuongTienDraft_${inspectionRecord?.id}`]: null,
           lastMinimizedDialog: null,
         },
       }),
@@ -281,8 +299,8 @@ const BienPhapPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapPhuongTienDraft_${idGiamDinhPhuongTien}`]: {
-            idGiamDinhPhuongTien,
+          [`bienPhapPhuongTienDraft_${inspectionRecord?.id}`]: {
+            idGiamDinhPhuongTien: formik.values.idGiamDinhPhuongTien,
             soBienBan: formik.values.soBienBan,
             donViQuanLy: formik.values.donViQuanLy,
             tienDoTuNgay: formik.values.tienDoTuNgay,
@@ -639,6 +657,7 @@ const BienPhapPhuongTienDialog = ({
                             }}
                             data={allToolDetail}
                             labelkey="tenTaiSan"
+                            labelOption="idTaiSan"
                             limitOptions={20}
                             noBorder={true}
                           />

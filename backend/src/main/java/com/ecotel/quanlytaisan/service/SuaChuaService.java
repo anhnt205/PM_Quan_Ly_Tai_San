@@ -25,6 +25,9 @@ public class SuaChuaService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private TaiSanService taiSanService;
+
     public List<SuaChuaDTO> findAll(String idCongTy) {
         return suaChuaDao.findAll(idCongTy);
     }
@@ -297,6 +300,11 @@ public class SuaChuaService {
             // 1. Insert details
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
                 for (SuaChuaChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
                     if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
                         chiTiet.setId(suaChuaChiTietDao.generateNextId());
                     }
@@ -328,6 +336,11 @@ public class SuaChuaService {
             suaChuaChiTietDao.deleteByIdSuaChua(planId);
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
                 for (SuaChuaChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
                     if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
                         chiTiet.setId(suaChuaChiTietDao.generateNextId());
                     }

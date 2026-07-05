@@ -25,19 +25,19 @@ import { useFormik } from "formik";
 import {
   InspectionRecordData,
   InspectionRecordDetailData,
-  MaintenancePlanData,
   AcceptanceTestRecordData,
   AcceptanceTestRecordAssetData,
   AcceptanceTestRecordToolData,
+  BienPhapMayMocData,
 } from "../../types";
 import { MaintenanceRepairData } from "../../types";
-import { PlanSigner } from "../../../../mockdata/mockPlans";
+import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { generateCode } from "../../../../utils/helpers";
 import { useMaintenanceAcceptanceTestMutation } from "../../mutation";
 import { useSelector } from "react-redux";
-import { CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
+import { PlanSigner } from "../../../../mockdata/mockPlans";
 import dayjs from "dayjs";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
@@ -57,21 +57,19 @@ import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: MaintenancePlanData;
   repairRequest?: MaintenanceRepairData;
   inspectionRecord: InspectionRecordData;
-  initData?: AcceptanceTestRecordData;
-  bienPhapId?: string;
+  initData?: AcceptanceTestRecordData | null;
+  bienPhap?: BienPhapMayMocData | null;
 }
 
 const AcceptanceTestDialog = ({
   open,
   onClose,
-  plan,
   repairRequest,
   inspectionRecord,
   initData,
-  bienPhapId,
+  bienPhap,
 }: Props) => {
   const { user } = useSelector((state: any) => state.user);
   const { createMutation, updateMutation } =
@@ -85,7 +83,7 @@ const AcceptanceTestDialog = ({
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return (
       tab?.formData?.[
-        `acceptanceDraft_${bienPhapId || inspectionRecord?.id}`
+        `acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`
       ] ?? null
     );
   });
@@ -109,7 +107,7 @@ const AcceptanceTestDialog = ({
     initialValues: {
       id: "",
       idCongTy: CongTy.CT001,
-      idBienPhapMayMoc: bienPhapId || "",
+      idBienPhapMayMoc: bienPhap?.id || "",
       idGiamDinhMayMoc: inspectionRecord?.id || "",
       soPhieu: "",
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
@@ -291,11 +289,27 @@ const AcceptanceTestDialog = ({
       },
     );
 
+    const parentRecord = bienPhap || inspectionRecord;
+    const listInfoFromParent = parentRecord
+      ? listSigneInfo(parentRecord as any, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
     if (savedDraft) {
       formik.setValues({
         id: "",
         idCongTy: CongTy.CT001,
-        idBienPhapMayMoc: bienPhapId || "",
+        idBienPhapMayMoc: bienPhap?.id || "",
         idGiamDinhMayMoc: inspectionRecord?.id || "",
         idNguoiLap: "",
         nguoiLapXacNhan: false,
@@ -322,7 +336,7 @@ const AcceptanceTestDialog = ({
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
-      idBienPhapMayMoc: bienPhapId || "",
+      idBienPhapMayMoc: bienPhap?.id || "",
       idGiamDinhMayMoc: inspectionRecord?.id || "",
       soPhieu: `BB-NT-${repairRequest?.id ?? ""}`,
       ngayNghiemThu: dayjs().format("YYYY-MM-DD"),
@@ -345,9 +359,9 @@ const AcceptanceTestDialog = ({
         "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
       congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachTaiSan: list,
-      nguoiKyList: [],
+      nguoiKyList: signersListFromParent,
     });
-  }, [open, initData, apiUsers, apiDepartments, savedDraft]);
+  }, [open, initData, apiUsers, apiDepartments, savedDraft, bienPhap, inspectionRecord]);
 
   const addMaterialRow = (assetIdx: number) => {
     const ts = formik.values.danhSachTaiSan[assetIdx];
@@ -399,7 +413,7 @@ const AcceptanceTestDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceDraft_${bienPhapId || inspectionRecord?.id}`]: null,
+          [`acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`]: null,
           lastMinimizedDialog: null,
         },
       }),
@@ -411,11 +425,11 @@ const AcceptanceTestDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceDraft_${bienPhapId || inspectionRecord?.id}`]: {
+          [`acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`]: {
             idBienPhapMayMoc: formik.values.idBienPhapMayMoc,
             idGiamDinhMayMoc: formik.values.idGiamDinhMayMoc,
             idGiamDinh: inspectionRecord?.id,
-            acceptanceParentBienPhapId: bienPhapId || inspectionRecord?.id,
+            acceptanceParentBienPhapId: bienPhap?.id || inspectionRecord?.id,
             soPhieu: formik.values.soPhieu,
             ngayNghiemThu: formik.values.ngayNghiemThu,
             viTri: formik.values.viTri,
@@ -620,7 +634,8 @@ const AcceptanceTestDialog = ({
                               <FieldAutoCompleted
                                 title=""
                                 data={allToolDetail}
-                                labelkey="idTaiSan"
+                                labelkey="tenTaiSan"
+                                labelOption="idTaiSan"
                                 limitOptions={10}
                                 value={item.idChiTietVatTu}
                                 noBorder={true}

@@ -28,6 +28,7 @@ public class SuCoThietBiService {
     @Autowired private SuCoThietBiDao suCoDao;
     @Autowired private SuCoThietBiChiTietDao chiTietDao;
     @Autowired private KyTaiLieuDao kyTaiLieuDao;
+    @Autowired private TaiSanService taiSanService;
 
     // ==================== Find all ====================
 
@@ -178,9 +179,13 @@ public class SuCoThietBiService {
         if (result != null) {
             String sucoId = result.getId();
             
-            // 1. Insert details
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
                 for (SuCoThietBiChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
                     if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
                         chiTiet.setId(chiTietDao.generateNextId());
                     }
@@ -212,6 +217,11 @@ public class SuCoThietBiService {
             chiTietDao.deleteByIdSuCo(sucoId);
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
                 for (SuCoThietBiChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
                     if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
                         chiTiet.setId(chiTietDao.generateNextId());
                     }

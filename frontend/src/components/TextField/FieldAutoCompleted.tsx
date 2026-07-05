@@ -90,7 +90,18 @@ export default function FieldAutoCompleted({
   return (
     <Autocomplete
       sx={autocompleteSx}
-      componentsProps={componentsProps}
+      componentsProps={{
+        ...componentsProps,
+        paper: {
+          ...componentsProps?.paper,
+          sx: {
+            width: "max-content",
+            minWidth: "100%",
+            maxWidth: "1000",
+            ...(componentsProps?.paper?.sx || {}),
+          },
+        },
+      }}
       disabled={disabled}
       fullWidth
       options={data}

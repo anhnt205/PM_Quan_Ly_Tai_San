@@ -1329,7 +1329,7 @@ export const generateGiamDinhPdf = async (
         styles: { fontStyle: "bold" },
       },
       {
-        content: `Thiết bị: ${item.tenTaiSan || ""}`,
+        content: `Thiết bị: ${item.tenTaiSan || item.idTaiSan || ""}`,
         colSpan: 7,
         styles: { fontStyle: "bold" },
       },
@@ -2372,7 +2372,7 @@ export const generateKiemTraSuCoPdf = async (
         styles: { fontStyle: "bold" },
       },
       {
-        content: `Thiết bị: ${danhSachChiTiet.tenTaiSan || ""}`,
+        content: `Thiết bị: ${danhSachChiTiet.tenTaiSan || danhSachChiTiet.idTaiSan || ""}`,
         colSpan: 7,
         styles: { fontStyle: "bold" },
       },

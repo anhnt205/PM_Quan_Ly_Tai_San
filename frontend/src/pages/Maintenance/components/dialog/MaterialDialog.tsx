@@ -41,7 +41,6 @@ import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 import {
   CongTy,
-  Action,
   BIEN_PHAP_XU_LY,
   LOAI_BIEN_BAN_TYPE,
 } from "../../../../utils/const";
@@ -85,9 +84,10 @@ const MaterialDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftId = initData?.id || acceptanceRecord?.id || "new";
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    return tab?.formData?.[`materialDraft_${acceptanceRecord?.id}`] ?? null;
+    return tab?.formData?.[`materialDraft_${draftId}`] ?? null;
   });
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -202,6 +202,41 @@ const MaterialDialog = ({
 
   useEffect(() => {
     if (!open) return;
+    if (savedDraft) {
+      formik.setValues({
+        id: initData?.id || "",
+        idCongTy: initData?.idCongTy || CongTy.CT001,
+        idNghiemThu: acceptanceRecord?.id || "",
+        idDonViQuanLy: plan?.tenDonViGiao || "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        share: false,
+        trangThai: initData?.trangThai || 0,
+        soPhieu: savedDraft.soPhieu,
+        ngayDanhGia: savedDraft.ngayDanhGia,
+        viTri: savedDraft.viTri,
+        capSuaChua: savedDraft.capSuaChua,
+        tenThietBi: savedDraft.tenThietBi,
+        kieu: savedDraft.kieu,
+        soDangKi: savedDraft.soDangKi,
+        soLuongPhucHoi: savedDraft.soLuongPhucHoi,
+        soLuongPheLieu: savedDraft.soLuongPheLieu,
+        soLuongHuy: savedDraft.soLuongHuy,
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        danhSachChiTiet: savedDraft.danhSachChiTiet,
+        nguoiKyList: savedDraft.nguoiKyList?.length
+          ? savedDraft.nguoiKyList
+          : [],
+      });
+      return;
+    }
+
     if (initData) {
       const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
       const signersList = (listInfo || []).map((item, idx) => ({
@@ -211,7 +246,6 @@ const MaterialDialog = ({
         departmentId: item.idDonVi,
         departmentName: item.donVi,
         order: idx + 1,
-        action: Action.UPDATE,
       }));
       formik.setValues({
         id: initData.id || "",
@@ -239,11 +273,8 @@ const MaterialDialog = ({
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
         congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
-        danhSachChiTiet: (initData.danhSachChiTiet || []).map((vt: any) => ({
-          ...vt,
-          action: Action.UPDATE,
-        })),
-        nguoiKyList: signersList,
+        danhSachChiTiet: initData.danhSachChiTiet || [],
+        nguoiKyList: signersList?.length ? signersList : [],
       });
       return;
     }
@@ -251,35 +282,55 @@ const MaterialDialog = ({
     // Tính danhSachChiTiet từ acceptanceRecord — luôn làm trước
     const list: ChiTietVatTuThuHoiData[] = [];
     if ((acceptanceRecord?.danhSachTaiSan || []).length > 0) {
+      const mapVatTu = new Map<string, ChiTietVatTuThuHoiData>();
       (acceptanceRecord?.danhSachTaiSan || [])
         .filter((t: any) => t.danhSachVatTu && t.danhSachVatTu.length > 0)
         .forEach((t: any) => {
           (t.danhSachVatTu || []).forEach((vt: any) => {
-            list.push({
-              idChiTietVatTu: vt.idChiTietVatTu || "",
-              idVatTu: vt.idVatTu || "",
-              tenVatTu: vt.tenVatTu || "",
-              donViTinh: vt.donViTinh || "Cái",
-              soLuong: vt.soLuong || 1,
-              tinhTrang: "",
-              bienPhapXuLy: "",
-              ghiChu: "",
-            });
+            const key = vt.idChiTietVatTu || vt.idVatTu || vt.tenVatTu || "unknown";
+            const soLuong = vt.soLuong || 1;
+            
+            if (mapVatTu.has(key)) {
+              const existing = mapVatTu.get(key)!;
+              existing.soLuong = (existing.soLuong || 0) + soLuong;
+            } else {
+              mapVatTu.set(key, {
+                idChiTietVatTu: vt.idChiTietVatTu || "",
+                idVatTu: vt.idVatTu || "",
+                tenVatTu: vt.tenVatTu || "",
+                donViTinh: vt.donViTinh || "Cái",
+                soLuong: soLuong,
+                tinhTrang: "",
+                bienPhapXuLy: "",
+                ghiChu: "",
+              });
+            }
           });
         });
+      list.push(...Array.from(mapVatTu.values()));
     } else if ((acceptanceRecord?.danhSachChiTiet || []).length > 0) {
+      const mapVatTu = new Map<string, ChiTietVatTuThuHoiData>();
       (acceptanceRecord?.danhSachChiTiet || []).forEach((vt: any) => {
-        list.push({
-          idChiTietVatTu: vt.idChiTietVatTu || "",
-          idVatTu: vt.idVatTu || "",
-          tenVatTu: vt.tenVatTu || "",
-          donViTinh: vt.donViTinh || "Cái",
-          soLuong: vt.soLuongThayThe || vt.soLuong || 1,
-          tinhTrang: "",
-          bienPhapXuLy: "",
-          ghiChu: "",
-        });
+        const key = vt.idChiTietVatTu || vt.idVatTu || vt.tenVatTu || "unknown";
+        const soLuong = vt.soLuongThayThe || vt.soLuong || 1;
+        
+        if (mapVatTu.has(key)) {
+          const existing = mapVatTu.get(key)!;
+          existing.soLuong = (existing.soLuong || 0) + soLuong;
+        } else {
+          mapVatTu.set(key, {
+            idChiTietVatTu: vt.idChiTietVatTu || "",
+            idVatTu: vt.idVatTu || "",
+            tenVatTu: vt.tenVatTu || "",
+            donViTinh: vt.donViTinh || "Cái",
+            soLuong: soLuong,
+            tinhTrang: "",
+            bienPhapXuLy: "",
+            ghiChu: "",
+          });
+        }
       });
+      list.push(...Array.from(mapVatTu.values()));
     }
 
     const defaultList: ChiTietVatTuThuHoiData[] =
@@ -298,38 +349,20 @@ const MaterialDialog = ({
             },
           ];
 
-    if (savedDraft) {
-      formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idNghiemThu: acceptanceRecord.id || "",
-        idDonViQuanLy: plan.tenDonViGiao || "",
-        idNguoiLap: "",
-        nguoiLapXacNhan: false,
-        idGiamDoc: "",
-        giamDocXacNhan: false,
-        share: false,
-        trangThai: 0,
-        soPhieu: savedDraft.soPhieu,
-        ngayDanhGia: savedDraft.ngayDanhGia,
-        viTri: savedDraft.viTri,
-        capSuaChua: savedDraft.capSuaChua,
-        tenThietBi: savedDraft.tenThietBi,
-        kieu: savedDraft.kieu,
-        soDangKi: savedDraft.soDangKi,
-        soLuongPhucHoi: savedDraft.soLuongPhucHoi,
-        soLuongPheLieu: savedDraft.soLuongPheLieu,
-        soLuongHuy: savedDraft.soLuongHuy,
-        tenMauBienBan:
-          savedDraft.tenMauBienBan ||
-          mauMacDinh?.ten ||
-          "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
-      });
-      return;
-    }
+    const listInfoFromParent = acceptanceRecord
+      ? listSigneInfo(acceptanceRecord as any, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
 
     formik.setValues({
       id: "",
@@ -358,7 +391,7 @@ const MaterialDialog = ({
         "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
       congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
       danhSachChiTiet: defaultList,
-      nguoiKyList: [],
+      nguoiKyList: signersListFromParent,
     });
   }, [
     open,
@@ -413,7 +446,6 @@ const MaterialDialog = ({
       tinhTrang: "",
       bienPhapXuLy: "",
       ghiChu: "",
-      action: Action.CREATE,
     };
     formik.setFieldValue("danhSachChiTiet", [
       ...formik.values.danhSachChiTiet,
@@ -449,7 +481,7 @@ const MaterialDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`materialDraft_${acceptanceRecord?.id}`]: null,
+          [`materialDraft_${draftId}`]: null,
           lastMinimizedDialog: null,
         },
       }),
@@ -462,7 +494,7 @@ const MaterialDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`materialDraft_${acceptanceRecord?.id}`]: {
+          [`materialDraft_${draftId}`]: {
             idNghiemThu: formik.values.idNghiemThu,
             idBienPhapMayMoc: acceptanceRecord?.idBienPhapMayMoc,
             materialParentAccId: acceptanceRecord?.id,
@@ -553,11 +585,7 @@ const MaterialDialog = ({
               Thông tin
             </Typography>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <FieldInput
-                title="Số biên bản"
-                formik={formik}
-                field="soBienBan"
-              />
+              <FieldInput title="Số biên bản" formik={formik} field="soPhieu" />
               <FieldDate
                 title="Ngày lập biên bản"
                 selectedDate={formik.values.ngayDanhGia}
@@ -644,7 +672,7 @@ const MaterialDialog = ({
               <TableHead>
                 <TableRow sx={{ bgcolor: "#f5f5f5" }}>
                   <TableCell sx={{ fontWeight: 700, width: 40 }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: 700 }}>
+                  <TableCell sx={{ fontWeight: 700, width: 250 }}>
                     Tên vật tư, thiết bị
                   </TableCell>
                   <TableCell sx={{ fontWeight: 700, width: 55 }}>ĐVT</TableCell>
@@ -670,6 +698,7 @@ const MaterialDialog = ({
                           title=""
                           data={allToolDetail}
                           labelkey="tenTaiSan"
+                          labelOption="idTaiSan"
                           limitOptions={10}
                           value={item.idChiTietVatTu}
                           noBorder={true}

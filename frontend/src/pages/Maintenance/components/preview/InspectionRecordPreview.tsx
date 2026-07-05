@@ -88,7 +88,8 @@ export default function InspectionRecordPreview({
         display="block"
         sx={{ mb: 2, textTransform: "uppercase" }}
       >
-        {tieude || "................................................................."}
+        {tieude ||
+          "................................................................."}
       </Typography>
       <Typography variant="caption" display="block" sx={{ mb: 0.5 }}>
         Hôm nay, ngày {new Date(formik?.values?.ngayGiamDinh).getDate()} tháng{" "}
@@ -185,7 +186,7 @@ export default function InspectionRecordPreview({
                     colSpan={7}
                     sx={{ fontSize: "0.75rem", fontWeight: 600 }}
                   >
-                    Thiết bị: {entry.tenTaiSan}
+                    Thiết bị: {entry.tenTaiSan || entry.idTaiSan}
                   </TableCell>
                 </TableRow>
                 {!entry.danhSachVatTu ||

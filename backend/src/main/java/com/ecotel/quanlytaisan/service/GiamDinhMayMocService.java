@@ -3,15 +3,10 @@ package com.ecotel.quanlytaisan.service;
 import com.ecotel.quanlytaisan.dao.GiamDinhMayMocDao;
 import com.ecotel.quanlytaisan.dao.GiamDinhMayMocChiTietDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
-import com.ecotel.quanlytaisan.model.GiamDinhMayMoc;
-import com.ecotel.quanlytaisan.model.GiamDinhMayMocDTO;
+import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.ecotel.quanlytaisan.model.PageResponse;
-import com.ecotel.quanlytaisan.model.SuaChuaDTO;
-import com.ecotel.quanlytaisan.model.NguoiKy;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,6 +21,9 @@ public class GiamDinhMayMocService {
 
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
+
+    @Autowired
+    private TaiSanService taiSanService;
 
     public List<GiamDinhMayMocDTO> findAll(String idCongTy) {
         List<GiamDinhMayMocDTO> list = giamDinhMayMocDao.findAll(idCongTy);
@@ -61,12 +59,74 @@ public class GiamDinhMayMocService {
 
     @Transactional
     public GiamDinhMayMoc insert(GiamDinhMayMoc entity) {
-        return giamDinhMayMocDao.insert(entity);
+        GiamDinhMayMoc result = giamDinhMayMocDao.insert(entity);
+        if (result != null) {
+            String planId = result.getId();
+            // 1. Insert details
+            if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
+                for (GiamDinhMayMocChiTiet chiTiet : entity.getDanhSachChiTiet()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
+                    chiTiet.setIdGiamDinhMayMoc(planId);
+                    giamDinhMayMocChiTietDao.insert(chiTiet);
+                    if (chiTiet.getDanhSachVatTu() != null && !chiTiet.getDanhSachVatTu().isEmpty()) {
+                        for (GiamDinhMayMocVatTu vt : chiTiet.getDanhSachVatTu()) {
+                            vt.setIdChiTietGiamDinhMayMoc(chiTiet.getId());
+                        }
+                        giamDinhMayMocChiTietDao.batchInsertVatTu(chiTiet.getDanhSachVatTu());
+                    }
+                }
+            }
+            // 2. Insert signers
+            if (entity.getNguoiKyList() != null && !entity.getNguoiKyList().isEmpty()) {
+                for (NguoiKy nk : entity.getNguoiKyList()) {
+                    nk.setIdTaiLieu(planId);
+                }
+                kyTaiLieuDao.insertNguoiKyBatch(entity.getNguoiKyList());
+            }
+        }
+        return result;
     }
 
     @Transactional
     public GiamDinhMayMoc update(GiamDinhMayMoc entity) {
-        return giamDinhMayMocDao.update(entity);
+        GiamDinhMayMoc result = giamDinhMayMocDao.update(entity);
+        if (result != null) {
+            String planId = result.getId();
+            // 1. Re-insert details
+            giamDinhMayMocChiTietDao.deleteByIdGiamDinh(planId);
+            if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
+                for (GiamDinhMayMocChiTiet chiTiet : entity.getDanhSachChiTiet()) {
+                    if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
+                        if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
+                            throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
+                        }
+                    }
+                    chiTiet.setIdGiamDinhMayMoc(planId);
+                    giamDinhMayMocChiTietDao.insert(chiTiet);
+                    if (chiTiet.getDanhSachVatTu() != null && !chiTiet.getDanhSachVatTu().isEmpty()) {
+                        for (GiamDinhMayMocVatTu vt : chiTiet.getDanhSachVatTu()) {
+                            vt.setIdChiTietGiamDinhMayMoc(chiTiet.getId());
+                        }
+                        giamDinhMayMocChiTietDao.batchInsertVatTu(chiTiet.getDanhSachVatTu());
+                    }
+                }
+            }
+            // 2. Re-insert signers
+            kyTaiLieuDao.delete(planId);
+            if (entity.getNguoiKyList() != null) {
+                for (NguoiKy nk : entity.getNguoiKyList()) {
+                    nk.setIdTaiLieu(planId);
+                }
+                kyTaiLieuDao.updateNguoiKy(planId, entity.getNguoiKyList());
+            } else {
+                kyTaiLieuDao.deleteAllNguoiKy(planId);
+            }
+        }
+        return result;
     }
 
     public int updateGhiChu(String id, String ghiChuBienBan) {
@@ -153,6 +213,8 @@ public class GiamDinhMayMocService {
     @Transactional
     public int delete(String id) {
         giamDinhMayMocChiTietDao.deleteByIdGiamDinh(id);
+        kyTaiLieuDao.deleteAllNguoiKy(id);
+        kyTaiLieuDao.delete(id);
         return giamDinhMayMocDao.delete(id);
     }
 
