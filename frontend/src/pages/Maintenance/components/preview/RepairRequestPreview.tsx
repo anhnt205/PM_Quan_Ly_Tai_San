@@ -13,6 +13,7 @@ import {
 import { departments } from "../../../../mockdata/mockDepartments";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../types";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   assets: any[];
@@ -56,7 +57,7 @@ const RepairRequestPreview = ({
           <Typography
             sx={{ fontWeight: 700, fontSize: 13, fontFamily: "inherit", textTransform: "uppercase" }}
           >
-            CÔNG TY {congty ? congty : "..."}
+            {congty || currentBrandConfig.company}
           </Typography>
           <Typography
             sx={{

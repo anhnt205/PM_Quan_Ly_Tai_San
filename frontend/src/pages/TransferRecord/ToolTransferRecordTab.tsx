@@ -21,6 +21,7 @@ import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../ToolTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { VisibilityOff } from "@mui/icons-material";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 export default function ToolTransferRecordTab() {
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
@@ -236,7 +237,7 @@ export default function ToolTransferRecordTab() {
           sx={{
             minHeight: "40px",
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: currentBrandConfig.primaryColor,
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -244,7 +245,7 @@ export default function ToolTransferRecordTab() {
               fontSize: "0.85rem",
               minHeight: "40px",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: currentBrandConfig.primaryColor,
               },
             },
           }}

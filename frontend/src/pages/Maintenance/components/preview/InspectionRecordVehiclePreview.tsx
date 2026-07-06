@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import React from "react";
 import { Action } from "../../../../utils/const";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 export default function InspectionRecordVehiclePreview({
   formik,
@@ -62,7 +63,7 @@ export default function InspectionRecordVehiclePreview({
             fontWeight={700}
             sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            CÔNG TY {congty || "............."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>

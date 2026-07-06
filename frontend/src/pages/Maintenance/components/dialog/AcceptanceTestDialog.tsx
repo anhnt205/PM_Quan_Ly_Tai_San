@@ -54,6 +54,7 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -127,7 +128,7 @@ const AcceptanceTestDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachTaiSan: [] as AcceptanceTestRecordAssetData[],
       nguoiKyList: [] as any[],
     },
@@ -222,7 +223,8 @@ const AcceptanceTestDialog = ({
           initData?.tenMauBienBan ||
           mauMacDinh?.ten ||
           "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
-        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData?.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
           ...ts,
           danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({ ...vt })),
@@ -358,7 +360,7 @@ const AcceptanceTestDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachTaiSan: list,
       nguoiKyList: signersListFromParent,
     });

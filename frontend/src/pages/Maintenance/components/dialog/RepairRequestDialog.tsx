@@ -35,6 +35,7 @@ import {
 import { MinimizeIcon } from "lucide-react";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -84,7 +85,7 @@ const RepairRequestDialog = ({
       share: false,
       trangThai: 0,
       tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       danhSachTaiSan: [] as any[],
@@ -173,7 +174,7 @@ const RepairRequestDialog = ({
           mauMacDinh?.ten ||
           "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
         congTy:
-          initialData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+          initialData.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachTaiSan: initialData.danhSachTaiSan ?? [],
         nguoiKyList: signersList,
       });
@@ -218,7 +219,7 @@ const RepairRequestDialog = ({
           savedDraft.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
-        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy: savedDraft.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachTaiSan: assetsList,
         nguoiKyList: savedDraft.nguoiKyList,
       });
@@ -251,7 +252,7 @@ const RepairRequestDialog = ({
       share: false,
       trangThai: 0,
       tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       danhSachTaiSan: assetsList,

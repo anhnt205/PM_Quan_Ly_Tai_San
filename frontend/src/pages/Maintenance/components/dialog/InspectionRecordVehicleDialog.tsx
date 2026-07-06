@@ -55,6 +55,7 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -129,7 +130,7 @@ const InspectionRecordVehicleDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         `BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -227,7 +228,7 @@ const InspectionRecordVehicleDialog = ({
           initData.tenMauBienBan ??
           mauMacDinh?.ten ??
           `BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
-        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: initData.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
         danhSachChiTiet: (initData.danhSachChiTiet ?? []) as VehicleInspectionRecordDetailData[],
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
@@ -303,7 +304,7 @@ const InspectionRecordVehicleDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         `BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`,
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
       nguoiKyList: signersListFromParent,
     });
@@ -415,7 +416,7 @@ const InspectionRecordVehicleDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              currentBrandConfig.company,
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },

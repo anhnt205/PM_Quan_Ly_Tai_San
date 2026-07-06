@@ -13,6 +13,7 @@ import {
   NghiemThuPhuongTienData,
   NghiemThuPhuongTienChiTietData,
 } from "../../types";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   row: NghiemThuPhuongTienData & {
@@ -59,7 +60,7 @@ const AcceptanceVehiclePreview = ({ row, congty, tieude }: Props) => {
             fontWeight={700}
             sx={{ textTransform: "uppercase", textDecorationLine: "underline" }}
           >
-            CÔNG TY {congty || "................."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>

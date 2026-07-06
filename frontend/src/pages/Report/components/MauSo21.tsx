@@ -21,6 +21,7 @@ import MauSo21Content from "./MauSo21Content";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 import { CongTy } from "../../../utils/const";
 import { useAllDepartmentsQuery } from "../../Department/Mutation";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 if (typeof window !== "undefined") {
   (window as any).Buffer = (window as any).Buffer || Buffer;
@@ -131,7 +132,7 @@ export default function MauSo21({ title }: { title?: string }) {
     r++;
 
     wsData[r] = Array(14).fill("");
-    wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+    wsData[r][0] = cell(currentBrandConfig.company, {
       font: fontB,
       alignment: { horizontal: "center" },
     });

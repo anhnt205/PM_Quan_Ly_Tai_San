@@ -30,6 +30,7 @@ import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../AssetTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { Construction } from "@mui/icons-material";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 interface AssetTransferApprovalTabProps {
   assetTransferCounts: any;
@@ -289,7 +290,7 @@ export default function AssetTransferApprovalTab({
           sx={{
             minHeight: "40px",
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: currentBrandConfig.primaryColor,
             },
             "& .MuiTab-root": {
               textTransform: "none",
@@ -297,7 +298,7 @@ export default function AssetTransferApprovalTab({
               fontSize: "0.85rem",
               minHeight: "40px",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: currentBrandConfig.primaryColor,
               },
             },
           }}

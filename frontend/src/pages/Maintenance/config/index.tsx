@@ -16,6 +16,7 @@ import {
 import { MessageTypeFunctions } from "../../../utils/const";
 import socketService from "../../../services/socketService";
 import { FileDownloadOutlined } from "@mui/icons-material";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
   return (
@@ -754,7 +755,7 @@ export const generateSuaChuaPdf = async (
 
   // Header Left
   doc.text(
-    `CÔNG TY ${repair?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${repair?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     20,
     {
@@ -984,7 +985,7 @@ export const generatePhieuSuCoPdf = async (
 
   // Header Left
   doc.text(
-    incident?.congTy || "CÔNG TY THAN UÔNG BÍ - TKV",
+    incident?.congTy || currentBrandConfig.company,
     leftColCenter,
     20,
     {
@@ -1245,7 +1246,7 @@ export const generateGiamDinhPdf = async (
     align: "center",
   });
   doc.text(
-    `CÔNG TY ${inspection?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${inspection?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     32,
     {
@@ -1510,7 +1511,7 @@ export const generateGiamDinhPhuongTienPdf = async (
     align: "center",
   });
   doc.text(
-    `CÔNG TY ${inspection?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${inspection?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     32,
     {
@@ -1757,7 +1758,7 @@ export const generateNghiemThuPdf = async (
     align: "center",
   });
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     32,
     {
@@ -2024,7 +2025,7 @@ export const generateDanhGiaVatTuPdf = async (
     align: "center",
   });
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     32,
     {
@@ -2262,7 +2263,7 @@ export const generateKiemTraSuCoPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     30,
     { align: "center" },
@@ -2553,7 +2554,7 @@ export const generateBienPhapMayMocPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     30,
     { align: "center" },
@@ -2762,7 +2763,7 @@ export const generateBienPhapPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     30,
     { align: "center" },
@@ -3145,7 +3146,7 @@ export const generateNghiemThuPhuongTienPdf = async (
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
   doc.text(
-    `CÔNG TY ${item?.congTy || "THAN UÔNG BÍ - TKV"}`,
+    `${item?.congTy || currentBrandConfig.company}`,
     leftColCenter,
     30,
     { align: "center" },

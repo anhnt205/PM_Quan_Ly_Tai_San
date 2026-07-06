@@ -1,6 +1,7 @@
 import React, { ChangeEvent } from 'react';
 import { Box, Button, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { currentBrandConfig } from '../../../../config/brandConfig';
 
 interface AssetEbookCoverProps {
   asset:any,
@@ -153,7 +154,7 @@ export default function AssetEbookCover({
             {/* Phần Header */}
             <Box>
               <HeaderText>TẬP ĐOÀN CÔNG NGHIỆP THAN - KHOÁNG SẢN VIỆT NAM</HeaderText>
-              <HeaderText>CÔNG TY CỔ PHẦN THAN UÔNG BÍ - TKV</HeaderText>
+              <HeaderText>{currentBrandConfig.company}</HeaderText>
             </Box>
 
             {/* Tiêu đề chính */}

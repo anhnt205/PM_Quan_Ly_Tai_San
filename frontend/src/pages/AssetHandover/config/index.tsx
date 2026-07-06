@@ -11,6 +11,7 @@ import autoTable from "jspdf-autotable";
 import { findById, formatted, loadImage } from "../../../utils/helpers";
 import jsPDF from "jspdf";
 import imgSig from "../../../assets/images/tick.png";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export const getStatusHandoverText = (status: number) => {
   switch (status) {
@@ -595,7 +596,7 @@ export const generateBienBanPdf = async (
   doc.text("THAN - KHOÁNG SẢN VIỆT NAM", 50, 26, { align: "center" });
 
   doc.setFont("times_new_roman", "bold");
-  doc.text("CÔNG TY THAN UÔNG BÍ - TKV", 50, 32, { align: "center" });
+  doc.text(currentBrandConfig.company, 50, 32, { align: "center" });
   doc.line(40, 34, 80, 34); // Đường kẻ dưới tên công ty
 
   doc.setFont("times_new_roman", "normal");

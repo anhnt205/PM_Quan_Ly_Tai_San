@@ -2,6 +2,7 @@ import { IconButton, TextField } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useDebounce } from "../../hooks/useDebounce";
 import { Close, Search } from "@mui/icons-material";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 export default function FieldSearch({
   searchValue,
@@ -13,7 +14,7 @@ export default function FieldSearch({
   titleSearch: string;
 }) {
   // Local state để input mượt, debounce để set vào formik
-  const [localValue, setLocalValue] = useState(searchValue);
+  const [localValue, setLocalValue] = useState(searchValue || "");
   const debouncedValue = useDebounce(localValue, 500);
 
   useEffect(() => {
@@ -32,7 +33,9 @@ export default function FieldSearch({
       value={localValue}
       onChange={(e) => setLocalValue(e.target.value)}
       InputProps={{
-        startAdornment: <Search sx={{ color: "#1FA463", mr: 0.5 }} />,
+        startAdornment: (
+          <Search sx={{ color: currentBrandConfig.primaryColor, mr: 0.5 }} />
+        ),
         endAdornment: searchValue ? (
           <IconButton onClick={() => setSearchValue?.("")} size="small">
             <Close fontSize="small" />
@@ -43,18 +46,18 @@ export default function FieldSearch({
         "& .MuiOutlinedInput-root": {
           borderRadius: "10px",
           "& fieldset": {
-            borderColor: "#1FA463",
+            borderColor: currentBrandConfig.primaryColor,
           },
           "&:hover fieldset": {
-            borderColor: "#1FA463",
+            borderColor: currentBrandConfig.primaryColor,
           },
           "&.Mui-focused fieldset": {
-            borderColor: "#1FA463",
+            borderColor: currentBrandConfig.primaryColor,
           },
         },
         "& .MuiInputLabel-root": {
           "&.Mui-focused": {
-            color: "#1FA463",
+            color: currentBrandConfig.primaryColor,
           },
         },
       }}

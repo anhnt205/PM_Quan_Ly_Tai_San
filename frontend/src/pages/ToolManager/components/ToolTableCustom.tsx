@@ -34,8 +34,17 @@ import { findById } from "../../../utils/helpers";
 import { showConfirmAlert } from "../../../components/Alert";
 import { useQuery } from "@tanstack/react-query";
 import { fetchToolDetails } from "../Mutation";
+import FieldSearch from "../../../components/TextField/FieldSearch";
+import { currentBrandConfig } from "../../../config/brandConfig";
+import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 
-const ExpandedRowDetails = ({ toolId, allDepartments }: { toolId: string; allDepartments: any[] }) => {
+const ExpandedRowDetails = ({
+  toolId,
+  allDepartments,
+}: {
+  toolId: string;
+  allDepartments: any[];
+}) => {
   const { data: fullTool, isLoading } = useQuery({
     queryKey: ["toolDetails", toolId],
     queryFn: () => fetchToolDetails(toolId),
@@ -327,7 +336,7 @@ export default function ToolTableCustom({
         } catch (e) {
           return row;
         }
-      })
+      }),
     );
 
     const dataToExport = enrichedRows.map((row) => {
@@ -490,7 +499,10 @@ export default function ToolTableCustom({
               }}
             >
               {/* Wrap content in an inner Box for padding, so the outer Box width remains exact */}
-              <ExpandedRowDetails toolId={row.id} allDepartments={allDepartments} />
+              <ExpandedRowDetails
+                toolId={row.id}
+                allDepartments={allDepartments}
+              />
             </Box>
           </TableCell>
         </TableRow>,
@@ -554,7 +566,7 @@ export default function ToolTableCustom({
         gap={2}
         sx={{ background: "#f5f5f5" }}
       >
-        <TableView sx={{ color: "#1FA463" }} />
+        <TableView sx={{ color: currentBrandConfig.primaryColor }} />
         <Typography>
           {title} ({total})
         </Typography>
@@ -563,61 +575,30 @@ export default function ToolTableCustom({
       {/* Search and Action Bar */}
       <Grid container spacing={2} p={2} sx={{ backgroundColor: "#fafafa" }}>
         <Grid size={{ xs: 12, sm: 4 }}>
-          <TextField
-            label="Tìm kiếm"
-            fullWidth
-            size="small"
-            value={searchValue}
-            onChange={(e) => {
-              setSearchValue(e.target.value);
-            }}
-            InputProps={{
-              startAdornment: <SearchIcon sx={{ mr: 1, color: "#666" }} />,
-            }}
-            variant="outlined"
+          <FieldSearch
+            titleSearch="Tìm kiếm"
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
-          <Autocomplete
-            options={allDepartments}
-            getOptionLabel={(option) => option.tenPhongBan}
-            value={
-              allDepartments.find((item) => item.id === selectedDepartment) ||
-              null
-            }
-            onChange={(event, newValue) => {
-              onSelectedDepartmentChange?.(newValue?.id || "");
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Đơn vị sở hữu"
-                fullWidth
-                size="small"
-                variant="outlined"
-              />
-            )}
+          <FieldAutoCompleted
+            title="Đơn vị sở hữu"
+            data={allDepartments}
+            value={selectedDepartment}
+            setValue={onSelectedDepartmentChange}
+            labelkey="tenPhongBan"
+            labelOption="id"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 2 }}>
-          <Autocomplete
-            options={toolGroups}
-            getOptionLabel={(option) => option.ten}
-            value={
-              toolGroups.find((item) => item.id === selectedToolGroup) || null
-            }
-            onChange={(event, newValue) => {
-              onSelectedToolGroupChange?.(newValue?.id || "");
-            }}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label={isVatTu ? "Nhóm vật tư" : "Nhóm ccdc"}
-                fullWidth
-                size="small"
-                variant="outlined"
-              />
-            )}
+          <FieldAutoCompleted
+            title="Nhóm ccdc-vật tư"
+            data={toolGroups}
+            value={selectedToolGroup}
+            setValue={onSelectedToolGroupChange}
+            labelkey="ten"
+            labelOption="id"
           />
         </Grid>
         <Grid size={{ xs: 12, sm: 3 }}>
@@ -677,7 +658,6 @@ export default function ToolTableCustom({
           {onExportExcel && (
             <Button
               variant="outlined"
-              color="success"
               size="small"
               startIcon={<FileDownloadIcon />}
               onClick={onExportExcel}
@@ -685,12 +665,6 @@ export default function ToolTableCustom({
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                borderColor: "#1FA463",
-                color: "#1FA463",
-                "&:hover": {
-                  borderColor: "#177e4b",
-                  bgcolor: "rgba(31, 164, 99, 0.04)",
-                },
               }}
             >
               Xuất Excel
@@ -700,20 +674,13 @@ export default function ToolTableCustom({
           {selectedIds.length > 0 && (
             <Button
               variant="outlined"
-              color="success"
               size="small"
               startIcon={<FileDownloadIcon />}
               onClick={handleExportSelectedExcel}
               sx={{
-                borderColor: "#1FA463",
-                color: "#1FA463",
                 borderRadius: "8px",
                 textTransform: "none",
                 fontWeight: 600,
-                "&:hover": {
-                  borderColor: "#177e4b",
-                  bgcolor: "rgba(31, 164, 99, 0.04)",
-                },
               }}
             >
               Xuất đã chọn ({selectedIds.length})
@@ -722,7 +689,6 @@ export default function ToolTableCustom({
 
           <Button
             variant="outlined"
-            color="success"
             size="small"
             startIcon={<TableChart />}
             onClick={onViewOwnership}
@@ -730,12 +696,6 @@ export default function ToolTableCustom({
               borderRadius: "8px",
               textTransform: "none",
               fontWeight: 600,
-              borderColor: "#1FA463",
-              color: "#1FA463",
-              "&:hover": {
-                borderColor: "#177e4b",
-                bgcolor: "rgba(31, 164, 99, 0.04)",
-              },
             }}
           >
             Danh sách nhập vật tư
@@ -764,7 +724,7 @@ export default function ToolTableCustom({
           <TableHead>
             <TableRow
               sx={{
-                backgroundColor: "#1FA463",
+                backgroundColor: currentBrandConfig.primaryColor,
                 "& .MuiTableCell-head": {
                   color: "#ffffff",
                   fontWeight: 700,

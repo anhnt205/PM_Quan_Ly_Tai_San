@@ -50,6 +50,7 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -112,7 +113,7 @@ const IncidentInspectionDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
       danhSachChiTiet: [] as IncidentInspectionDetailData[],
       nguoiKyList: [] as any[],
     },
@@ -226,7 +227,7 @@ const IncidentInspectionDialog = ({
           initData.tenMauBienBan ??
           mauMacDinh?.ten ??
           `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-        congTy: initData.congTy ?? mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: initData.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
         danhSachChiTiet: (initData.danhSachChiTiet || []).map((d: any) => ({
           ...d,
           danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({ ...vt })),
@@ -306,7 +307,7 @@ const IncidentInspectionDialog = ({
       danhSachChiTiet,
       nguoiKyList: signersListFromParent,
       tenMauBienBan: mauMacDinh?.ten ?? `KIỂM TRA SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
     });
   }, [
     open,
@@ -400,7 +401,7 @@ const IncidentInspectionDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              currentBrandConfig.company,
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },

@@ -22,6 +22,7 @@ import ToolOwnershipModal from "./components/ToolOwnershipModal";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 interface ToolManagerTabState {
   showForm: boolean;
@@ -258,7 +259,7 @@ export default function ToolManager() {
           }}
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: currentBrandConfig.primaryColor,
               height: 3,
               borderRadius: "3px 3px 0 0",
             },
@@ -272,7 +273,7 @@ export default function ToolManager() {
               mr: 4,
               minWidth: "auto",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: currentBrandConfig.primaryColor,
               },
             },
           }}

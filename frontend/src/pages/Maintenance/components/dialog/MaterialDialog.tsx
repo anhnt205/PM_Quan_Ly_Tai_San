@@ -55,6 +55,7 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -124,7 +125,7 @@ const MaterialDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachChiTiet: [] as ChiTietVatTuThuHoiData[],
       nguoiKyList: [] as any[],
     },
@@ -228,7 +229,7 @@ const MaterialDialog = ({
           savedDraft.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: savedDraft.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy: savedDraft.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList?.length
           ? savedDraft.nguoiKyList
@@ -272,7 +273,7 @@ const MaterialDialog = ({
           initData.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy: initData.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachChiTiet: initData.danhSachChiTiet || [],
         nguoiKyList: signersList?.length ? signersList : [],
       });
@@ -389,7 +390,7 @@ const MaterialDialog = ({
       tenMauBienBan:
         mauMacDinh?.ten ||
         "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-      congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
       danhSachChiTiet: defaultList,
       nguoiKyList: signersListFromParent,
     });
@@ -517,7 +518,7 @@ const MaterialDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              currentBrandConfig.company,
           },
           lastMinimizedDialog: "material",
         },

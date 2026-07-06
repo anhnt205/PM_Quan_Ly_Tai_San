@@ -13,6 +13,7 @@ import TaisanMonthlyCard from "./sections/TaisanMonthlyCard";
 import NearDepreciationPanel from "./sections/NearDepreciationPanel";
 import { QuickActionButtons } from "./components/QuickActionButtons";
 import PageAction from "../../components/common/PageAction";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 /* ── Section header helper ─────────────────────────── */
 const SectionHeader = ({ label, color }: { label: string; color: string }) => (
@@ -203,8 +204,7 @@ export default function DashBoard() {
           px: 3.5,
           py: 3,
           borderRadius: "16px",
-          background:
-            "linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0f9ff 100%)",
+          background: `linear-gradient(135deg, ${currentBrandConfig.primaryColor100} 0%, ${currentBrandConfig.primaryColor100} 50%, ${currentBrandConfig.primaryColor} 100%)`,
           border: "1px solid rgba(4, 180, 110, 0.1)",
           position: "relative",
           overflow: "hidden",
@@ -230,7 +230,9 @@ export default function DashBoard() {
               boxShadow: "0 4px 14px rgba(4, 180, 110, 0.1)",
             }}
           >
-            <DashboardOutlinedIcon sx={{ color: "#04b46e", fontSize: 28 }} />
+            <DashboardOutlinedIcon
+              sx={{ color: currentBrandConfig.primaryColor, fontSize: 28 }}
+            />
           </Box>
           <Box>
             <Typography

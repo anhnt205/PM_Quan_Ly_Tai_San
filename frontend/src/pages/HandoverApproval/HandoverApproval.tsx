@@ -6,6 +6,7 @@ import ToolApprovalTab from "./ToolApprovalTab";
 import { Inventory, Construction } from "@mui/icons-material";
 import { useSelector } from "react-redux";
 import { useMenuData } from "../../hooks/useMenuData";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 export default function HandoverApproval() {
   const [mainTab, setMainTab] = useState(0);
@@ -58,7 +59,7 @@ export default function HandoverApproval() {
             onChange={handleMainTabChange}
             sx={{
               "& .MuiTabs-indicator": {
-                backgroundColor: "#04b46eff",
+                backgroundColor: currentBrandConfig.primaryColor,
                 height: 3,
                 borderRadius: "3px 3px 0 0",
               },
@@ -72,7 +73,7 @@ export default function HandoverApproval() {
                 mr: 4,
                 minWidth: "auto",
                 "&.Mui-selected": {
-                  color: "#04b46eff",
+                  color: currentBrandConfig.primaryColor,
                 },
               },
             }}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../../../config/api.config";
 import { Box, Typography, TextField } from "@mui/material";
 import InlineCell from "../../../components/common/InlineCell";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 interface MauSo01ContentProps {
   onContentChange?: (content: any) => void;
@@ -308,7 +309,7 @@ export default function MauSo01Content({
               mt: 0.5,
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            {currentBrandConfig.company}
           </Typography>
         </Box>
 

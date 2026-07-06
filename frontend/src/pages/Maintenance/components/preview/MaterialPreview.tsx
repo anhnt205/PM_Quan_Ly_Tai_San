@@ -11,6 +11,7 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 export default function MaterialPreview({
   d,
@@ -50,7 +51,7 @@ export default function MaterialPreview({
             fontWeight={700}
             sx={{ textDecoration: "underline", textTransform: "uppercase" }}
           >
-            CÔNG TY {congty || "................."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>

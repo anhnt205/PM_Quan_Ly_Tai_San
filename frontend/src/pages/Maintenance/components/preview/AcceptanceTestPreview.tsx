@@ -11,6 +11,7 @@ import {
   Typography,
 } from "@mui/material";
 import React from "react";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 export default function AcceptanceTestPreview({
   formik,
@@ -50,7 +51,7 @@ export default function AcceptanceTestPreview({
             fontWeight={700}
             sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            CÔNG TY {congty || "............."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>

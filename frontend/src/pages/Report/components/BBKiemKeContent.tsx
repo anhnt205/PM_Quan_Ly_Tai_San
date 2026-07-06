@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, TextField } from "@mui/material";
 import InlineCell from "../../../components/common/InlineCell";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 interface BBKiemKeContentProps {
   onContentChange?: (content: any) => void;
@@ -311,7 +312,7 @@ export default function BBKiemKeContent({
               textTransform: "uppercase",
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            {currentBrandConfig.company}
           </Typography>
         </Box>
 
@@ -711,9 +712,7 @@ export default function BBKiemKeContent({
           </Typography>
         </Box>
 
-        <Box
-          sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}
-        >
+        <Box sx={{ mt: 5, display: "flex", justifyContent: "flex-end" }}>
           <Box sx={{ width: "50%" }}></Box>
 
           <Box sx={{ width: "50%", textAlign: "center" }}>

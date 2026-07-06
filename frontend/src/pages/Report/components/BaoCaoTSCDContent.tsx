@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import api from "../../../config/api.config";
 import { Box, Typography, TextField } from "@mui/material";
 import InlineCell from "../../../components/common/InlineCell";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 interface BaoCaoTSCDContentProps {
   onContentChange?: (content: any) => void;
@@ -344,7 +345,7 @@ export default function BaoCaoTSCDContent({
               textTransform: "uppercase",
             }}
           >
-            CÔNG TY THAN UÔNG BÍ - TKV
+            {currentBrandConfig.company}
           </Typography>
         </Box>
 

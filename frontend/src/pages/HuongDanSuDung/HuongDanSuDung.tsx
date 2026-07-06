@@ -25,9 +25,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "../../redux/store";
 import { useHuongDanQuery, useHuongDanMutation } from "./Mutation";
 import s3Service from "../../services/S3Service";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 const HuongDanSuDung: React.FC = () => {
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state: any) => state.user);
   const isAdmin = user?.taiKhoan?.tenDangNhap === "admin";
 
   const { data: huongDanList, isLoading, error } = useHuongDanQuery();
@@ -194,9 +195,13 @@ const HuongDanSuDung: React.FC = () => {
       {isAdmin && (
         <Tooltip title="Chỉnh sửa hướng dẫn">
           <Fab
-            color="success"
             aria-label="edit"
-            sx={{ position: "fixed", bottom: 32, right: 32 }}
+            sx={{
+              position: "fixed",
+              bottom: 32,
+              right: 32,
+              backgroundColor: currentBrandConfig.primaryColor,
+            }}
             onClick={handleOpenEdit}
           >
             <Edit sx={{ color: "white" }} />

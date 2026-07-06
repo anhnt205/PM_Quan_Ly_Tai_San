@@ -20,6 +20,7 @@ import { Buffer } from "buffer";
 import XLSX from "xlsx-js-style";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 import { CongTy } from "../../../utils/const";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 if (typeof window !== "undefined") {
   window.Buffer = window.Buffer || Buffer;
@@ -133,7 +134,7 @@ export default function MauSo01({ title }: { title?: string }) {
     r++;
 
     wsData[r] = Array(12).fill("");
-    wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+    wsData[r][0] = cell(currentBrandConfig.company, {
       font: fontB,
       alignment: { horizontal: "center" },
     });

@@ -1,5 +1,6 @@
 import { Box, Chip, Typography } from "@mui/material";
 import { AssetGroup, AssetGroupType } from "../../../utils/const";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export default function Filter({
   dateFrom,
@@ -172,7 +173,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
-                    ? "#1FA463"
+                    ? currentBrandConfig.primaryColor
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.MAYMOC
@@ -182,7 +183,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.MAYMOC
-                      ? "#1FA463"
+                      ? currentBrandConfig.primaryColor
                       : "text.primary",
                 },
               }}
@@ -206,7 +207,7 @@ export default function Filter({
                     : "transparent",
                 color:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                    ? "#1FA463"
+                    ? currentBrandConfig.primaryColor
                     : "text.secondary",
                 boxShadow:
                   nhomTaiSanFilter === AssetGroup.PHUONGTIEN
@@ -216,7 +217,7 @@ export default function Filter({
                 "&:hover": {
                   color:
                     nhomTaiSanFilter === AssetGroup.PHUONGTIEN
-                      ? "#1FA463"
+                      ? currentBrandConfig.primaryColor
                       : "text.primary",
                 },
               }}

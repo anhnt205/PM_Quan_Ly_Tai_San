@@ -51,6 +51,7 @@ import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import AcceptanceVehiclePreview from "../preview/AcceptanceVehiclePreview";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -115,7 +116,7 @@ const NghiemThuPhuongTienDialog = ({
     share: false,
     trangThai: 0,
     tenMauBienBan: mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
-    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+    congTy: mauMacDinh?.congTy || currentBrandConfig.company,
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -170,7 +171,7 @@ const NghiemThuPhuongTienDialog = ({
         ...initData,
         tenMauBienBan:
           initData.tenMauBienBan || mauMacDinh?.ten || "NGHIỆM THU SẢN PHẨM",
-        congTy: initData.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy: initData.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -318,7 +319,7 @@ const NghiemThuPhuongTienDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              currentBrandConfig.company,
             danhSachChiTiet: formik.values.danhSachChiTiet,
             nguoiKyList: formik.values.nguoiKyList,
           },

@@ -86,6 +86,7 @@ import {
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
 import { PDFDocument } from "pdf-lib";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 // Trang 1: BÌA - LÝ LỊCH THIẾT BỊ
 export const generateAssetCoverPDF = async (
@@ -113,7 +114,7 @@ export const generateAssetCoverPDF = async (
   doc.text("TẬP ĐOÀN CÔNG NGHIỆP THAN - KHOÁNG SẢN VIỆT NAM", 105, 30, {
     align: "center",
   });
-  doc.text("CÔNG TY CỔ PHẦN THAN UÔNG BÍ - TKV", 105, 40, { align: "center" });
+  doc.text(currentBrandConfig.company, 105, 40, { align: "center" });
 
   // Tiêu đề chính
   doc.setFontSize(30);

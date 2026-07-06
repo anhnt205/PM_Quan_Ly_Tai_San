@@ -66,6 +66,7 @@ import { getAssetHandoverCount } from "../../utils/helpers";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 interface AssetHandoverTabState {
   showForm: boolean;
@@ -816,14 +817,14 @@ export default function AssetHandover() {
                             ? "transparent"
                             : "rgba(148, 163, 184, 0.25)",
                           background: isActive
-                            ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                            ? `linear-gradient(135deg, ${currentBrandConfig.primaryColor} 0%, ${currentBrandConfig.primaryColor} 100%)`
                             : "#ffffff",
                           color: isActive ? "#ffffff" : "#334155",
                           boxShadow: isActive
                             ? "0 4px 12px rgba(4, 180, 110, 0.15)"
                             : "0 2px 4px rgba(0, 0, 0, 0.05)",
                           "&:hover": {
-                            borderColor: isActive ? "transparent" : "#04b46e",
+                            borderColor: isActive ? "transparent" : currentBrandConfig.primaryColor,
                             bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
                           },
                         }}
@@ -840,7 +841,7 @@ export default function AssetHandover() {
                             bgcolor: isActive
                               ? "rgba(255, 255, 255, 0.18)"
                               : "rgba(4, 180, 110, 0.08)",
-                            color: isActive ? "#ffffff" : "#04b46e",
+                            color: isActive ? "#ffffff" : currentBrandConfig.primaryColor,
                             transition: "all 0.25s ease",
                             mb: 1.5,
                           }}

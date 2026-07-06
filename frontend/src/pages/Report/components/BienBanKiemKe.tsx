@@ -20,6 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import ExportExcelButton from "../../../components/Button/ExportExcelButton";
 import { CongTy } from "../../../utils/const";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export default function BienBanKiemKe({ title }: { title?: string }) {
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -172,7 +173,7 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
       r++;
 
       wsData[r] = Array(COLS).fill("");
-      wsData[r][0] = cell("CÔNG TY THAN UÔNG BÍ - TKV", {
+      wsData[r][0] = cell(currentBrandConfig.company, {
         font: fontB,
         alignment: { horizontal: "center", wrapText: true },
       });
@@ -484,24 +485,10 @@ export default function BienBanKiemKe({ title }: { title?: string }) {
           <FieldAutoCompleted
             title="Chọn đơn vị"
             labelkey="tenPhongBan"
+            labelOption="id"
             data={departments}
             formik={formik}
             field="IdDonVi"
-            componentsProps={{
-              paper: {
-                sx: {
-                  backgroundColor: "#fff0f5",
-                  borderRadius: "6px",
-                },
-              },
-              popper: {
-                style: { width: 360, overflow: "visible" },
-                placement: "bottom-start",
-              },
-              listbox: {
-                sx: { maxHeight: 220, overflow: "auto" },
-              },
-            }}
           />
         </Box>
 

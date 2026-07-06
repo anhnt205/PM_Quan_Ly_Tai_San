@@ -558,24 +558,10 @@ export default function ReportS22DN({ title }: { title?: string }) {
           <FieldAutoCompleted
             title="Chọn đơn vị"
             labelkey="tenPhongBan"
+            labelOption="id"
             data={departments}
             formik={formik}
             field="IdDonVi"
-            componentsProps={{
-              paper: {
-                sx: {
-                  backgroundColor: "#fff0f5",
-                  borderRadius: "6px",
-                },
-              },
-              popper: {
-                style: { width: 360, overflow: "visible" },
-                placement: "bottom-start",
-              },
-              listbox: {
-                sx: { maxHeight: 220, overflow: "auto" },
-              },
-            }}
           />
         </Box>
 

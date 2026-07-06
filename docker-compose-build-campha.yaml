@@ -1,0 +1,17 @@
+
+services:
+
+  cp_qlts_reverse_proxy_service:
+    build:
+      context: ./reverse_proxy
+    image: ${REGISTRY}/cp_qlts_reverse_proxy_img:${VERSION}
+
+  cp_qlts_frontend_service:
+    build:
+      context: ./frontend
+    image: ${REGISTRY}/cp_qlts_frontend_img:${VERSION}
+
+  cp_qlts_backend_service:
+    build:
+      context: ./backend
+    image: ${REGISTRY}/cp_qlts_backend_img:${VERSION}

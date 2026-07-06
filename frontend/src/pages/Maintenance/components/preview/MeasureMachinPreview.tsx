@@ -11,6 +11,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import { BienPhapMayMocData } from "../../types";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   row: BienPhapMayMocData & { nguoiKyList?: any[] };
@@ -62,7 +63,7 @@ const MeasureMachinPreview = ({ row, tieude, congty }: Props) => {
             fontWeight={700}
             sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            CÔNG TY {congty || "................."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center" }}>

@@ -50,6 +50,7 @@ import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import MeasureVehiclePreview from "../preview/MeasureVehiclePreview";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -114,7 +115,7 @@ const BienPhapPhuongTienDialog = ({
     trangThai: 0,
     donViQuanLy: "",
     tenMauBienBan: mauMacDinh?.ten || "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
-    congTy: mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+    congTy: mauMacDinh?.congTy || currentBrandConfig.company,
     danhSachChiTiet: [],
     nguoiKyList: [],
   };
@@ -173,7 +174,8 @@ const BienPhapPhuongTienDialog = ({
           initData?.tenMauBienBan ||
           mauMacDinh?.ten ||
           "BIỆN PHÁP SỬA CHỮA THIẾT BỊ",
-        congTy: initData?.congTy || mauMacDinh?.congTy || "THAN UÔNG BÍ - TKV",
+        congTy:
+          initData?.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,

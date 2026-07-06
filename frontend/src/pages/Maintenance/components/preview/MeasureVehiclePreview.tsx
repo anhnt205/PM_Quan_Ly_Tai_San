@@ -10,6 +10,7 @@ import {
   Paper,
 } from "@mui/material";
 import { BienPhapPhuongTienData } from "../../types";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   row: BienPhapPhuongTienData & { nguoiKyList?: any[] };
@@ -69,7 +70,7 @@ const MeasureVehiclePreview = ({ row, tieude, congty }: Props) => {
             fontWeight={700}
             sx={{ textTransform: "uppercase", textDecoration: "underline" }}
           >
-            CÔNG TY {congty || "................."}
+            {congty || currentBrandConfig.company}
           </Typography>
           <Typography variant="caption" display="block">
             Số: {(row as any)?.soBienBan || "401"} /BP- CV

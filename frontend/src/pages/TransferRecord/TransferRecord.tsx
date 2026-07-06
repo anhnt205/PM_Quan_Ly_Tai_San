@@ -5,6 +5,7 @@ import { LocalShipping, Construction } from "@mui/icons-material";
 import AssetTransferRecordTab from "./AssetTransferRecordTab";
 import ToolTransferRecordTab from "./ToolTransferRecordTab";
 import { useMenuData } from "../../hooks/useMenuData";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 export default function TransferRecord() {
   const [mainTab, setMainTab] = useState(0);
@@ -35,7 +36,7 @@ export default function TransferRecord() {
           onChange={handleMainTabChange}
           sx={{
             "& .MuiTabs-indicator": {
-              backgroundColor: "#04b46eff",
+              backgroundColor: currentBrandConfig.primaryColor,
               height: 3,
               borderRadius: "3px 3px 0 0"
             },
@@ -49,7 +50,7 @@ export default function TransferRecord() {
               mr: 4,
               minWidth: "auto",
               "&.Mui-selected": {
-                color: "#04b46eff",
+                color: currentBrandConfig.primaryColor,
               },
             },
           }}

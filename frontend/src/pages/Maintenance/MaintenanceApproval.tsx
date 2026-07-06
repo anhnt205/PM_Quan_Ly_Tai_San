@@ -94,6 +94,7 @@ import { AssetGroup, AssetGroupType, TypeBienBan } from "../../utils/const";
 import { useMenuData } from "../../hooks/useMenuData";
 import S3Service from "../../services/S3Service";
 import Filter from "./components/Filter";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 export default function MaintenanceApprovalPage() {
   const signBatch = useSignBatch();
@@ -1324,7 +1325,7 @@ export default function MaintenanceApprovalPage() {
                       ? "transparent"
                       : "rgba(148, 163, 184, 0.25)",
                     background: isActive
-                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      ? `linear-gradient(135deg, ${currentBrandConfig.primaryColor} 0%, ${currentBrandConfig.primaryColor} 100%)`
                       : "#ffffff",
                     color: isActive ? "#ffffff" : "#334155",
                     boxShadow: isActive
@@ -1332,7 +1333,7 @@ export default function MaintenanceApprovalPage() {
                       : "0 2px 4px rgba(148, 163, 184, 0.05)",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      borderColor: isActive ? "transparent" : "#04b46e",
+                      borderColor: isActive ? "transparent" : currentBrandConfig.primaryColor,
                       boxShadow: isActive
                         ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
                         : "0 6px 16px rgba(4, 180, 110, 0.08)",
@@ -1361,7 +1362,7 @@ export default function MaintenanceApprovalPage() {
                         bgcolor: isActive
                           ? "rgba(255, 255, 255, 0.18)"
                           : "rgba(4, 180, 110, 0.08)",
-                        color: isActive ? "#ffffff" : "#04b46e",
+                        color: isActive ? "#ffffff" : currentBrandConfig.primaryColor,
                         transition: "all 0.25s ease",
                       }}
                     >
@@ -1380,7 +1381,7 @@ export default function MaintenanceApprovalPage() {
                           borderRadius: "10px",
                           fontSize: "0.75rem",
                           fontWeight: 700,
-                          color: isActive ? "#04b46e" : "#ffffff",
+                          color: isActive ? currentBrandConfig.primaryColor : "#ffffff",
                           background: isActive
                             ? "#ffffff"
                             : "linear-gradient(135deg, #ef4444 0%, #f43f5e 100%)",

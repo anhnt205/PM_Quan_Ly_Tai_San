@@ -14,6 +14,7 @@ import {
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import type { IncidentInspectionDetailData } from "../../types";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   number?: string;
@@ -68,7 +69,7 @@ const IncidentInspectionPreview = ({
               textDecoration: "underline",
             }}
           >
-            CÔNG TY {congty || "............."}
+            {congty || currentBrandConfig.company}
           </Typography>
         </Box>
         <Box sx={{ textAlign: "center", flex: 1 }}>

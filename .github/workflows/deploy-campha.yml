@@ -1,11 +1,11 @@
 # Reference:
 # 1. https://github.com/actions/starter-workflows/blob/main/deployments/azure-webapps-node.yml
-name: Build and run tests for staging version
+name: Deploy for campha version
 
 on:
   push:
     branches:
-      - main
+      - dev/campha # Deploy when code is pushed to 'develop'
 
 env:
   WEBAPP_NAME: qlts # set this to your application's name
@@ -16,7 +16,7 @@ env:
 #   contents: read
 
 jobs:
-  build-and-test:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "VITE_BASE_API=${{ secrets.VITE_BASE_API}}" > ./frontend/.env
           echo "VITE_SOCKET_API=${{ secrets.VITE_SOCKET_API}}" >> ./frontend/.env
-          echo "VITE_BRAND=UB" >> ./frontend/.env
+          echo "VITE_BRAND=CP" >> ./frontend/.env
 
       - name: List Files
         run: ls -laR
@@ -40,10 +40,10 @@ jobs:
           DOCKER_HUB_USERNAME: ${{ secrets.DOCKER_HUB_USERNAME }}
           DOCKER_HUB_ACCESS_TOKEN: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
         run: |
-          make test
+          make campha
           ls -al .env
           cat .env
-          cp .env deployment/test/
+          cp .env deployment/campha/
 
       - name: Ensure target directory exists
         uses: appleboy/ssh-action@v0.1.10
@@ -53,7 +53,7 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: ${{ secrets.STAGING_PORT }}
           script: |
-            mkdir -p /home/${{ secrets.STAGING_USER }}/qlts/deployment/test
+            mkdir -p /home/${{ secrets.STAGING_USER }}/qlts/deployment/campha
 
       - name: Transfer docker-compose file to VPS for deployment
         uses: appleboy/scp-action@v0.1.4
@@ -62,9 +62,9 @@ jobs:
           username: ${{ secrets.STAGING_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           port: ${{ secrets.STAGING_PORT }}
-          source: deployment/test/*
-          target: "/home/${{ secrets.STAGING_USER }}/qlts/deployment/test"
-          strip_components: 2 # Removes "deployment/staging/" folder path!
+          source: deployment/campha/*
+          target: "/home/${{ secrets.STAGING_USER }}/qlts/deployment/campha"
+          strip_components: 2 # Removes "deployment/campha/" folder path!
 
       - name: Clean up containers and stuff via SSH
         uses: appleboy/ssh-action@v0.1.7
@@ -75,12 +75,12 @@ jobs:
           port: ${{ secrets.STAGING_PORT }}
           script: |
             # Change to staging deployment directory
-            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/test 
+            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/campha 
             # Debug info
             pwd
             ls -al
             docker image prune -f
-            docker compose -f test-docker-compose.yaml down # always down first
+            docker compose -f campha-docker-compose.yaml down # always down first
             docker ps
 
       - name: Deploy to Staging via SSH
@@ -92,7 +92,7 @@ jobs:
           port: ${{ secrets.STAGING_PORT }}
           script: |
             ### Change to staging deployment directory
-            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/test 
+            cd /home/${{ secrets.STAGING_USER }}/qlts/deployment/campha 
             ### Clean up unused images
             docker image prune -f # clean up unused images
             ### Provide permissions and start the application

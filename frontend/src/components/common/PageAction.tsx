@@ -24,6 +24,7 @@ import { addTab, clearTabLimited, removeTab, setActiveTab } from "../../redux/ta
 import { useLocation, useNavigate } from "react-router-dom";
 import React from "react";
 import { showTabLimitAlert } from "../Alert";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 interface Props {
   loading?: boolean;
@@ -217,7 +218,7 @@ export default function PageAction({
           {/* Tiêu đề trang nằm bên trái */}
           <Box
             sx={{
-              borderLeft: "4px solid #14a760",
+              borderLeft: `4px solid ${currentBrandConfig.primaryColor}`,
               pl: 1.5,
               py: 0.5,
             }}
@@ -301,17 +302,12 @@ export default function PageAction({
                   sx={{
                     borderRadius: "10px",
                     borderColor: "rgba(20, 167, 96, 0.3)",
-                    color: "#14a760",
                     fontWeight: 600,
                     textTransform: "none",
                     fontSize: "0.85rem",
                     px: 2,
                     py: 0.75,
                     transition: "all 0.2s ease-in-out",
-                    "&:hover": {
-                      borderColor: "#14a760",
-                      bgcolor: "rgba(20, 167, 96, 0.05)",
-                    },
                   }}
                 >
                   Tiện ích
@@ -355,7 +351,6 @@ export default function PageAction({
                 startIcon={<Add />}
                 sx={{
                   borderRadius: "10px",
-                  bgcolor: "#14a760",
                   color: "#fff",
                   fontWeight: 700,
                   textTransform: "none",
@@ -364,10 +359,6 @@ export default function PageAction({
                   py: 0.8,
                   boxShadow: "0 4px 12px rgba(20, 167, 96, 0.2)",
                   transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "#118f51",
-                    boxShadow: "0 6px 16px rgba(20, 167, 96, 0.3)",
-                  },
                 }}
               >
                 Thêm mới

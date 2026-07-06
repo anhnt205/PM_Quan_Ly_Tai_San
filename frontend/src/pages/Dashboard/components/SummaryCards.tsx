@@ -6,6 +6,7 @@ import {
   ConstructionOutlined,
   AccountBalanceWalletOutlined,
 } from "@mui/icons-material";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 interface SummaryCardsProps {
   tongTaiSan: number;
@@ -36,32 +37,32 @@ export default function SummaryCards({
     {
       title: "Tổng số lượng tài sản",
       value: tongTaiSan.toLocaleString("vi-VN"),
-      icon: <InventoryOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
-      iconBg: "#f0fdf8",
+      icon: <InventoryOutlined sx={{ fontSize: 22, color: currentBrandConfig.primaryColor }} />,
+      accentColor: currentBrandConfig.primaryColor,
+      iconBg: currentBrandConfig.primaryColor100,
     },
     {
       title: "Tổng nguyên giá tài sản",
       value: formatPrice(tongNguyenGia),
-      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
-      iconBg: "#f0fdf8",
+      icon: <MonetizationOnOutlined sx={{ fontSize: 22, color: currentBrandConfig.primaryColor }} />,
+      accentColor: currentBrandConfig.primaryColor,
+      iconBg: currentBrandConfig.primaryColor100,
     },
     {
       title: "Tổng số lượng CCDC",
       value: tongCCDC.toLocaleString("vi-VN"),
-      icon: <ConstructionOutlined sx={{ fontSize: 22, color: "#04b46e" }} />,
-      accentColor: "#04b46e",
-      iconBg: "#f0fdf8",
+      icon: <ConstructionOutlined sx={{ fontSize: 22, color: currentBrandConfig.primaryColor }} />,
+      accentColor: currentBrandConfig.primaryColor,
+      iconBg: currentBrandConfig.primaryColor100,
     },
     {
       title: "Tổng giá trị CCDC",
       value: formatPrice(tongGiaTriCCDC),
       icon: (
-          <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: "#04b46e" }} />
+          <AccountBalanceWalletOutlined sx={{ fontSize: 22, color: currentBrandConfig.primaryColor }} />
       ),
-      accentColor: "#04b46e",
-      iconBg: "#f0fdf8",
+      accentColor: currentBrandConfig.primaryColor,
+      iconBg: currentBrandConfig.primaryColor100,
     },
   ];
 

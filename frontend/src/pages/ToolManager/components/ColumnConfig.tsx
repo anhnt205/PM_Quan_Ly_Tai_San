@@ -13,6 +13,7 @@ import React, { useMemo } from "react";
 // Giả định interface của bạn, hãy điều chỉnh nếu cần
 // interface ColumnConfig { key: string; label: string; visible: boolean; }
 import { ColumnConfig } from "../columnConfig";
+import FieldSearch from "../../../components/TextField/FieldSearch";
 
 interface Props {
   columns: ColumnConfig[];
@@ -28,7 +29,7 @@ export default function ColumnConfigMenu({ columns, onChange }: Props) {
   // 1. Logic lọc cột dựa trên tìm kiếm
   const filteredColumns = useMemo(() => {
     return columns.filter((col) =>
-      col.label.toLowerCase().includes(searchValue.toLowerCase())
+      col.label.toLowerCase().includes(searchValue.toLowerCase()),
     );
   }, [columns, searchValue]);
 
@@ -39,8 +40,8 @@ export default function ColumnConfigMenu({ columns, onChange }: Props) {
   const toggleColumn = (key: string) => {
     onChange?.(
       columns.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
+        col.key === key ? { ...col, visible: !col.visible } : col,
+      ),
     );
   };
 
@@ -75,18 +76,10 @@ export default function ColumnConfigMenu({ columns, onChange }: Props) {
             zIndex: 1,
           }}
         >
-          <TextField
-            placeholder="Tìm kiếm..."
-            fullWidth
-            size="small"
-            variant="outlined"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <SearchRounded sx={{ color: "action.active", mr: 1 }} />
-              ),
-            }}
+          <FieldSearch
+            titleSearch="Tìm kiếm"
+            searchValue={searchValue}
+            setSearchValue={setSearchValue}
           />
         </Box>
 

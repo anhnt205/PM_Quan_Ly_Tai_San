@@ -28,7 +28,6 @@ import {
   Snackbar,
   Typography,
 } from "@mui/material";
-import logo from "../assets/images/logo_1.png";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../redux/store";
 import { useState } from "react";
@@ -42,6 +41,7 @@ import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
 import React from "react";
 import { clearTabs } from "../redux/tabsSlice";
+import { currentBrandConfig } from "../config/brandConfig";
 
 const isMenuActive = (item: any, pathname: string): boolean => {
   if (item.path === pathname) {
@@ -672,8 +672,7 @@ export default function Menuheader() {
         display: "flex",
         gap: 3,
         px: 3,
-        background:
-          "linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)",
+        background: `linear-gradient(to right,${currentBrandConfig.primaryColor} 0%,${currentBrandConfig.primaryColor} 100%)`,
       }}
     >
       {canScrollLeft && (
@@ -747,7 +746,7 @@ export default function Menuheader() {
           >
             {user?.taiKhoan?.hoTen}
           </Typography>
-          <Avatar src={logo} />
+          <Avatar src={currentBrandConfig.logo} />
         </IconButton>
         <Menu
           id="menu-appbar"
@@ -776,13 +775,13 @@ export default function Menuheader() {
             sx={{ borderBottom: "1px solid black", display: "flex", gap: 2 }}
           >
             <ListItemIcon>
-              <Avatar src={logo} alt="avatar" />
+              <Avatar src={currentBrandConfig.logo} alt="avatar" />
             </ListItemIcon>
             <Typography>{user?.taiKhoan?.hoTen}</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleCloseSettingMenu}>
             <ListItemIcon>
-              <Person fontSize="small" color="success" />
+              <Person fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
             </ListItemIcon>
             <Typography
               component={Link}
@@ -798,13 +797,13 @@ export default function Menuheader() {
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenExpirationDialog}>
             <ListItemIcon>
-              <Settings fontSize="small" color="success" />
+              <Settings fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
             </ListItemIcon>
             <Typography>Thiết lập thời gian</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenMssqlDialog}>
             <ListItemIcon>
-              <Storage fontSize="small" color="success" />
+              <Storage fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
             </ListItemIcon>
             <Typography>Cấu hình server</Typography>
           </MenuItem>
@@ -818,7 +817,7 @@ export default function Menuheader() {
             }}
           >
             <ListItemIcon>
-              <Logout fontSize="small" color="success" />
+              <Logout fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
             </ListItemIcon>
             <Typography>Đăng xuất</Typography>
           </MenuItem>

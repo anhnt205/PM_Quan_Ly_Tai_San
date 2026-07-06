@@ -1,6 +1,7 @@
 import { Box, Typography, Paper, IconButton } from "@mui/material";
 import { Close, Info, Business, CalendarToday } from "@mui/icons-material";
 import { findById } from "../../../utils/helpers";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 interface ToolDetailSidebarProps {
   selectedTool: any;
@@ -70,7 +71,7 @@ export default function ToolDetailSidebar({
               height: 36,
               borderRadius: "10px",
               bgcolor: "rgba(4, 180, 110, 0.08)",
-              color: "#04b46eff",
+              color: currentBrandConfig.primaryColor,
               flexShrink: 0,
             }}
           >
@@ -177,7 +178,7 @@ export default function ToolDetailSidebar({
                       width: 6,
                       height: 6,
                       borderRadius: "50%",
-                      bgcolor: "#04b46eff",
+                      bgcolor: currentBrandConfig.primaryColor,
                     }}
                   />
                   <Typography
@@ -196,7 +197,7 @@ export default function ToolDetailSidebar({
                   variant="caption"
                   sx={{
                     bgcolor: taiSan?.namSanXuat ? "rgba(4, 180, 110, 0.08)" : "grey.200",
-                    color: taiSan?.namSanXuat ? "#04b46eff" : "text.secondary",
+                    color: taiSan?.namSanXuat ? currentBrandConfig.primaryColor : "text.secondary",
                     px: 1.2,
                     py: 0.3,
                     borderRadius: "6px",
@@ -275,7 +276,7 @@ export default function ToolDetailSidebar({
                           bgcolor: "#fff",
                           transition: "all 0.2s ease-in-out",
                           "&:hover": {
-                            borderColor: "#04b46eff",
+                            borderColor: currentBrandConfig.primaryColor,
                             boxShadow: "0 4px 12px rgba(4, 180, 110, 0.06)",
                             transform: "translateY(-1px)",
                           },
@@ -314,7 +315,7 @@ export default function ToolDetailSidebar({
                             <Typography variant="caption" color="text.secondary" display="block" sx={{ fontSize: "0.72rem" }}>
                               Số lượng sở hữu
                             </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, color: "#04b46eff" }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, color: currentBrandConfig.primaryColor }}>
                               {item?.soLuong || 0}
                             </Typography>
                           </Box>

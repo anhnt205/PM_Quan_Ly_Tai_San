@@ -24,6 +24,7 @@ import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import type { IncidenDetailData } from "../../types";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   number?: string;
@@ -294,7 +295,7 @@ const IncidentPreview = ({
               textTransform: "uppercase",
             }}
           >
-            CÔNG TY {congty || "............"}
+            {congty || currentBrandConfig.company}
           </Typography>
           <Typography
             sx={{

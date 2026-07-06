@@ -1,4 +1,5 @@
 import { Box, Typography } from "@mui/material";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 type ReportSidebarProps = {
   reports: { id: number; label: string }[];
@@ -21,7 +22,7 @@ export default function ReportSidebar({
           gutterBottom
           sx={{
             color: "#fff",
-            bgcolor: "#309e5d",
+            bgcolor: currentBrandConfig.primaryColor,
             p: 2,
             borderRadius: "4px 4px 0 0",
             fontSize: "1.1rem",
@@ -55,9 +56,9 @@ export default function ReportSidebar({
                   py: 1.5,
                   borderLeft: "4px solid transparent",
                   fontWeight: isActive ? 700 : 500,
-                  color: isActive ? "#2e7d32" : "#333",
+                  color: isActive ? currentBrandConfig.primaryColor : "#333",
                   bgcolor: isActive ? "#f1f8e9" : "transparent",
-                  borderLeftColor: isActive ? "#4caf50" : "transparent",
+                  borderLeftColor: isActive ? currentBrandConfig.primaryColor : "transparent",
                   transition: "all 0.2s",
                   fontSize: "0.95rem",
                   borderBottom: "1px solid #f0f0f0",
@@ -65,9 +66,9 @@ export default function ReportSidebar({
                     borderBottom: "none",
                   },
                   "&:hover": {
-                    color: "#2e7d32",
+                    color: currentBrandConfig.primaryColor,
                     bgcolor: "#f1f8e9",
-                    borderLeftColor: "#4caf50",
+                    borderLeftColor: currentBrandConfig.primaryColor,
                   },
                 }}
               >

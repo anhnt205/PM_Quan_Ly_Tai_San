@@ -39,6 +39,7 @@ import { ToolValidation } from "../validation";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
 import { CongTy } from "../../../utils/const";
 import { useDebounce } from "../../../hooks/useDebounce";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export default function ToolForm({
   onEdit,
@@ -222,7 +223,10 @@ export default function ToolForm({
           justifyContent="space-between"
           mb={1}
         >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: 700, color: currentBrandConfig.primaryColor }}
+          >
             Chi tiết CCDC - Vật tư
           </Typography>
           <Box display="flex" gap={0.5}>

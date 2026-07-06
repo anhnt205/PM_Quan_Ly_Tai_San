@@ -1,7 +1,6 @@
 import { AppBar, Avatar, Box, Typography } from "@mui/material";
-import logo from "../assets/images/logo_1.png";
 import { Email, Phone } from "@mui/icons-material";
-import MenuHeader from "./MenuHeader";
+import { currentBrandConfig } from "../config/brandConfig";
 
 export default function Header() {
   return (
@@ -20,17 +19,17 @@ export default function Header() {
                     rgba(255, 255, 255, 0.15) 1px, 
                     transparent 2px, 
                     transparent 40px
-                ),linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)`,
+                ),linear-gradient(to right,${currentBrandConfig.primaryColor} 0%,${currentBrandConfig.primaryColor} 100%)`,
         }}
       >
         <Box display={"flex"} alignItems={"center"} gap={3}>
-          <Avatar src={logo} alt="logo" sx={{ width: 80, height: 80 }} />
+          <Avatar src={currentBrandConfig.logo} alt="logo" sx={{ width: 80, height: 80 }} />
           <Box sx={{ color: "white" }}>
             <Typography align="center" fontSize={26} fontWeight={700}>
               PHẦN MỀM QUẢN LÝ TÀI SẢN
             </Typography>
             <Typography align="center" fontWeight={700} fontSize={18}>
-              CÔNG TY THAN UÔNG BÍ - TKV
+              {currentBrandConfig.company}
             </Typography>
             <Box sx={{ display: "flex", justifyContent: "center", gap: 3 }}>
               <Typography
@@ -41,7 +40,7 @@ export default function Header() {
                 gap={1}
               >
                 <Phone sx={{ fontSize: 16 }} />
-                Hotline: 02033.854491
+                Hotline: {currentBrandConfig.phone}
               </Typography>
               <Typography
                 fontWeight={700}
@@ -51,7 +50,7 @@ export default function Header() {
                 gap={1}
               >
                 <Email sx={{ fontSize: 16 }} />
-                Email: ctythanub@gmail.com
+                Email: {currentBrandConfig.email}
               </Typography>
             </Box>
           </Box>

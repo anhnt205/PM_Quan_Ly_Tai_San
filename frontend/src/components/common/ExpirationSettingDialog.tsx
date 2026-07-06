@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../Alert";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 interface ExpirationSettingDialogProps {
   open: boolean;
@@ -174,7 +175,7 @@ export default function ExpirationSettingDialog({
       {/* Header với gradient */}
       <Box
         sx={{
-          background: `linear-gradient(135deg, #1b8a4a 0%, #1b8a4a 100%)`,
+          background: `linear-gradient(135deg, ${currentBrandConfig.primaryColor} 0%, ${currentBrandConfig.primaryColor} 100%)`,
           position: "relative",
         }}
       >
@@ -472,15 +473,9 @@ export default function ExpirationSettingDialog({
           variant="contained"
           disabled={loading}
           sx={{
-            backgroundColor: "#1b8a4a",
             borderRadius: 2,
             textTransform: "none",
             px: 4,
-            "&:hover": {
-              backgroundColor: "#17c45fff",
-              transform: "translateY(-1px)",
-              boxShadow: theme.shadows[4],
-            },
             transition: "all 0.2s",
           }}
         >

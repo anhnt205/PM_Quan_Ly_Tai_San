@@ -34,6 +34,7 @@ import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { Remove } from "@mui/icons-material";
 import { useBienBanSuaChuaPageQuery } from "../../../RepairReport/Mutation";
 import { useAllAssetsByDepartmentQuery } from "../../../AssetManager/Mutation";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   open: boolean;
@@ -94,7 +95,7 @@ const IncidentDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
@@ -195,7 +196,7 @@ const IncidentDialog = ({
         share: initialIncident.share ?? false,
         tenMauBienBan:
           initialIncident.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-        congTy: initialIncident.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: initialIncident.congTy ?? currentBrandConfig.company,
         ngayTao:
           initialIncident.ngayTao ||
           dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
@@ -241,7 +242,7 @@ const IncidentDialog = ({
         trangThai: 0,
         share: false,
         tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-        congTy: savedDraft.congTy ?? "THAN UÔNG BÍ - TKV",
+        congTy: savedDraft.congTy ?? currentBrandConfig.company,
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
         nguoiKyList: savedDraft.nguoiKyList?.length
           ? savedDraft.nguoiKyList
@@ -275,7 +276,7 @@ const IncidentDialog = ({
       trangThai: 0,
       share: false,
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-      congTy: mauMacDinh?.congTy ?? "THAN UÔNG BÍ - TKV",
+      congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       nguoiKyList: signersListFromParent,
       danhSachTaiSan: [],
@@ -337,7 +338,7 @@ const IncidentDialog = ({
             congTy:
               formik.values.congTy ||
               mauMacDinh?.congTy ||
-              "THAN UÔNG BÍ - TKV",
+              currentBrandConfig.company,
             nguoiKyList: formik.values.nguoiKyList,
             assets,
             danhSachTaiSan: formik.values.danhSachTaiSan,
