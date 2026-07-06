@@ -40,7 +40,6 @@ import MssqlConfigDialog from "../components/common/MssqlConfigDialog";
 import { useMenuData } from "../hooks/useMenuData";
 import { ShowCount } from "../components/common/ShowCount";
 import { ShowCountInSubMenu } from "../components/common/ShowCountInSubMenu";
-import api from "../config/api.config";
 import React from "react";
 import { clearTabs } from "../redux/tabsSlice";
 
@@ -273,7 +272,7 @@ export default function Menuheader() {
   const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const permissions = user?.role?.map((r: any) => r.permissionCode) || [];
+  const permissions = user?.role?.filter((r: any) => r.canRead).map((r: any) => r.permissionCode) || [];
   const hasPermission = (code?: string) => {
     if (!code) return true; // menu không yêu cầu quyền
     return permissions.includes(code);
@@ -407,8 +406,8 @@ export default function Menuheader() {
           text: "Danh mục thiết bị",
           path: "#",
           subMenu: [
-            { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP },
-            { text: "Mô hình tài sản", path: ROUTES.MODELASSET },
+            { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP,code:"NHOMTAISAN" },
+            { text: "Mô hình tài sản", path: ROUTES.MODELASSET,code:"MOHINHTAISAN" },
             { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
             { text: "Loại tài sản", path: ROUTES.TYPEASSET },
             { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
@@ -421,7 +420,7 @@ export default function Menuheader() {
           path: "#",
           subMenu: [
             { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
-            { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE },
+            { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE,code:"NGUONVON" },
             { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
             { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
             { text: "Đơn vị tính", path: ROUTES.UNIT },

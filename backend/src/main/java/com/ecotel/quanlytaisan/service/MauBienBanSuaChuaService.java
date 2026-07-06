@@ -63,6 +63,16 @@ public class MauBienBanSuaChuaService {
         if (entity.getMacDinh() != null) existing.setMacDinh(entity.getMacDinh());
         if (entity.getLoaiBienBan() != null) existing.setLoaiBienBan(entity.getLoaiBienBan());
         if (entity.getCongTy() != null) existing.setCongTy(entity.getCongTy());
+        if (entity.getTrai1() != null) existing.setTrai1(entity.getTrai1());
+        if (entity.getTrai2() != null) existing.setTrai2(entity.getTrai2());
+        if (entity.getTrai3() != null) existing.setTrai3(entity.getTrai3());
+        if (entity.getPhai1() != null) existing.setPhai1(entity.getPhai1());
+        if (entity.getPhai2() != null) existing.setPhai2(entity.getPhai2());
+        if (entity.getPhai3() != null) existing.setPhai3(entity.getPhai3());
+        if (entity.getThoiGian() != null) existing.setThoiGian(entity.getThoiGian());
+        if (entity.getGiua1() != null) existing.setGiua1(entity.getGiua1());
+        if (entity.getGiua2() != null) existing.setGiua2(entity.getGiua2());
+        if (entity.getGiua3() != null) existing.setGiua3(entity.getGiua3());
 
         MauBienBanSuaChua updated = repository.save(existing);
         applyMacDinhReset(updated);
@@ -84,6 +94,16 @@ public class MauBienBanSuaChuaService {
             if (entity.getMacDinh() != null) existing.setMacDinh(entity.getMacDinh());
             if (entity.getLoaiBienBan() != null) existing.setLoaiBienBan(entity.getLoaiBienBan());
             if (entity.getCongTy() != null) existing.setCongTy(entity.getCongTy());
+            if (entity.getTrai1() != null) existing.setTrai1(entity.getTrai1());
+            if (entity.getTrai2() != null) existing.setTrai2(entity.getTrai2());
+            if (entity.getTrai3() != null) existing.setTrai3(entity.getTrai3());
+            if (entity.getPhai1() != null) existing.setPhai1(entity.getPhai1());
+            if (entity.getPhai2() != null) existing.setPhai2(entity.getPhai2());
+            if (entity.getPhai3() != null) existing.setPhai3(entity.getPhai3());
+            if (entity.getThoiGian() != null) existing.setThoiGian(entity.getThoiGian());
+            if (entity.getGiua1() != null) existing.setGiua1(entity.getGiua1());
+            if (entity.getGiua2() != null) existing.setGiua2(entity.getGiua2());
+            if (entity.getGiua3() != null) existing.setGiua3(entity.getGiua3());
             mergedList.add(existing);
         }
 

@@ -937,19 +937,19 @@ export default function MaintenanceStatPage() {
     },
     {
       step: 3,
-      title: "LỆNH SỬA CHỮA",
-      icon: <DescriptionOutlined sx={{ fontSize: 16 }} />,
-      color: "#f59e0b",
-      items: repairItems,
-      type: "repair",
-    },
-    {
-      step: 4,
       title: "BB SỰ CỐ",
       icon: <SearchOutlined sx={{ fontSize: 16 }} />,
       color: "#8b5cf6",
       items: incidentInspectionItems,
       type: "incidentInspection",
+    },
+    {
+      step: 4,
+      title: "LỆNH SỬA CHỮA",
+      icon: <DescriptionOutlined sx={{ fontSize: 16 }} />,
+      color: "#f59e0b",
+      items: repairItems,
+      type: "repair",
     },
     {
       step: 5,

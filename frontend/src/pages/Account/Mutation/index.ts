@@ -56,57 +56,8 @@ export const useAccountMutation = (
 
   const createMutation = useMutation({
     mutationFn: async (payload: { values: any; staff: any }) => {
-      // BƯỚC 1: Tạo tài khoản
       const createRes = await api.post("/taikhoan", payload.values);
-      const newAccount = createRes.data?.data || createRes.data;
-
-      try {
-        // BƯỚC 2: Login ngầm bằng tài khoản vừa tạo
-        const loginRes = await api.post("/taikhoan/login", null, {
-          params: {
-            tenDangNhap: payload.values.username,
-            matKhau: payload.values.matKhau,
-          },
-        });
-        const loggedInUser =
-          loginRes.data?.data?.taiKhoan || loginRes.data?.taiKhoan;
-
-        // BƯỚC 3: Sử dụng chucVuId từ object staff để lấy quyền
-        const targetChucVuId = payload.staff.chucVuId;
-
-        if (loggedInUser && targetChucVuId) {
-          const chucVuRes = await api.get(`/chucvu/${targetChucVuId}`);
-          const chucVuData = chucVuRes.data?.data || chucVuRes.data;
-
-          const permissionsBatch = Object.entries(PERMISSION_MAP)
-            .filter(([key]) => chucVuData[key] === true)
-            .map(([_, roleCode]) => ({
-              userId: loggedInUser.id,
-              permissionCode: roleCode,
-              canCreate: true,
-              canRead: true,
-              canUpdate: true,
-              canDelete: true,
-              permissionName: roleCode,
-            }));
-
-          // BƯỚC 4: Set quyền Batch (POST)
-          if (permissionsBatch.length > 0) {
-            await api.post(
-              "/userpermission/set-permission-batch",
-              permissionsBatch,
-            );
-          }
-        } else {
-          console.warn(
-            "Không tìm thấy loggedInUser hoặc staff.chucVuId để áp quyền.",
-          );
-        }
-      } catch (workflowError) {
-        console.error("Lỗi quy trình tự động áp quyền:", workflowError);
-      }
-
-      return newAccount;
+      return createRes.data?.data || createRes.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [mainKey] });

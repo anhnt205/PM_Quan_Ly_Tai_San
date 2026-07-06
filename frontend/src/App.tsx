@@ -65,7 +65,8 @@ const ProtectedRoute = ({
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} />;
   }
-  const listRole = user?.role?.map((item: any) => item.permissionCode) || [];
+  const listRole =
+    user?.role?.filter((r: any) => r.canRead).map((item: any) => item.permissionCode) || [];
   if (!allowedRoles.some((r: any) => listRole.includes(r))) {
     return <Navigate to={ROUTES.NOT_FOUND} />;
   }

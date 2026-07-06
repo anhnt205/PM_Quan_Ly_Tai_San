@@ -149,7 +149,13 @@ public class UserPermissionDao {
     public int setUserPermission(UserPermission userPermission) {
         // Lấy PermissionId từ PermissionCode
         String permissionIdSql = "SELECT Id FROM Permission WHERE PermissionCode = ?";
-        String permissionId = jdbcTemplate.queryForObject(permissionIdSql, String.class, userPermission.getPermissionCode());
+        String permissionId;
+        try {
+            permissionId = jdbcTemplate.queryForObject(permissionIdSql, String.class, userPermission.getPermissionCode());
+        } catch (org.springframework.dao.EmptyResultDataAccessException e) {
+            System.err.println("Warning: Permission code '" + userPermission.getPermissionCode() + "' does not exist in DB. Skipping.");
+            return 0;
+        }
         
         if (permissionId == null) {
             throw new RuntimeException("Permission code không tồn tại: " + userPermission.getPermissionCode());

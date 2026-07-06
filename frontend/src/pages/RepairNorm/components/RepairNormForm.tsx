@@ -24,7 +24,7 @@ import ViewBtn from "../../../components/Button/ViewBtn";
 import EditButton from "../../../components/Button/EditButton";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import RepairNormVatTuTable from "./RepairNormVatTuTable";
-import { DinhMucSuaChua, DinhMucVatTu } from "../types";
+import { DinhMucSuaChua } from "../types";
 import { RepairNormValidation } from "../validation";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
 import { useDebounce } from "../../../hooks/useDebounce";
@@ -138,6 +138,7 @@ export default function RepairNormForm({
                 title="Loại sửa chữa *"
                 data={allRepairTypes}
                 labelkey="ten"
+                labelOption="id"
                 formik={formik}
                 field="idLoaiSuaChua"
                 disabled={readOnly}

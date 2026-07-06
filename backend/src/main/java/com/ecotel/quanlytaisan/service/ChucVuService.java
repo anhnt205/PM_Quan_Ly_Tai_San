@@ -1,8 +1,11 @@
 package com.ecotel.quanlytaisan.service;
 
 import com.ecotel.quanlytaisan.dao.ChucVuDao;
+import com.ecotel.quanlytaisan.dao.TaiKhoanDao;
 import com.ecotel.quanlytaisan.model.ChucVu;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.model.TaiKhoan;
+import com.ecotel.quanlytaisan.model.UserPermission;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -16,12 +19,20 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ChucVuService {
     @Autowired
     private ChucVuDao chucVuDAO;
+
+    @Autowired
+    private TaiKhoanDao taiKhoanDao;
+
+    @Autowired
+    private UserPermissionService userPermissionService;
 
     public int insert(ChucVu cv) {
         return chucVuDAO.insert(cv);
@@ -32,11 +43,57 @@ public class ChucVuService {
     }
 
     public int update(ChucVu cv) {
-        return chucVuDAO.update(cv);
+        int result = chucVuDAO.update(cv);
+        if (result > 0) {
+            syncPermissionsForAccounts(cv);
+        }
+        return result;
+    }
+
+    private void syncPermissionsForAccounts(ChucVu cv) {
+        List<TaiKhoan> accounts = taiKhoanDao.findByChucVuId(cv.getId());
+        if (accounts.isEmpty()) return;
+
+        Map<String, Boolean> pMap = new HashMap<>();
+        pMap.put("NHANVIEN", cv.getQuanLyNhanVien() != null && cv.getQuanLyNhanVien());
+        pMap.put("PHONGBAN", cv.getQuanLyPhongBan() != null && cv.getQuanLyPhongBan());
+        pMap.put("DUAN", cv.getQuanLyDuAn() != null && cv.getQuanLyDuAn());
+        pMap.put("NGUONVON", cv.getQuanLyNguonVon() != null && cv.getQuanLyNguonVon());
+        pMap.put("MOHINHTAISAN", cv.getQuanLyMoHinhTaiSan() != null && cv.getQuanLyMoHinhTaiSan());
+        pMap.put("NHOMTAISAN", cv.getQuanLyNhomTaiSan() != null && cv.getQuanLyNhomTaiSan());
+        pMap.put("TAISAN", cv.getQuanLyTaiSan() != null && cv.getQuanLyTaiSan());
+        pMap.put("CCDCVT", cv.getQuanLyCCDCVatTu() != null && cv.getQuanLyCCDCVatTu());
+        pMap.put("DIEUDONG_TAISAN", cv.getDieuDongTaiSan() != null && cv.getDieuDongTaiSan());
+        pMap.put("DIEUDONG_CCDC", cv.getDieuDongCCDCVatTu() != null && cv.getDieuDongCCDCVatTu());
+        pMap.put("BANGIAO_TAISAN", cv.getBanGiaoTaiSan() != null && cv.getBanGiaoTaiSan());
+        pMap.put("BANGIAO_CCDC", cv.getBanGiaoCCDCVatTu() != null && cv.getBanGiaoCCDCVatTu());
+        pMap.put("BAOCAO", cv.getBaoCao() != null && cv.getBaoCao());
+
+        for (TaiKhoan tk : accounts) {
+            List<UserPermission> userPerms = new ArrayList<>();
+            for (Map.Entry<String, Boolean> entry : pMap.entrySet()) {
+                UserPermission up = new UserPermission();
+                up.setUserId(tk.getId());
+                up.setPermissionCode(entry.getKey());
+                boolean val = entry.getValue();
+                up.setCanCreate(val);
+                up.setCanRead(val);
+                up.setCanUpdate(val);
+                up.setCanDelete(val);
+                userPerms.add(up);
+            }
+            userPermissionService.setUserPermissionsBatch(userPerms);
+        }
     }
 
     public int batchUpdate(List<ChucVu> list) {
-        return chucVuDAO.batchUpdate(list);
+        int result = chucVuDAO.batchUpdate(list);
+        if (result > 0) {
+            for (ChucVu cv : list) {
+                syncPermissionsForAccounts(cv);
+            }
+        }
+        return result;
     }
 
     public int delete(String id) {
