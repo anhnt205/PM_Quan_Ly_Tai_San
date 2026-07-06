@@ -34,4 +34,34 @@ public class MauBienBanSuaChua {
 
     @Column(name = "CongTy")
     String congTy;
+
+    @Column(name = "Trai1")
+    String trai1;
+
+    @Column(name = "Trai2")
+    String trai2;
+
+    @Column(name = "Trai3")
+    String trai3;
+
+    @Column(name = "Phai1")
+    String phai1;
+
+    @Column(name = "Phai2")
+    String phai2;
+
+    @Column(name = "Phai3")
+    String phai3;
+
+    @Column(name = "ThoiGian")
+    String thoiGian;
+
+    @Column(name = "Giua1")
+    String giua1;
+
+    @Column(name = "Giua2")
+    String giua2;
+
+    @Column(name = "Giua3")
+    String giua3;
 }

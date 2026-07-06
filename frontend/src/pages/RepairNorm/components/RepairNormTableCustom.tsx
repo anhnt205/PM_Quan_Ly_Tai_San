@@ -291,6 +291,7 @@ export default function RepairNormTableCustom({
                   <TableHead>
                     <TableRow sx={{ backgroundColor: "#f5f5f5" }}>
                       <TableCell width="50px">STT</TableCell>
+                      <TableCell>Mã vật tư</TableCell>
                       <TableCell>Tên vật tư</TableCell>
                       <TableCell width="120px">Nhóm</TableCell>
                       <TableCell width="120px">ĐVT</TableCell>
@@ -310,6 +311,7 @@ export default function RepairNormTableCustom({
                       row.dinhMucVatTuList.map((vt: any, idx: number) => (
                         <TableRow key={vt.id || idx}>
                           <TableCell>{idx + 1}</TableCell>
+                          <TableCell>{vt.idCCDCVT}</TableCell>
                           <TableCell>{vt.tenCCDCVT}</TableCell>
                           <TableCell>{vt.tenNhom}</TableCell>
                           <TableCell>{vt.donViTinh}</TableCell>

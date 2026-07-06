@@ -102,6 +102,11 @@ export default function RepairNorm() {
 
   const [columns, setColumns] = useState<ColumnConfig[]>([
     {
+      key: "idLoaiSuaChua",
+      label: "Mã loại sửa chữa",
+      width: 100,
+    },
+    {
       key: "tenLoaiSuaChua",
       label: "Loại sửa chữa",
       width: 250,

@@ -428,6 +428,18 @@ export default function MaintenanceApprovalPage() {
   const tabConfigs = [
     { label: "Kế hoạch", icon: <AssignmentOutlined />, idLabel: "Mã KH" },
     {
+      label: "Phiếu báo sự cố",
+      icon: <WarningOutlined />,
+      idLabel: "Số phiếu",
+      field: "soPhieu",
+    },
+    {
+      label: "BB Kiểm tra sự cố",
+      icon: <SearchOutlined />,
+      idLabel: "Số BB kiểm tra",
+      field: "soPhieu",
+    },
+    {
       label: "Lệnh sửa chữa",
       icon: <BuildOutlined />,
       idLabel: "Số lệnh SC",
@@ -454,18 +466,6 @@ export default function MaintenanceApprovalPage() {
       label: "BB Đánh giá VT",
       icon: <InventoryOutlined />,
       idLabel: "Số BB đánh giá",
-    },
-    {
-      label: "Phiếu báo sự cố",
-      icon: <WarningOutlined />,
-      idLabel: "Số phiếu",
-      field: "soPhieu",
-    },
-    {
-      label: "BB Kiểm tra sự cố",
-      icon: <SearchOutlined />,
-      idLabel: "Số BB kiểm tra",
-      field: "soPhieu",
     },
   ];
 
@@ -1244,6 +1244,18 @@ export default function MaintenanceApprovalPage() {
                 count: counts.totalPlan,
               },
               {
+                label: "Phiếu báo sự cố",
+                subLabel: "Báo cáo sự cố thiết bị",
+                icon: AlertTriangle,
+                count: counts.totalIncident,
+              },
+              {
+                label: "BB Kiểm tra sự cố",
+                subLabel: "Kiểm tra hiện trạng SC",
+                icon: FileWarning,
+                count: counts.totalIncidentInspection,
+              },
+              {
                 label: "Lệnh sửa chữa",
                 subLabel: "Lệnh xử lý kỹ thuật",
                 icon: Wrench,
@@ -1274,18 +1286,6 @@ export default function MaintenanceApprovalPage() {
                 subLabel: "Đánh giá vật tư tiêu hao",
                 icon: Boxes,
                 count: counts.totalMaterialAssessment,
-              },
-              {
-                label: "Phiếu báo sự cố",
-                subLabel: "Báo cáo sự cố thiết bị",
-                icon: AlertTriangle,
-                count: counts.totalIncident,
-              },
-              {
-                label: "BB Kiểm tra sự cố",
-                subLabel: "Kiểm tra hiện trạng SC",
-                icon: FileWarning,
-                count: counts.totalIncidentInspection,
               },
             ].map((tab, idx) => {
               const IconComponent = tab.icon;
