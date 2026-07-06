@@ -70,6 +70,23 @@ public class TaiKhoanDao {
         return jdbcTemplate.query(sql, rowMapper);
     }
 
+    public List<TaiKhoan> findByChucVuId(String chucVuId) {
+        String sql = "SELECT tk.*, nv.HoTen AS TenNhanVien, nv.BoPhan AS PhongBanId, nv.ChucVu AS ChucVuId " +
+                     "FROM TaiKhoan tk " +
+                     "JOIN NhanVien nv ON nv.Id = tk.TenDangNhap " +
+                     "WHERE nv.ChucVu = ?";
+        return jdbcTemplate.query(sql, rowMapper, chucVuId);
+    }
+
+    public String getChucVuIdByUsername(String username) {
+        String sql = "SELECT ChucVu FROM NhanVien WHERE Id = ?";
+        try {
+            return jdbcTemplate.queryForObject(sql, String.class, username);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public List<TaiKhoan> findAllPaged(int page, int size, String sortBy, String sortDir, String search) {
         // Xử lý sortBy và sortDir
         String orderBy = "Id"; // default sort
