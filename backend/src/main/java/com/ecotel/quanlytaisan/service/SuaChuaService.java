@@ -305,9 +305,7 @@ public class SuaChuaService {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
-                        chiTiet.setId(suaChuaChiTietDao.generateNextId());
-                    }
+                    chiTiet.setId(suaChuaChiTietDao.generateNextId());
                     chiTiet.setIdSuaChua(planId);
                 }
                 suaChuaChiTietDao.batchInsert(dto.getDanhSachTaiSan());
@@ -341,9 +339,7 @@ public class SuaChuaService {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    if (chiTiet.getId() == null || chiTiet.getId().isEmpty()) {
-                        chiTiet.setId(suaChuaChiTietDao.generateNextId());
-                    }
+                    chiTiet.setId(suaChuaChiTietDao.generateNextId());
                     chiTiet.setIdSuaChua(planId);
                 }
                 suaChuaChiTietDao.batchInsert(dto.getDanhSachTaiSan());
