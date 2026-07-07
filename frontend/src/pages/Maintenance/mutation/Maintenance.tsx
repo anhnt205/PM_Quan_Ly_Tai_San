@@ -22,6 +22,7 @@ export const useMaintenanceMutation = (
     }: {
       SignaturesData: SignaturesData[];
       asset: any;
+      suppressAlert?: boolean;
     }) => {
       const res = await api.post("/chuky", SignaturesData);
       return res.data;
@@ -59,12 +60,16 @@ export const useMaintenanceMutation = (
                           : "",
         recieve: list,
       });
-      showSuccessAlert("Ký thành công");
+      if (!data.suppressAlert) {
+        showSuccessAlert("Ký thành công");
+      }
     },
-    onError: (error: any) => {
-      showErrorAlert(
-        error.response?.data?.message || error.message || "Ký thất bại",
-      );
+    onError: (error: any, variables) => {
+      if (!variables?.suppressAlert) {
+        showErrorAlert(
+          error.response?.data?.message || error.message || "Ký thất bại",
+        );
+      }
     },
   });
 

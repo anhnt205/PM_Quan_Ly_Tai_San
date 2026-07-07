@@ -16,7 +16,7 @@ import {
   Paper,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
@@ -54,6 +54,7 @@ export default function MaintenanceRepairTypeForm({
   bulkEditType?: "create" | "edit";
 }) {
   const [expanded, setExpanded] = useState(true);
+  const isClosedRef = useRef(false);
   const formik = useFormik({
     initialValues: {
       id: initialFormData?.id ?? "",
@@ -62,6 +63,7 @@ export default function MaintenanceRepairTypeForm({
     },
     validationSchema: MaintenanceRepairTypeValidation,
     onSubmit(values) {
+      isClosedRef.current = true;
       onSave(values);
     },
   });
@@ -80,6 +82,7 @@ export default function MaintenanceRepairTypeForm({
 
   const debouncedBulkItems = useDebounce(localBulkItems, 600);
   useEffect(() => {
+    if (isClosedRef.current) return;
     onBulkItemsChange?.(debouncedBulkItems);
   }, [debouncedBulkItems]);
 
@@ -139,12 +142,14 @@ export default function MaintenanceRepairTypeForm({
   const handleBulkSave = async () => {
     const { hasError } = await validateBulkItems();
     if (hasError) return;
+    isClosedRef.current = true;
     const cleanItems = localBulkItems.map(({ errors, ...rest }) => rest);
     onSave(cleanItems);
   };
 
   const debouncedValues = useDebounce(formik.values, 800);
   useEffect(() => {
+    if (isClosedRef.current) return;
     onFormChange?.(debouncedValues);
   }, [debouncedValues]);
 
@@ -341,7 +346,14 @@ export default function MaintenanceRepairTypeForm({
           <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
             <Remove fontSize="small" />
           </IconButton>
-          <IconButton size="small" onClick={onCancel} title="Đóng">
+          <IconButton
+            size="small"
+            onClick={() => {
+              isClosedRef.current = true;
+              onCancel();
+            }}
+            title="Đóng"
+          >
             <Close fontSize="small" />
           </IconButton>
         </Box>
