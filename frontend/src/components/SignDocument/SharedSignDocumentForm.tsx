@@ -273,7 +273,6 @@ export default function SharedSignDocumentForm({
     );
   };
 
-
   const handleUpdateScale = (id: string, newScale: number) => {
     setSignatures((prev) =>
       prev.map((sig) => (sig.id === id ? { ...sig, scale: newScale } : sig)),
@@ -335,10 +334,12 @@ export default function SharedSignDocumentForm({
           const { width: pageWidth, height: pageHeight } = targetPage.getSize();
 
           // [FIX] Dùng widthRatio để tính kích thước trong PDF — không phụ thuộc displayWidth
-          const canvasWidth = canvasDisplaySizes[sigPageNum - 1]?.width || canvasDisplaySizes[0]?.width || 800;
+          const canvasWidth =
+            canvasDisplaySizes[sigPageNum - 1]?.width ||
+            canvasDisplaySizes[0]?.width ||
+            800;
           const effectiveWidthRatio =
-            sig.widthRatio ??
-            (sig.width * (sig.scale || 1)) / canvasWidth;
+            sig.widthRatio ?? (sig.width * (sig.scale || 1)) / canvasWidth;
           const pdfImageWidth =
             effectiveWidthRatio * (sig.scale || 1) * pageWidth;
           const pdfImageHeight =
@@ -407,10 +408,12 @@ export default function SharedSignDocumentForm({
           const { width, height } = targetPage.getSize();
 
           // [FIX] Dùng widthRatio
-          const canvasWidth = canvasDisplaySizes[sigPageNum - 1]?.width || canvasDisplaySizes[0]?.width || 800;
+          const canvasWidth =
+            canvasDisplaySizes[sigPageNum - 1]?.width ||
+            canvasDisplaySizes[0]?.width ||
+            800;
           const effectiveWidthRatio =
-            sig.widthRatio ??
-            (sig.width * sig.scale) / canvasWidth;
+            sig.widthRatio ?? (sig.width * sig.scale) / canvasWidth;
           const pdfW = effectiveWidthRatio * sig.scale * width;
           const pdfH = (img.height / img.width) * pdfW;
           targetPage.drawImage(img, {
@@ -522,7 +525,16 @@ export default function SharedSignDocumentForm({
           sx: { borderRadius: "12px", p: 1 },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 600, pb: 1, color: "#d97706", display: "flex", alignItems: "center", gap: 1 }}>
+        <DialogTitle
+          sx={{
+            fontWeight: 600,
+            pb: 1,
+            color: "#d97706",
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
           <RateReviewOutlined /> Nội dung ghi chú
         </DialogTitle>
         <DialogContent sx={{ pt: 1 }}>

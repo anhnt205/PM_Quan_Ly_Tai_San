@@ -78,7 +78,6 @@ import { useAssetByDonViQuery } from "../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
 import { findById } from "../../utils/helpers";
 import PageAction from "../../components/common/PageAction";
-import { AssetGroup } from "../../utils/const";
 import { showStatus } from "./config";
 import { useAllAssetsByDepartmentQuery } from "../AssetManager/Mutation";
 
@@ -622,7 +621,6 @@ export default function MaintenanceStatPage() {
   const [donVi, setDonVi] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
-  const [nhomTaiSan, setNhomTaiSan] = useState(AssetGroup.MAYMOC);
   const [selectedId, setSelectedId] = useState("");
 
   const [modal, setModal] = useState<{
@@ -680,7 +678,6 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
-    nhomTaiSan || undefined,
     selectedId || undefined,
     true,
   );
@@ -701,7 +698,7 @@ export default function MaintenanceStatPage() {
 
   // giám định máy móc
   const {
-    data: machineInspectionPaged = {
+    data: inspectionPaged = {
       items: [],
       totalItems: 0,
       trangThaiCounts: {},
@@ -716,36 +713,11 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
-    nhomTaiSan === AssetGroup.MAYMOC,
   );
-
-  // giám định phương tiện
-  const {
-    data: vehicleInspectionPaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceVehicleInspectionPageQuery(
-    pageModels.inspection,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-    nhomTaiSan === AssetGroup.PHUONGTIEN,
-  );
-  const inspectionPaged =
-    nhomTaiSan === AssetGroup.MAYMOC
-      ? machineInspectionPaged
-      : vehicleInspectionPaged;
 
   // biện pháp máy móc
   const {
-    data: machineMeasurePaged = {
+    data: measurePaged = {
       items: [],
       totalItems: 0,
       trangThaiCounts: {},
@@ -759,31 +731,8 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
-    nhomTaiSan === AssetGroup.MAYMOC,
   );
 
-  // biện pháp phương tiện
-  const {
-    data: vehicleMeasurePaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceBienPhapPhuongTienPageQuery(
-    pageModels.measure,
-    10,
-    "",
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-    nhomTaiSan === AssetGroup.PHUONGTIEN,
-  );
-  const measurePaged =
-    nhomTaiSan === AssetGroup.MAYMOC
-      ? machineMeasurePaged
-      : vehicleMeasurePaged;
 
   // vật tư
   const {
@@ -800,7 +749,7 @@ export default function MaintenanceStatPage() {
   );
   // nghiệm thu máy móc
   const {
-    data: acceptanceMachinePaged = {
+    data: acceptancePaged = {
       items: [],
       totalItems: 0,
       trangThaiCounts: {},
@@ -815,32 +764,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
-    nhomTaiSan === AssetGroup.MAYMOC,
   );
-  // nghiệm thu phương tiện
-  const {
-    data: acceptanceVehiclePaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceAcceptanceTestVehiclePageQuery(
-    pageModels.acceptance,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-    nhomTaiSan === AssetGroup.PHUONGTIEN,
-  );
-  const acceptancePaged =
-    nhomTaiSan === AssetGroup.MAYMOC
-      ? acceptanceMachinePaged
-      : acceptanceVehiclePaged;
-
   // sự cố
   const {
     data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -1062,25 +986,6 @@ export default function MaintenanceStatPage() {
                 setValue={handleDonViChange}
                 value={donVi}
               />
-            </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel id="nhom-tai-san-select-label">
-                  Loại tài sản
-                </InputLabel>
-                <Select
-                  labelId="nhom-tai-san-select-label"
-                  label="Loại tài sản"
-                  value={nhomTaiSan}
-                  onChange={(e) => {
-                    setNhomTaiSan(e.target.value);
-                    setSelectedId(""); // Clear selected device when group changes
-                  }}
-                >
-                  <MenuItem value={AssetGroup.MAYMOC}>Máy móc</MenuItem>
-                  <MenuItem value={AssetGroup.PHUONGTIEN}>Phương tiện</MenuItem>
-                </Select>
-              </FormControl>
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
               <TextField
@@ -1647,7 +1552,6 @@ export default function MaintenanceStatPage() {
                       idTaiSan={selectedId}
                       dateFrom={dateFrom}
                       dateTo={dateTo}
-                      nhomTaiSan={nhomTaiSan}
                     />
                   </TableBody>
                 </Table>
@@ -1716,19 +1620,16 @@ const MaterialConsumptionRows = ({
   idTaiSan,
   dateFrom,
   dateTo,
-  nhomTaiSan,
 }: {
   idTaiSan: string;
   dateFrom: string;
   dateTo: string;
-  nhomTaiSan: string;
 }) => {
   const { data: materials = [], isLoading } =
     useMaintenanceMaterialConsumptionQuery(
       idTaiSan,
       dateFrom,
       dateTo,
-      nhomTaiSan,
     );
 
   if (isLoading) {

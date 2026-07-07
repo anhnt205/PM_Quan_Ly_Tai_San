@@ -18,6 +18,31 @@ import socketService from "../../../services/socketService";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { currentBrandConfig } from "../../../config/brandConfig";
 
+export const PLAN_STATUS_CONFIG: Record<
+  number,
+  {
+    label: string;
+    color:
+      | "default"
+      | "primary"
+      | "secondary"
+      | "error"
+      | "info"
+      | "success"
+      | "warning";
+  }
+> = {
+  0: { label: "Chưa lập", color: "default" },
+  1: { label: "Đã báo cáo", color: "info" },
+  2: { label: "Đã giám định", color: "warning" },
+  3: { label: "Đã lên lệnh sửa chữa", color: "error" },
+  4: { label: "Đã giao việc", color: "success" },
+  5: { label: "Đã lĩnh vật tư", color: "primary" },
+  6: { label: "Đã nghiệm thu", color: "success" },
+  7: { label: "Đã đánh giá", color: "success" },
+  8: { label: "Đã quyết toán", color: "success" },
+};
+
 export const showShareStatus = (isShare: boolean, isMyCreated: boolean) => {
   return (
     <Chip
@@ -984,14 +1009,9 @@ export const generatePhieuSuCoPdf = async (
   const rightColCenter = (pageWidth * 3) / 4;
 
   // Header Left
-  doc.text(
-    incident?.congTy || currentBrandConfig.company,
-    leftColCenter,
-    20,
-    {
-      align: "center",
-    },
-  );
+  doc.text(incident?.congTy || currentBrandConfig.company, leftColCenter, 20, {
+    align: "center",
+  });
   doc.text(`Đơn vị: ${incident.tenDonViBaoCao}`, leftColCenter, 26, {
     align: "center",
   });
@@ -1757,14 +1777,9 @@ export const generateNghiemThuPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    32,
-    {
-      align: "center",
-    },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 32, {
+    align: "center",
+  });
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -2024,14 +2039,9 @@ export const generateDanhGiaVatTuPdf = async (
   doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
     align: "center",
   });
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    32,
-    {
-      align: "center",
-    },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 32, {
+    align: "center",
+  });
   doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
 
   // Header Right
@@ -2262,12 +2272,9 @@ export const generateKiemTraSuCoPdf = async (
     align: "center",
   });
   doc.setFont("times_new_roman", "bold");
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    30,
-    { align: "center" },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 30, {
+    align: "center",
+  });
   doc.line(leftColCenter - 25, 31, leftColCenter + 25, 31);
 
   // Header Right
@@ -2553,12 +2560,9 @@ export const generateBienPhapMayMocPdf = async (
     align: "center",
   });
   doc.setFont("times_new_roman", "bold");
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    30,
-    { align: "center" },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 30, {
+    align: "center",
+  });
   doc.line(leftColCenter - 25, 31, leftColCenter + 25, 31);
 
   // Header Right
@@ -2762,12 +2766,9 @@ export const generateBienPhapPhuongTienPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    30,
-    { align: "center" },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 30, {
+    align: "center",
+  });
 
   // Underline for Company name
   doc.setLineWidth(0.3);
@@ -3145,12 +3146,9 @@ export const generateNghiemThuPhuongTienPdf = async (
   });
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(10);
-  doc.text(
-    `${item?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    30,
-    { align: "center" },
-  );
+  doc.text(`${item?.congTy || currentBrandConfig.company}`, leftColCenter, 30, {
+    align: "center",
+  });
 
   // Underline for Company name
   doc.setLineWidth(0.3);
@@ -3181,12 +3179,9 @@ export const generateNghiemThuPhuongTienPdf = async (
   // Title
   doc.setFont("times_new_roman", "bold");
   doc.setFontSize(13);
-  doc.text(
-    item?.tenMauBienBan || "NGHIỆM THU SẢN PHẨM",
-    pageWidth / 2,
-    47,
-    { align: "center" },
-  );
+  doc.text(item?.tenMauBienBan || "NGHIỆM THU SẢN PHẨM", pageWidth / 2, 47, {
+    align: "center",
+  });
 
   let y = 57;
 
@@ -3449,6 +3444,209 @@ export const generateNghiemThuPhuongTienPdf = async (
     doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
     doc.setFont("times_new_roman", "bold");
     doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+  });
+
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};
+
+// pdf báo cáo thống kê
+export const generateTechnicalReportPdf = async (
+  data: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
+}> => {
+  const listSigneInfos: any[] = listSigneInfo(
+    data,
+    staffs,
+    departments,
+    positions,
+  );
+  const doc = new jsPDF("p", "mm", "a4");
+
+  console.log(doc.getFontList());
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(11);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const leftColCenter = pageWidth / 4;
+  const rightColCenter = (pageWidth * 3) / 4;
+
+  // Header Left
+  const companyName =
+    `${data?.congTy || currentBrandConfig.company}`.toUpperCase();
+  const words = companyName.split(" ");
+  let companyLines: string[];
+  if (words.length > 6) {
+    const mid = Math.ceil(words.length / 2);
+    companyLines = [words.slice(0, mid).join(" "), words.slice(mid).join(" ")];
+  } else {
+    companyLines = doc.splitTextToSize(companyName, pageWidth / 2 - 20);
+  }
+
+  doc.text(companyLines, leftColCenter, 20, { align: "center" });
+
+  let currentY = 20 + (companyLines.length - 1) * 5 + 6;
+  const deptName = `${data?.tenDonViBaoCao || ""}`.toUpperCase();
+  const deptLines = doc.splitTextToSize(deptName, pageWidth / 2 - 20);
+  doc.text(deptLines, leftColCenter, currentY, { align: "center" });
+
+  currentY += (deptLines.length - 1) * 5 + 1;
+  doc.line(leftColCenter - 15, currentY, leftColCenter + 15, currentY); // Underline
+
+  // Header Right
+  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
+    align: "center",
+  });
+  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
+    align: "center",
+  });
+  doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
+
+  // Date
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.setFontSize(10);
+  const today = new Date(data?.ngayTao || new Date());
+  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
+  doc.text(dateStr, pageWidth - 20, 35, { align: "right" });
+
+  // Title
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(14);
+  doc.text(
+    (data?.tenMauBienBan ?? "BÁO CÁO TÌNH TRẠNG KỸ THUẬT").toUpperCase(),
+    pageWidth / 2,
+    45,
+    { align: "center" },
+  );
+  doc.setFontSize(11);
+  doc.setFont("times_new_roman_italic", "italic");
+  doc.text(`Thiết bị: ${data?.tenTaiSan || "..."}`, pageWidth / 2, 52, {
+    align: "center",
+  });
+
+  // Content
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(12);
+  let y = 65;
+  const marginX = 30;
+
+  doc.text(
+    `Kính gửi: ${data?.tenDonViNhan || "..................................................."}`,
+    marginX,
+    y,
+  );
+  y += 10;
+
+  const indent = "   ";
+
+  const thangStr =
+    data?.thang && data?.thang < 10 ? `0${data?.thang}` : data?.thang || "...";
+  const canCu1 = `${indent}Căn cứ kế hoạch sửa chữa thường xuyên tháng ${thangStr} năm ${data?.nam || "..."}`;
+  const canCu1Lines = doc.splitTextToSize(canCu1, pageWidth - 2 * marginX);
+  doc.text(canCu1Lines, marginX, y);
+  y += canCu1Lines.length * 7;
+
+  const canCu2 = `${indent}Căn cứ tình trạng Kỹ thuật; giờ hoạt động lũy kế của ${data?.tenTaiSan || "..."}`;
+  const canCu2Lines = doc.splitTextToSize(canCu2, pageWidth - 2 * marginX);
+  doc.text(canCu2Lines, marginX, y);
+  y += canCu2Lines.length * 7;
+
+  const p1 = `${indent}Đơn vị ${data?.tenDonViBaoCao || "..."} báo cáo và đề nghị cho ${data?.tenTaiSan || "..."} bảo dưỡng các cấp cụ thể như sau:`;
+  const p1Lines = doc.splitTextToSize(p1, pageWidth - 2 * marginX);
+  doc.text(p1Lines, marginX, y);
+  y += p1Lines.length * 7;
+
+  const p2 = `${indent}1. Tên thiết bị: ${data?.tenTaiSan || "..."}`;
+  const p2Lines = doc.splitTextToSize(p2, pageWidth - 2 * marginX);
+  doc.text(p2Lines, marginX, y);
+  y += p2Lines.length * 7;
+
+  const p2b = `${indent}2. Ngày giờ bảo dưỡng gần nhất: ${data?.ngayBaoDuongGanNhat ? formatted(data?.ngayBaoDuongGanNhat) : "..."}`;
+  const p2bLines = doc.splitTextToSize(p2b, pageWidth - 2 * marginX);
+  doc.text(p2bLines, marginX, y);
+  y += p2bLines.length * 7;
+
+  const p3 = `${indent}3. Tình trạng kỹ thuật: ${data?.tinhTrang || "..."}`;
+  const p3Lines = doc.splitTextToSize(p3, pageWidth - 2 * marginX);
+  doc.text(p3Lines, marginX, y);
+  y += p3Lines.length * 7;
+
+  const p4 = `${indent}4. Nội dung sửa chữa: ${data?.noiDungSuaChua || "..."}`;
+  const p4Lines = doc.splitTextToSize(p4, pageWidth - 2 * marginX);
+  doc.text(p4Lines, marginX, y);
+  y += p4Lines.length * 7;
+
+  y += 3;
+  const p5 = `Đề nghị ${data?.tenDonViNhan || "................"} Công ty kiểm tra, xét duyệt./.`;
+  const p5Lines = doc.splitTextToSize(p5, pageWidth - 2 * marginX);
+  doc.text(p5Lines, marginX, y);
+  y += p5Lines.length * 7 + 10;
+
+  // Signatures
+  if (y > pageHeight - 80) {
+    doc.addPage();
+    y = 30;
+  }
+
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
+  const baseWidthPx = 120;
+  const displayWidth = 800;
+  const colWidth = 45;
+  const printableWidth = pageWidth - 2 * marginX;
+
+  const maxPerRow = 5;
+  listSigneInfos.forEach((s, index) => {
+    const rowIndex = Math.floor(index / maxPerRow);
+    const colIndex = index % maxPerRow;
+    const itemsInRow = Math.min(
+      maxPerRow,
+      listSigneInfos.length - rowIndex * maxPerRow,
+    );
+    let x;
+    if (itemsInRow === 1) {
+      x = rightColCenter;
+    } else {
+      const firstX = marginX + colWidth / 2;
+      const lastX = pageWidth - marginX - colWidth / 2;
+      const gapSize = (lastX - firstX) / (itemsInRow - 1);
+      x = firstX + colIndex * gapSize;
+    }
+
+    const currentY = y + rowIndex * 60;
+    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+    coordinates[s.idNhanVien] = {
+      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+      yRatio: Math.max(0, Math.min((currentY + 5) / pageHeight, 1)),
+      page: (doc as any).internal.getNumberOfPages(),
+    };
+
+    doc.setFontSize(10);
+    doc.setFont("times_new_roman", "bold");
+    const donViLines = doc.splitTextToSize(
+      (s.donVi || s.departmentName || s.title || "Ký tên").toUpperCase(),
+      colWidth,
+    );
+    doc.text(donViLines, x, currentY, { align: "center" });
+
+    const nameY = currentY + 30;
+    const hoTenLines = doc.splitTextToSize(
+      s.hoTen || s.userName || "",
+      colWidth,
+    );
+    doc.text(hoTenLines, x, nameY, { align: "center" });
   });
 
   return {

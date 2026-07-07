@@ -485,7 +485,7 @@ export interface MaintenancePlanAssetItem {
   capSuaChuaThang12?: string;
 
   capSuaChua?: string;
-  daCoLenhSuaChua?: number;
+  daCoBienBan?: number;
 
   action?: ActionType;
 }
@@ -735,3 +735,64 @@ export interface BienPhapPhuongTienChiTietData {
   donViTinh?: string;
   action?: ActionType;
 }
+
+// Báo cáo kỹ thuật
+export interface TechnicalReportData {
+  id?: string;
+  idCongTy?: string;
+  congTy?: string;
+  tenMauBienBan?: string;
+  soPhieu?: string;
+  idKeHoach?: string;
+  thang?: number;
+  nam?: number;
+  donViBaoCao?: string;
+  donViNhan?: string;
+  tenTaiSan?: string;
+  ngayBaoDuongGanNhat?: string;
+  tinhTrang?: string;
+  noiDungSuaChua?: string;
+  ghiChu?: string;
+  ghiChuBienBan?: string;
+  
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+  
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenKeHoach?: string;
+  tenDonViBaoCao?: string;
+  tenDonViNhan?: string;
+
+  danhSachTaiSan?: TechnicalReportDetailData[];
+  chuKyList?: any[];
+  nguoiKyList?: any[];
+}
+
+export interface TechnicalReportDetailData {
+  id?: string;
+  idBaoCaoKyThuat?: string;
+  idTaiSan?: string;
+  idKeHoachChiTiet?: string;
+  
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  tenTaiSan?: string;
+  donViTinh?: string;
+  nhomTaiSan?: string;
+  donViQuanLy?: string;
+  action?: ActionType;
+}
+

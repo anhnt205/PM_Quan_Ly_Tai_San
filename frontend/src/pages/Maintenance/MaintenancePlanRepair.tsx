@@ -74,7 +74,6 @@ export default function MaintenancePlanRepair() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [nhomTaiSanFilter, setNhomTaiSanFilter] = useState(AssetGroup.MAYMOC);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [expandedYears, setExpandedYears] = useState<Record<string, boolean>>(
     {},
@@ -102,7 +101,6 @@ export default function MaintenancePlanRepair() {
     selectedDepartment,
     dateFrom,
     dateTo,
-    nhomTaiSanFilter,
   );
   const { createMutation, updateMutation, deleteMutation } =
     useMaintenancePlanningMutation();
@@ -144,7 +142,7 @@ export default function MaintenancePlanRepair() {
     undefined,
     dateFrom,
     dateTo,
-    nhomTaiSanFilter,
+    undefined,
     activeTab === 1,
   );
 
@@ -511,8 +509,6 @@ export default function MaintenancePlanRepair() {
                 setDateFrom={setDateFrom}
                 dateTo={dateTo}
                 setDateTo={setDateTo}
-                nhomTaiSanFilter={nhomTaiSanFilter}
-                setNhomTaiSanFilter={setNhomTaiSanFilter}
                 isCompact={isDetailOpen}
               />
               {activeTab === 0 && (
@@ -1514,7 +1510,7 @@ export default function MaintenancePlanRepair() {
         selectedPlans={selectedPlans}
         initialIncident={selectedIncident}
         onSubmit={handleSaveIncident}
-        nhomTaiSan={nhomTaiSanFilter}
+        nhomTaiSan={undefined}
       />
 
       {(lastMinimizedDialog === "plan" ||
