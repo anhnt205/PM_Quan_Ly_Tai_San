@@ -71,6 +71,7 @@ import {
   generateBienPhapMayMocPdf,
   generateBienPhapPhuongTienPdf,
   getPermissionSigning,
+  getAutoSignatureType,
   ShowPermissionSigning,
   canSign,
   showStatus,
@@ -95,6 +96,14 @@ import { useMenuData } from "../../hooks/useMenuData";
 import S3Service from "../../services/S3Service";
 import Filter from "./components/Filter";
 import { currentBrandConfig } from "../../config/brandConfig";
+import {
+  showConfirmAlert,
+  showErrorAlert,
+  showSuccessAlert,
+} from "../../components/Alert";
+import Swal from "sweetalert2";
+import { handleSigning } from "../../utils/efySigning";
+import dayjs from "dayjs";
 
 export default function MaintenanceApprovalPage() {
   const signBatch = useSignBatch();
@@ -526,17 +535,20 @@ export default function MaintenanceApprovalPage() {
 
   const currentAllRows = allRows[activeTab];
 
-  const handleSign = (data: SignaturesData[]) => {
-    signMutation.mutate(
+  const handleSign = (data: SignaturesData[], item?: any) => {
+    // ponytail: return mutateAsync promise so batch signing can await and catch individual errors
+    return signMutation.mutateAsync(
       {
         SignaturesData: data,
-        asset: selectedRow || selectedItem,
+        asset: item || selectedRow || selectedItem,
       },
       {
         onSuccess: () => {
-          setSelectedItem([]);
-          setSelectedIds([]);
-          setSelectedRow(null);
+          if (!item) {
+            setSelectedItem([]);
+            setSelectedIds([]);
+            setSelectedRow(null);
+          }
         },
       },
     );
@@ -1333,7 +1345,9 @@ export default function MaintenanceApprovalPage() {
                       : "0 2px 4px rgba(148, 163, 184, 0.05)",
                     "&:hover": {
                       transform: "translateY(-4px)",
-                      borderColor: isActive ? "transparent" : currentBrandConfig.primaryColor,
+                      borderColor: isActive
+                        ? "transparent"
+                        : currentBrandConfig.primaryColor,
                       boxShadow: isActive
                         ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
                         : "0 6px 16px rgba(4, 180, 110, 0.08)",
@@ -1362,7 +1376,9 @@ export default function MaintenanceApprovalPage() {
                         bgcolor: isActive
                           ? "rgba(255, 255, 255, 0.18)"
                           : "rgba(4, 180, 110, 0.08)",
-                        color: isActive ? "#ffffff" : currentBrandConfig.primaryColor,
+                        color: isActive
+                          ? "#ffffff"
+                          : currentBrandConfig.primaryColor,
                         transition: "all 0.25s ease",
                       }}
                     >
@@ -1381,7 +1397,9 @@ export default function MaintenanceApprovalPage() {
                           borderRadius: "10px",
                           fontSize: "0.75rem",
                           fontWeight: 700,
-                          color: isActive ? currentBrandConfig.primaryColor : "#ffffff",
+                          color: isActive
+                            ? currentBrandConfig.primaryColor
+                            : "#ffffff",
                           background: isActive
                             ? "#ffffff"
                             : "linear-gradient(135deg, #ef4444 0%, #f43f5e 100%)",
@@ -1454,41 +1472,12 @@ export default function MaintenanceApprovalPage() {
           <SignBatchModal
             open={signBatch.isOpen}
             items={signBatch.items}
-            isProcessing={signBatch.isProcessing}
-            onSign={handleSign}
             onClose={() => {
               signBatch.closeModal();
               setSelectedIds([]);
               setSelectedItem([]);
               setSelectedRow(null);
             }}
-            generatePdf={
-              activeTab === 0
-                ? generateBienBanKeHoachPdf
-                : activeTab === 1
-                  ? generatePhieuSuCoPdf
-                  : activeTab === 2
-                    ? generateKiemTraSuCoPdf
-                    : activeTab === 3
-                      ? generateSuaChuaPdf
-                      : activeTab === 4
-                        ? bienPhapType === AssetGroup.MAYMOC
-                          ? generateGiamDinhPdf
-                          : generateGiamDinhPhuongTienPdf
-                        : activeTab === 5
-                          ? bienPhapType === AssetGroup.MAYMOC
-                            ? generateBienPhapMayMocPdf
-                            : generateBienPhapPhuongTienPdf
-                          : activeTab === 6
-                            ? bienPhapType === AssetGroup.MAYMOC
-                              ? generateNghiemThuPdf
-                              : generateNghiemThuPhuongTienPdf
-                            : generateDanhGiaVatTuPdf
-            }
-            staffs={staffs || []}
-            departments={departments || []}
-            positions={positions || []}
-            user={user}
           />
 
           {/* Nội dung: bảng + panel detail song song */}
@@ -1534,8 +1523,191 @@ export default function MaintenanceApprovalPage() {
                   isRowSelectable={(params) => canSign([params.row], user)}
                   showStatusFilter={false}
                   canSign={(items) => items.length >= 1}
-                  handleSignDocuments={(items) => {
-                    signBatch.openModal(items);
+                  handleSignDocuments={async (items) => {
+                    // ponytail: show confirmation modal before proceeding to sign batch
+                    const confirmResult = await showConfirmAlert(
+                      "Bạn có chắc chắn muốn ký duyệt các kế hoạch đã chọn?",
+                    );
+                    if (!confirmResult.isConfirmed) return;
+
+                    // Show loading alert using Swal
+                    Swal.fire({
+                      title: "Đang xử lý...",
+                      text: "Vui lòng chờ trong khi hệ thống ký duyệt các tài liệu",
+                      allowOutsideClick: false,
+                      allowEscapeKey: false,
+                      showConfirmButton: false,
+                      didOpen: () => {
+                        Swal.showLoading();
+                      },
+                    });
+
+                    const finalSignedItems: any[] = [];
+                    let successCount = 0;
+                    let errorCount = 0;
+
+                    const employee = staffs?.find(
+                      (s: any) => s.id === user?.taiKhoan?.tenDangNhap,
+                    );
+                    if (!employee) {
+                      Swal.close();
+                      showErrorAlert("Không tìm thấy thông tin nhân viên");
+                      return;
+                    }
+
+                    // Get PDF generator function based on activeTab
+                    const pdfGenerator =
+                      activeTab === 0
+                        ? generateBienBanKeHoachPdf
+                        : activeTab === 1
+                          ? generatePhieuSuCoPdf
+                          : activeTab === 2
+                            ? generateKiemTraSuCoPdf
+                            : activeTab === 3
+                              ? generateSuaChuaPdf
+                              : activeTab === 4
+                                ? bienPhapType === AssetGroup.MAYMOC
+                                  ? generateGiamDinhPdf
+                                  : generateGiamDinhPhuongTienPdf
+                                : activeTab === 5
+                                  ? bienPhapType === AssetGroup.MAYMOC
+                                    ? generateBienPhapMayMocPdf
+                                    : generateBienPhapPhuongTienPdf
+                                  : activeTab === 6
+                                    ? bienPhapType === AssetGroup.MAYMOC
+                                      ? generateNghiemThuPdf
+                                      : generateNghiemThuPhuongTienPdf
+                                    : generateDanhGiaVatTuPdf;
+
+                    for (const item of items) {
+                      try {
+                        const signatureType = getAutoSignatureType(employee);
+                        if (signatureType === 0) {
+                          finalSignedItems.push({
+                            ...item,
+                            status: "error",
+                            errorMessage:
+                              "Bạn chưa thiết lập loại chữ ký hợp lệ.",
+                          });
+                          errorCount++;
+                          continue;
+                        }
+
+                        let chuKySo = "";
+                        if ([3, 4, 5].includes(signatureType)) {
+                          if (!employee.savePin) {
+                            finalSignedItems.push({
+                              ...item,
+                              status: "error",
+                              errorMessage: `Bạn chưa lưu mã PIN để thực hiện ký số lô cho tài liệu ${item.id}`,
+                            });
+                            errorCount++;
+                            continue;
+                          }
+                          const hash = await handleSigning(
+                            user?.taiKhoan?.tenDangNhap,
+                            item.id,
+                          );
+                          if (!hash) {
+                            finalSignedItems.push({
+                              ...item,
+                              status: "error",
+                              errorMessage: "Ký số EFY thất bại",
+                            });
+                            errorCount++;
+                            continue;
+                          }
+                          chuKySo = hash;
+                        }
+
+                        const result = await pdfGenerator(
+                          item,
+                          staffs || [],
+                          departments || [],
+                          positions || [],
+                        );
+                        const coords = result.coordinates[
+                          user?.taiKhoan?.tenDangNhap
+                        ] ?? {
+                          xRatio: 0.2,
+                          yRatio: 0.8,
+                          page: 1,
+                        };
+                        const displayWidth = 800;
+                        const baseWidthPx = 80;
+
+                        const signatureData: SignaturesData = {
+                          stt: 1,
+                          id: `temp-${Date.now()}`,
+                          idTaiLieu: item.id,
+                          idNguoiKy: user?.taiKhoan?.tenDangNhap,
+                          loaiKy: signatureType,
+                          ngayKy: dayjs(new Date()).format(
+                            "YYYY-MM-DD HH:mm:ss",
+                          ),
+                          x: coords.xRatio,
+                          y: coords.yRatio,
+                          page: coords.page || 1,
+                          chuKyNhay:
+                            (signatureType === 1 || signatureType === 5) &&
+                            employee.chuKyNhay,
+                          chuKyThuong:
+                            (signatureType === 2 || signatureType === 4) &&
+                            employee.chuKyThuong,
+                          width: baseWidthPx,
+                          widthRatio: baseWidthPx / displayWidth,
+                          scale: 1,
+                          chuKySo: chuKySo,
+                          isLocked: false,
+                        };
+
+                        // Call mutateAsync directly and suppress default alerts
+                        await signMutation.mutateAsync({
+                          SignaturesData: [signatureData],
+                          asset: item,
+                          suppressAlert: true,
+                        });
+
+                        finalSignedItems.push({
+                          ...item,
+                          status: "success",
+                        });
+                        successCount++;
+                      } catch (error: any) {
+                        console.error(`Lỗi ký biên bản ${item.id}:`, error);
+                        const errorMsg =
+                          error?.response?.data?.message ||
+                          error?.message ||
+                          "Lỗi ký biên bản";
+                        finalSignedItems.push({
+                          ...item,
+                          status: "error",
+                          errorMessage: errorMsg,
+                        });
+                        errorCount++;
+                      }
+                    }
+
+                    // Close loading alert
+                    Swal.close();
+
+                    // Show exactly one success or status alert, and wait for user to dismiss it
+                    if (successCount > 0 && errorCount === 0) {
+                      await showSuccessAlert(
+                        `Ký thành công tất cả ${successCount} biên bản!`,
+                      );
+                    } else if (successCount > 0 && errorCount > 0) {
+                      await showErrorAlert(
+                        `Ký duyệt hoàn tất: ${successCount} thành công, ${errorCount} thất bại.`,
+                      );
+                    } else {
+                      await showErrorAlert(
+                        `Tất cả ${errorCount} biên bản đều ký thất bại.`,
+                      );
+                    }
+
+                    // Open the summary modal with pre-filled results
+                    signBatch.openModal(finalSignedItems);
                   }}
                   onSign={() => {}}
                 />

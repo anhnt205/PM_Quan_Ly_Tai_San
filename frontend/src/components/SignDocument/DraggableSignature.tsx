@@ -77,7 +77,7 @@ export default function DraggableSignature({
   // Chiều rộng hiển thị: ưu tiên widthRatio, fallback về sig.width (px cũ)
   const baseWidthPx = widthRatio
     ? widthRatio * containerWidth
-    : sig.width || 120;
+    : Math.min(sig.width || 120, 80);
   const displayWidthPx = baseWidthPx * scale;
 
   // Vị trí pixel tính từ ratio × kích thước container hiện tại

@@ -11,6 +11,7 @@ export interface UseSignBatchReturn {
   isOpen: boolean;
   items: SignItem[];
   isProcessing: boolean;
+  setIsProcessing: (isProcessing: boolean) => void;
   openModal: (selectedItems: any[]) => void;
   closeModal: () => void;
   confirmSign: (
@@ -34,8 +35,8 @@ export const useSignBatch = (): UseSignBatchReturn => {
       selectedItems.map((item) => ({
         ...item,
         id: item.id,
-        status: "pending" as const,
-        originalStatus: item.status,
+        status: item.status || ("pending" as const),
+        originalStatus: item.originalStatus || item.status,
       })),
     );
     setIsOpen(true);
@@ -99,6 +100,7 @@ export const useSignBatch = (): UseSignBatchReturn => {
     isOpen,
     items,
     isProcessing,
+    setIsProcessing,
     openModal,
     closeModal,
     confirmSign,

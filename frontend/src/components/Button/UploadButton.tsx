@@ -15,6 +15,60 @@ interface Props {
   nameFile?: string;
 }
 
+// ponytail: using native canvas API to resize images to avoid complex dependencies
+const resizeImageCanvas = (
+  file: File,
+  targetW = 300,
+  targetH = 150,
+): Promise<File> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = targetW;
+        canvas.height = targetH;
+
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(file);
+          return;
+        }
+
+        // giữ nền trong suốt
+        ctx.clearRect(0, 0, targetW, targetH);
+
+        // scale fit trong khung targetW x targetH, giữ tỉ lệ, canh giữa
+        const scale = Math.min(targetW / img.width, targetH / img.height);
+        const drawW = img.width * scale;
+        const drawH = img.height * scale;
+        const offsetX = (targetW - drawW) / 2;
+        const offsetY = (targetH - drawH) / 2;
+
+        ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          resolve(
+            new File([blob], file.name, {
+              type: "image/png",
+              lastModified: Date.now(),
+            }),
+          );
+        }, "image/png");
+      };
+      img.onerror = () => resolve(file);
+    };
+    reader.onerror = () => resolve(file);
+  });
+};
+
 export default function UploadButton({
   label = "Nhấn để chọn file chữ ký (.png, .jpg...)",
   onChange,
@@ -23,13 +77,20 @@ export default function UploadButton({
   disabled = false,
   nameFile,
 }: Props) {
+
   const [fileName, setFileName] = useState<string | null | undefined>(nameFile);
 
   const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const file = e.target.files[0];
+      let file = e.target.files[0];
       if (file) {
         try {
+          if (
+            file.type.startsWith("image/") ||
+            /\.(png|jpe?g)$/i.test(file.name)
+          ) {
+            file = await resizeImageCanvas(file);
+          }
           const key = await S3Service.put({
             name: file.name,
             file: file,
