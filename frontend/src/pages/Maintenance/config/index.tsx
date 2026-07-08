@@ -17,6 +17,7 @@ import { MessageTypeFunctions } from "../../../utils/const";
 import socketService from "../../../services/socketService";
 import { FileDownloadOutlined } from "@mui/icons-material";
 import { currentBrandConfig } from "../../../config/brandConfig";
+import dayjs from "dayjs";
 
 export const PLAN_STATUS_CONFIG: Record<
   number,
@@ -327,7 +328,7 @@ export const showServerity = (status: number) => {
 const getChucVu = (idUser: string, staffs: any[], positions: any[]) => {
   const nhanVien = findById(staffs, idUser);
   const chucVu = findById(positions, nhanVien?.chucVuId ?? "");
-  return chucVu?.tenChucVu ?? "";
+  return chucVu;
 };
 const getDonVi = (idUser: string, staffs: any[], departments: any[]) => {
   const nhanVien = findById(staffs, idUser);
@@ -350,7 +351,9 @@ export const listSigneInfo = (
       idNhanVien: item.idNguoiLapBieu ?? "",
       title: "Người lập",
       hoTen: item.tenNguoiLapBieu ?? "",
-      chucVu: getChucVu(item.idNguoiLapBieu ?? "", staffs, positions),
+      chucVu: getChucVu(item.idNguoiLapBieu ?? "", staffs, positions)
+        ?.tenChucVu,
+      idChucVu: getChucVu(item.idNguoiLapBieu ?? "", staffs, positions)?.id,
       donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
         ?.tenPhongBan,
       idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
@@ -365,10 +368,10 @@ export const listSigneInfo = (
       result.push({
         idNhanVien: sign.idNguoiKy ?? "",
         hoTen: sign.tenNguoiKy ?? "",
-        chucVu: getChucVu(sign.idNguoiKy ?? "", staffs, positions),
-        donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
-          ?.tenPhongBan,
-        idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
+        chucVu: getChucVu(sign.idNguoiKy ?? "", staffs, positions)?.tenChucVu,
+        idChucVu: getChucVu(sign.idNguoiKy ?? "", staffs, positions)?.id,
+        donVi: getDonVi(sign.idNguoiKy ?? "", staffs, departments)?.tenPhongBan,
+        idDonVi: getDonVi(sign.idNguoiKy ?? "", staffs, departments)?.id,
         signed: sign.trangThai === 0 ? false : true,
       });
     }
@@ -380,10 +383,14 @@ export const listSigneInfo = (
       idNhanVien: item.idTrinhDuyetGiamDoc ?? "",
       title: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions),
       hoTen: item.tenTrinhDuyetGiamDoc ?? "",
-      chucVu: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions),
-      donVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)
+      chucVu: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions)
+        ?.tenChucVu,
+      idChucVu: getChucVu(item.idTrinhDuyetGiamDoc ?? "", staffs, positions)
+        ?.id,
+      donVi: getDonVi(item.idTrinhDuyetGiamDoc ?? "", staffs, departments)
         ?.tenPhongBan,
-      idDonVi: getDonVi(item.idNguoiLapBieu ?? "", staffs, departments)?.id,
+      idDonVi: getDonVi(item.idTrinhDuyetGiamDoc ?? "", staffs, departments)
+        ?.id,
       signed: item.trinhDuyetGiamDocXacNhan || false,
     });
   }
@@ -931,7 +938,7 @@ export const generateSuaChuaPdf = async (
     doc.addPage();
     finalY = 20;
   }
-  const marginX = 25;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -957,7 +964,12 @@ export const generateSuaChuaPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = finalY + rowIndex * rowGap;
+    let yPos = finalY + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      finalY = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
@@ -1184,7 +1196,7 @@ export const generatePhieuSuCoPdf = async (
     doc.addPage();
     finalY = 20;
   }
-  const marginX = 30;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -1210,7 +1222,12 @@ export const generatePhieuSuCoPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = finalY + rowIndex * rowGap;
+    let yPos = finalY + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      finalY = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
@@ -1261,19 +1278,39 @@ export const generateGiamDinhPdf = async (
   const rightColCenter = (pageWidth * 3) / 4;
 
   // Header Left
-  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
-  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
-    align: "center",
-  });
-  doc.text(
-    `${inspection?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    32,
-    {
-      align: "center",
-    },
-  );
-  doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
+  doc.setFont("times_new_roman", "normal");
+  let congTyText = (
+    inspection?.congTy || currentBrandConfig.company
+  ).toUpperCase();
+  let currentY = 20;
+
+  const words = congTyText.split(" ");
+  if (words.length > 6) {
+    const line1 = words.slice(0, 6).join(" ");
+    const line2 = words.slice(6).join(" ");
+    doc.text(line1, leftColCenter, currentY, { align: "center" });
+    currentY += 5;
+    doc.text(line2, leftColCenter, currentY, { align: "center" });
+  } else {
+    doc.text(congTyText, leftColCenter, currentY, { align: "center" });
+  }
+  currentY += 5;
+
+  doc.setFont("times_new_roman", "bold");
+  let rawDonVi = inspection?.tenDonViGiamDinh || inspection?.tenDonVi || "";
+  if (rawDonVi.toString().toLowerCase() === "null") rawDonVi = "";
+
+  const tenDonVi = rawDonVi.toUpperCase();
+  if (tenDonVi) {
+    doc.text(tenDonVi, leftColCenter, currentY, { align: "center" });
+    const textWidth = doc.getTextWidth(tenDonVi);
+    doc.line(
+      leftColCenter - textWidth / 2,
+      currentY + 1,
+      leftColCenter + textWidth / 2,
+      currentY + 1,
+    );
+  }
 
   // Header Right
   doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
@@ -1283,13 +1320,6 @@ export const generateGiamDinhPdf = async (
     align: "center",
   });
   doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
-
-  // Date
-  doc.setFont("times_new_roman_italic", "italic");
-  doc.setFontSize(10);
-  const today = new Date(inspection.ngayGiamDinh || new Date());
-  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
-  doc.text(dateStr, pageWidth - 20, 40, { align: "right" });
 
   // Title
   doc.setFont("times_new_roman", "bold");
@@ -1307,9 +1337,9 @@ export const generateGiamDinhPdf = async (
   doc.setFontSize(11);
   let y = 70;
 
-  const d = new Date(inspection.ngayGiamDinh || new Date());
+  const d = dayjs(inspection.ngayGiamDinh || new Date()).format();
   doc.text(
-    `Hôm nay, ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}. Tại ${inspection.viTri || "……………………………"}`,
+    ` Hôm nay, vào hồi ${new Date(inspection?.ngayGiamDinh).getHours()} giờ ${new Date(inspection?.ngayGiamDinh).getMinutes()} phút, ngày ${formatted(inspection?.ngayGiamDinh)}. Tại ${inspection.donViGiamDinh || "……………………………"}`,
     20,
     y,
   );
@@ -1318,68 +1348,47 @@ export const generateGiamDinhPdf = async (
   y += 8;
 
   listSigneInfos.forEach((s, idx) => {
-    doc.text(`${idx + 1}.`, 25, y);
-    doc.setFont("times_new_roman", "bold");
-    doc.text(s.hoTen || "………………………", 35, y);
     doc.setFont("times_new_roman", "normal");
-    doc.text(s.chucVu || "", 75, y);
-    doc.text(s.donVi || "", 115, y);
+    const prefix = `${idx + 1}. Ông: `;
+    doc.text(prefix, 25, y);
+
+    // Switch to bold for the name if desired or keep normal.
+    // The image seems to show normal text for the name, but just in case:
+    doc.setFont("times_new_roman", "normal");
+    const labelWidth = doc.getTextWidth(prefix);
+    doc.text(s.hoTen || "………………………", 25 + labelWidth, y);
+
+    doc.setFont("times_new_roman", "normal");
+    doc.text(`Chức vụ: ${s.idChucVu || ""}`, 120, y);
     y += 7;
   });
 
   y += 3;
-  const canCuText = `Cùng tiến hành thực hiện giải thể và kiểm tra tình trạng kỹ thuật thiết bị theo văn bản đề nghị số ${inspection.soPhieuSuaChua || "……………"} của phân xưởng.`;
+  const tenTaiSanList = (inspection.danhSachChiTiet || [])
+    .map((i: any) => i.tenTaiSan || i.idTaiSan)
+    .filter(Boolean)
+    .join(", ");
+  const canCuText = `Cùng kiểm tra tình trạng kỹ thuật thiết bị: ${tenTaiSanList || inspection.noiDung || "........................."} trước khi vào bảo dưỡng các cấp và bàn giao bộ phận sửa chữa với tình trạng kỹ thuật với nội dung sửa chữa sau:`;
   const canCuLines = doc.splitTextToSize(canCuText, pageWidth - 40);
   canCuLines.forEach((line: string) => {
     doc.text(line, 20, y);
     y += 7;
   });
-
-  doc.text("Số đăng ký: ……………… trước khi đưa vào sửa chữa cấp ………………", 20, y);
-  y += 7;
-  doc.text("Với tình trạng kỹ thuật và nội dung sửa chữa như sau:", 20, y);
-  y += 8;
+  y += 1;
 
   // Table
   const tableData: any[] = [];
-  (inspection.danhSachChiTiet || []).forEach((item: any, idx: number) => {
-    // Group row (I/, II/, ...)
+  (inspection.danhSachChiTiet || []).forEach((entry: any, idx: number) => {
     tableData.push([
-      {
-        content: `${String.fromCharCode(73 + idx)}/`,
-        styles: { fontStyle: "bold" },
-      },
-      {
-        content: `Thiết bị: ${item.tenTaiSan || item.idTaiSan || ""}`,
-        colSpan: 7,
-        styles: { fontStyle: "bold" },
-      },
+      (idx + 1).toString(),
+      entry.tenTaiSan || entry.idTaiSan || "—",
+      entry.donViTinh || "—",
+      entry.soLuong || "",
+      entry.tinhTrang || "",
+      entry.thayMoi || "",
+      entry.suaChua || "",
+      entry.ghiChu || "",
     ]);
-
-    // Hàng các vật tư chi tiết đi kèm
-    if (!item.danhSachVatTu || item.danhSachVatTu.length === 0) {
-      tableData.push([
-        "",
-        {
-          content: "",
-          colSpan: 7,
-          styles: { fontStyle: "italic" },
-        },
-      ]);
-    } else {
-      item.danhSachVatTu.forEach((vt: any, vtIdx: number) => {
-        tableData.push([
-          `${idx + 1}.${vtIdx + 1}`,
-          vt.tenVatTu || vt.idChiTietVatTu || "",
-          vt.donViTinh || "",
-          vt.soLuong || "",
-          vt.tinhTrang || "",
-          vt.soLuongSuaChua || 0,
-          vt.soLuongThayMoi || 0,
-          vt.ghiChu || "",
-        ]);
-      });
-    }
   });
 
   autoTable(doc, {
@@ -1387,14 +1396,45 @@ export const generateGiamDinhPdf = async (
     margin: { left: 15, right: 15 },
     head: [
       [
-        "STT",
-        "Tên vật tư, thiết bị",
-        "ĐVT",
-        "SL",
-        "Tình trạng kỹ thuật",
-        "SL S.chữa",
-        "SL Thay mới",
-        "Ghi chú",
+        {
+          content: "STT",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Tên thiết bị, phụ tùng",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "ĐVT",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "SL",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Tình trạng kỹ thuật",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Biện pháp xử lý",
+          colSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+        {
+          content: "Ghi chú",
+          rowSpan: 2,
+          styles: { halign: "center", valign: "middle" },
+        },
+      ],
+      [
+        { content: "T.Mới", styles: { halign: "center", valign: "middle" } },
+        { content: "S.Chữa", styles: { halign: "center", valign: "middle" } },
       ],
     ],
     body: tableData,
@@ -1406,11 +1446,10 @@ export const generateGiamDinhPdf = async (
       lineWidth: 0.1,
       lineColor: 0,
       fontStyle: "bold",
-      halign: "center",
     },
     bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
     columnStyles: {
-      0: { cellWidth: 12, halign: "center" },
+      0: { cellWidth: 10, halign: "center" },
       2: { cellWidth: 12, halign: "center" },
       3: { cellWidth: 10, halign: "center" },
       5: { cellWidth: 18, halign: "center" },
@@ -1421,270 +1460,17 @@ export const generateGiamDinhPdf = async (
   const lastY = (doc as any).lastAutoTable.finalY;
   y = lastY + 10;
 
-  doc.text(
-    `Số để lại phục hồi phục vụ cho sản xuất: ${inspection.soDeLaiPhucHoi ?? "…………"}.`,
-    20,
-    y,
-  );
-  y += 7;
-  doc.text(
-    `Số để làm phế liệu: ${inspection.soDeLamPheLieu ?? "…………"} (mục)`,
-    20,
-    y,
-  );
-  y += 7;
-  doc.text(`Số lượng hủy: ${inspection.soLuongHuy ?? "…………"} (mục)`, 20, y);
-  y += 10;
-
-  doc.text(
-    "Biên bản được lập xong lúc …… giờ cùng ngày và được các thành phần cùng thống nhất thông qua./.",
-    20,
-    y,
-  );
-  y += 15;
-  if (y > pageHeight - 80) {
-    doc.addPage();
-    y = 20;
-  }
-
-  // Signatures
-  const marginX = 25;
-  const printableWidth = pageWidth - 2 * marginX;
-  const maxPerRow = 3;
-  const rowGap = 60;
-  const coordinates: Record<
-    string,
-    { xRatio: number; yRatio: number; page?: number }
-  > = {};
-  const baseWidthPx = 120;
-  const displayWidth = 800;
-
-  listSigneInfos.forEach((s, index) => {
-    const rowIndex = Math.floor(index / maxPerRow);
-    const colIndex = index % maxPerRow;
-    const itemsInRow = Math.min(
-      maxPerRow,
-      listSigneInfos.length - rowIndex * maxPerRow,
-    );
-
-    let x;
-    if (itemsInRow === 1) x = pageWidth / 2;
-    else {
-      const gapSize = printableWidth / (itemsInRow - 1);
-      x = marginX + colIndex * gapSize;
-    }
-
-    const yPos = y + rowIndex * rowGap;
-    const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
-
-    coordinates[s.idNhanVien] = {
-      xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
-      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
-      page: (doc as any).internal.getNumberOfPages(),
-    };
-
-    doc.setFont("times_new_roman", "bold");
-    doc.setFontSize(10);
-    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
-    doc.setFont("times_new_roman_italic", "italic");
-    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
-    doc.setFont("times_new_roman", "bold");
-    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
-  });
-
-  return {
-    pdf: new Uint8Array(doc.output("arraybuffer")),
-    coordinates,
-  };
-};
-
-export const generateGiamDinhPhuongTienPdf = async (
-  inspection: any,
-  staffs: any[],
-  departments: any[],
-  positions: any[],
-): Promise<{
-  pdf: Uint8Array;
-  coordinates: Record<
-    string,
-    { xRatio: number; yRatio: number; page?: number }
-  >;
-}> => {
-  const listSigneInfos: any[] = listSigneInfo(
-    inspection,
-    staffs,
-    departments,
-    positions,
-  );
-  const doc = new jsPDF("p", "mm", "a4");
-
-  doc.setFont("times_new_roman", "bold");
-  doc.setFontSize(11);
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const leftColCenter = pageWidth / 4;
-  const rightColCenter = (pageWidth * 3) / 4;
-
-  // Header Left
-  doc.text("TẬP ĐOÀN CÔNG NGHIỆP", leftColCenter, 20, { align: "center" });
-  doc.text("THAN – KHOÁNG SẢN VIỆT NAM", leftColCenter, 26, {
-    align: "center",
-  });
-  doc.text(
-    `${inspection?.congTy || currentBrandConfig.company}`,
-    leftColCenter,
-    32,
-    {
-      align: "center",
-    },
-  );
-  doc.line(leftColCenter - 15, 33, leftColCenter + 15, 33);
-
-  // Header Right
-  doc.text("CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", rightColCenter, 20, {
-    align: "center",
-  });
-  doc.text("Độc lập - Tự do - Hạnh phúc", rightColCenter, 26, {
-    align: "center",
-  });
-  doc.line(rightColCenter - 15, 27, rightColCenter + 15, 27);
-
-  // Date
-  doc.setFont("times_new_roman_italic", "italic");
-  doc.setFontSize(10);
-  const today = new Date(inspection.ngayGiamDinh || new Date());
-  const dateStr = `Quảng Ninh, ngày ${today.getDate()} tháng ${today.getMonth() + 1} năm ${today.getFullYear()}`;
-  doc.text(dateStr, pageWidth - 20, 40, { align: "right" });
-
-  // Title
-  doc.setFont("times_new_roman", "bold");
-  doc.setFontSize(14);
-  doc.text(
-    inspection?.tenMauBienBan ||
-      "BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ",
-    pageWidth / 2,
-    50,
-    { align: "center" },
-  );
-  doc.text("VÀO SỬA CHỮA", pageWidth / 2, 58, { align: "center" });
-
-  doc.setFont("times_new_roman", "normal");
-  doc.setFontSize(11);
-  let y = 70;
-
-  const d = new Date(inspection.ngayGiamDinh || new Date());
-  doc.text(
-    `Hôm nay, ngày ${d.getDate()} tháng ${d.getMonth() + 1} năm ${d.getFullYear()}. Tại ${inspection.viTri || "……………………………"}`,
-    20,
-    y,
-  );
-  y += 8;
-  doc.setFont("times_new_roman", "bold");
-  doc.text("Chúng tôi gồm:", 20, y);
-  y += 8;
-
-  const groupSignersByDept = (signerList: any[]) => {
-    const groups: { deptName: string; members: any[] }[] = [];
-    signerList.forEach((s) => {
-      const deptName = s.donVi || "Bộ phận khác";
-      let group = groups.find((g) => g.deptName === deptName);
-      if (!group) {
-        group = { deptName, members: [] };
-        groups.push(group);
-      }
-      group.members.push(s);
-    });
-    return groups;
-  };
-
-  const groups = groupSignersByDept(listSigneInfos);
-  groups.forEach((group) => {
-    doc.setFont("times_new_roman", "bold");
-    doc.text(`* ${group.deptName}:`, 22, y);
-    y += 7;
-
-    group.members.forEach((member, mIdx) => {
-      doc.text(`${mIdx + 1}.`, 27, y);
-      doc.setFont("times_new_roman", "bold");
-      doc.text(`Ông: ${member.hoTen || "………………………"}`, 32, y);
-      doc.setFont("times_new_roman", "normal");
-      doc.text(`Chức vụ: ${member.chucVu || "—"}`, 95, y);
-      y += 7;
-    });
-  });
-
-  y += 1;
-  const canCuText = `Cùng thực hiện giải thể kiểm tra tình trạng kỹ thuật thiết bị: ${inspection.tenTaiSan || ".............."} trước khi vào sửa chữa bảo dưỡng cấp ${inspection.capBaoDuong || "............"} và bàn giao cho phân xưởng ${inspection.donViSuaChua || "............."} sửa chữa với tình trạng kỹ thuật và nội dung sửa chữa sau:`;
-  const canCuLines = doc.splitTextToSize(canCuText, pageWidth - 40);
-  canCuLines.forEach((line: string) => {
-    doc.text(line, 20, y);
-    y += 7;
-  });
-
-  y += 1;
-
-  // Table
-  const tableData: any[] = (inspection.danhSachChiTiet || []).map(
-    (vt: any, vtIdx: number) => [
-      `${vtIdx + 1}`,
-      vt.tenVatTu || vt.idChiTietVatTu || "",
-      vt.donViTinh || "",
-      vt.soLuong || 0,
-      vt.tinhTrang || "",
-      vt.soLuongThayMoi || 0,
-      vt.soLuongSuaChua || 0,
-      vt.ghiChu || "",
-    ],
-  );
-
-  autoTable(doc, {
-    startY: y,
-    margin: { left: 15, right: 15 },
-    head: [
-      [
-        "STT",
-        "Tên chi tiết",
-        "ĐVT",
-        "SL",
-        "Tình trạng kỹ thuật",
-        "Thay mới",
-        "Sửa chữa",
-        "Ghi chú",
-      ],
-    ],
-    body: tableData,
-    theme: "grid",
-    styles: { font: "times_new_roman", fontSize: 9 },
-    headStyles: {
-      fillColor: false,
-      textColor: 0,
-      lineWidth: 0.1,
-      lineColor: 0,
-      fontStyle: "bold",
-      halign: "center",
-    },
-    bodyStyles: { lineWidth: 0.1, lineColor: 0, textColor: 0 },
-    columnStyles: {
-      0: { cellWidth: 12, halign: "center" },
-      2: { cellWidth: 12, halign: "center" },
-      3: { cellWidth: 10, halign: "center" },
-      5: { cellWidth: 18, halign: "center" },
-      6: { cellWidth: 18, halign: "center" },
-    },
-  });
-
-  y = (doc as any).lastAutoTable.finalY + 10;
-
-  const noiDungKhacText = `Các nội dung cần thống nhất khác: ${inspection.noiDungKhac || "................."}`;
+  const noiDungKhacText = `Các nội dung cần thống nhất khác: ${inspection.noiDung || "Không"}`;
   const noiDungKhacLines = doc.splitTextToSize(noiDungKhacText, pageWidth - 40);
   noiDungKhacLines.forEach((line: string) => {
     doc.text(line, 20, y);
     y += 7;
   });
 
-  y += 3;
+  const h = new Date(inspection.ngayTao || new Date()).getHours();
+  const m = new Date(inspection.ngayTao || new Date()).getMinutes();
   doc.text(
-    "Biên bản lập xong hồi: .... giờ ....cùng ngày, đã được mọi người nhất trí thông qua./.",
+    `Biên bản lập xong hồi ${h} giờ ${m < 10 ? "0" + m : m} phút cùng ngày, đã được mọi người nhất trí thông qua.`,
     20,
     y,
   );
@@ -1695,10 +1481,10 @@ export const generateGiamDinhPhuongTienPdf = async (
   }
 
   // Signatures
-  const marginX = 25;
+  const marginX = 20;
   const printableWidth = pageWidth - 2 * marginX;
-  const maxPerRow = 3;
-  const rowGap = 60;
+  const maxPerRow = 5;
+  const rowGap = 50;
   const coordinates: Record<
     string,
     { xRatio: number; yRatio: number; page?: number }
@@ -1721,22 +1507,24 @@ export const generateGiamDinhPhuongTienPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = y + rowIndex * rowGap;
+    let yPos = y + rowIndex * rowGap;
+    if (yPos > pageHeight - 60) {
+      doc.addPage();
+      y = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
       xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
-      yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+      yRatio: Math.max(0, Math.min((yPos + 5) / pageHeight, 1)),
       page: (doc as any).internal.getNumberOfPages(),
     };
 
     doc.setFont("times_new_roman", "bold");
     doc.setFontSize(10);
-    doc.text(s.title || s.donVi || "", x, yPos, { align: "center" });
-    doc.setFont("times_new_roman_italic", "italic");
-    doc.text("(Ký, ghi rõ họ tên)", x, yPos + 5, { align: "center" });
-    doc.setFont("times_new_roman", "bold");
-    doc.text(s.hoTen || "", x, yPos + 35, { align: "center" });
+    doc.text(s.idChucVu || "", x, yPos, { align: "center" });
+    doc.text(s.hoTen || "", x, yPos + 30, { align: "center" });
   });
 
   return {
@@ -1957,7 +1745,7 @@ export const generateNghiemThuPdf = async (
     y = 20;
   }
   // Signatures
-  const marginX = 25;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -1983,7 +1771,12 @@ export const generateNghiemThuPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = y + rowIndex * rowGap;
+    let yPos = y + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      y = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
@@ -2188,7 +1981,7 @@ export const generateDanhGiaVatTuPdf = async (
   }
 
   // Signatures
-  const marginX = 25;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -2214,7 +2007,12 @@ export const generateDanhGiaVatTuPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = y + rowIndex * rowGap;
+    let yPos = y + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      y = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
@@ -2470,7 +2268,7 @@ export const generateKiemTraSuCoPdf = async (
   }
 
   // Signatures
-  const marginX = 25;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -2489,12 +2287,6 @@ export const generateKiemTraSuCoPdf = async (
       listSigneInfos.length - rowIndex * maxPerRow,
     );
 
-    // Nếu row mới tràn trang thì thêm page
-    if (rowIndex > 0 && y + rowIndex * rowGap > pageHeight - 20) {
-      doc.addPage();
-      y = 20;
-    }
-
     let x;
     if (itemsInRow === 1) x = pageWidth / 2;
     else {
@@ -2502,7 +2294,12 @@ export const generateKiemTraSuCoPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = y + rowIndex * rowGap;
+    let yPos = y + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      y = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {
@@ -2677,7 +2474,7 @@ export const generateBienPhapMayMocPdf = async (
   }
 
   // Signatures block
-  const marginX = 25;
+  const marginX = 35;
   const printableWidth = pageWidth - 2 * marginX;
   const maxPerRow = 3;
   const rowGap = 60;
@@ -2696,12 +2493,6 @@ export const generateBienPhapMayMocPdf = async (
       listSigneInfos.length - rowIndex * maxPerRow,
     );
 
-    // Nếu row mới tràn trang thì thêm page
-    if (rowIndex > 0 && y + rowIndex * rowGap > pageHeight - 20) {
-      doc.addPage();
-      y = 20;
-    }
-
     let x;
     if (itemsInRow === 1) x = pageWidth / 2;
     else {
@@ -2709,7 +2500,12 @@ export const generateBienPhapMayMocPdf = async (
       x = marginX + colIndex * gapSize;
     }
 
-    const yPos = y + rowIndex * rowGap;
+    let yPos = y + rowIndex * rowGap;
+    if (yPos > pageHeight - 80) {
+      doc.addPage();
+      y = 20 - rowIndex * rowGap;
+      yPos = 20;
+    }
     const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
 
     coordinates[s.idNhanVien] = {

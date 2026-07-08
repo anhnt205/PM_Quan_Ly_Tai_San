@@ -44,9 +44,9 @@ public class SuCoThietBiChiTietDao {
                                         SELECT 1 FROM danhgia_vattu dg
                                         INNER JOIN nghiemthu_maymoc ntmm ON dg.IdNghiemThu = ntmm.Id
                                         LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
-                                        INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                    INNER JOIN giamdinh gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
+                                        INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                         INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
                                           AND dg.TrangThai != 2
@@ -54,26 +54,26 @@ public class SuCoThietBiChiTietDao {
                                     WHEN EXISTS (
                                         SELECT 1 FROM nghiemthu_maymoc ntmm
                                         LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
-                                        INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                    INNER JOIN giamdinh gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
+                                        INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                         INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
                                           AND ntmm.TrangThai != 2
                                     ) THEN 4
                                     WHEN EXISTS (
                                         SELECT 1 FROM bienphap_maymoc bpm
-                                        INNER JOIN giamdinh_maymoc gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
-                                        INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                        INNER JOIN giamdinh gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
+                                        INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                         INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
                                           AND bpm.TrangThai != 2
                                     ) THEN 3
                                     WHEN EXISTS (
-                                        SELECT 1 FROM giamdinh_maymoc gdmm
-                                        INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                        SELECT 1 FROM giamdinh gdmm
+                                        INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                        INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                         INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
                                           AND gdmm.TrangThai != 2
@@ -93,7 +93,7 @@ public class SuCoThietBiChiTietDao {
                                         SELECT 1 FROM danhgia_vattu dg
                                         INNER JOIN nghiemthu_phuongtien ntpt ON dg.IdNghiemThu = ntpt.Id
                                         LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
+                                    INNER JOIN giamdinh gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                                         INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                         INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
@@ -102,7 +102,7 @@ public class SuCoThietBiChiTietDao {
                                     WHEN EXISTS (
                                         SELECT 1 FROM nghiemthu_phuongtien ntpt
                                         LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
+                                    INNER JOIN giamdinh gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                                         INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                         INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
@@ -110,14 +110,14 @@ public class SuCoThietBiChiTietDao {
                                     ) THEN 4
                                     WHEN EXISTS (
                                         SELECT 1 FROM bienphap_phuongtien bpp
-                                        INNER JOIN giamdinh_phuongtien gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
+                                        INNER JOIN giamdinh gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
                                         INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                         INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
                                           AND bpp.TrangThai != 2
                                     ) THEN 3
                                     WHEN EXISTS (
-                                        SELECT 1 FROM giamdinh_phuongtien gdpt
+                                        SELECT 1 FROM giamdinh gdpt
                                         INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                         INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                         WHERE ktscct.IdSuCoChiTiet = stct.Id
@@ -161,9 +161,9 @@ public class SuCoThietBiChiTietDao {
                                    SELECT 1 FROM danhgia_vattu dg
                                    INNER JOIN nghiemthu_maymoc ntmm ON dg.IdNghiemThu = ntmm.Id
                                    LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
-                                   INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                    INNER JOIN giamdinh gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
+                                   INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                    INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
                                      AND dg.TrangThai != 2
@@ -171,26 +171,26 @@ public class SuCoThietBiChiTietDao {
                                WHEN EXISTS (
                                    SELECT 1 FROM nghiemthu_maymoc ntmm
                                    LEFT JOIN bienphap_maymoc bpm ON ntmm.IdBienPhapMayMoc = bpm.Id
-                                    INNER JOIN giamdinh_maymoc gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
-                                   INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                    INNER JOIN giamdinh gdmm ON (bpm.IdGiamDinhMayMoc = gdmm.Id OR ntmm.IdGiamDinhMayMoc = gdmm.Id)
+                                   INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                    INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
                                      AND ntmm.TrangThai != 2
                                ) THEN 4
                                WHEN EXISTS (
                                    SELECT 1 FROM bienphap_maymoc bpm
-                                   INNER JOIN giamdinh_maymoc gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
-                                   INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                   INNER JOIN giamdinh gdmm ON bpm.IdGiamDinhMayMoc = gdmm.Id
+                                   INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                    INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
                                      AND bpm.TrangThai != 2
                                ) THEN 3
                                WHEN EXISTS (
-                                   SELECT 1 FROM giamdinh_maymoc gdmm
-                                   INNER JOIN giamdinh_maymoc_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinhMayMoc
-                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBienBanChiTiet = ktscct.Id
+                                   SELECT 1 FROM giamdinh gdmm
+                                   INNER JOIN giamdinh_chitiet gdmmct ON gdmm.Id = gdmmct.IdGiamDinh
+                                   INNER JOIN kiemtra_suco_chitiet ktscct ON gdmmct.IdBaoCaoKyThuatChiTiet = ktscct.Id
                                    INNER JOIN kiemtra_suco ktsc ON ktscct.IdKiemTraSuCo = ktsc.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
                                      AND gdmm.TrangThai != 2
@@ -210,7 +210,7 @@ public class SuCoThietBiChiTietDao {
                                    SELECT 1 FROM danhgia_vattu dg
                                    INNER JOIN nghiemthu_phuongtien ntpt ON dg.IdNghiemThu = ntpt.Id
                                    LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
+                                    INNER JOIN giamdinh gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                                    INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                    INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
@@ -219,7 +219,7 @@ public class SuCoThietBiChiTietDao {
                                WHEN EXISTS (
                                    SELECT 1 FROM nghiemthu_phuongtien ntpt
                                    LEFT JOIN bienphap_phuongtien bpp ON ntpt.IdBienPhapPhuongTien = bpp.Id
-                                    INNER JOIN giamdinh_phuongtien gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
+                                    INNER JOIN giamdinh gdpt ON (bpp.IdGiamDinhPhuongTien = gdpt.Id OR ntpt.IdGiamDinhPhuongTien = gdpt.Id)
                                    INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                    INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
@@ -227,14 +227,14 @@ public class SuCoThietBiChiTietDao {
                                ) THEN 4
                                WHEN EXISTS (
                                    SELECT 1 FROM bienphap_phuongtien bpp
-                                   INNER JOIN giamdinh_phuongtien gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
+                                   INNER JOIN giamdinh gdpt ON bpp.IdGiamDinhPhuongTien = gdpt.Id
                                    INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                    INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id
                                      AND bpp.TrangThai != 2
                                ) THEN 3
                                WHEN EXISTS (
-                                   SELECT 1 FROM giamdinh_phuongtien gdpt
+                                   SELECT 1 FROM giamdinh gdpt
                                    INNER JOIN kiemtra_suco ON gdpt.IdBienBan = kiemtra_suco.Id AND gdpt.LoaiBienBan = 'su_co'
                                    INNER JOIN kiemtra_suco_chitiet ktscct ON ktscct.IdKiemTraSuCo = kiemtra_suco.Id
                                    WHERE ktscct.IdSuCoChiTiet = ct.Id

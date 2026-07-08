@@ -62,7 +62,13 @@ public class BaoCaoKyThuatDao {
                 bc.NgayTao,
                 bc.NgayCapNhat,
                 bc.NguoiTao,
-                bc.NguoiCapNhat
+                bc.NguoiCapNhat,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM giamdinh gd
+                        WHERE gd.IdBaoCaoKyThuat = bc.id
+                    ) THEN 1 ELSE 0 
+                END as daCoGiamDinh
             FROM baocaokythuat bc
                 LEFT JOIN NhanVien nvLap ON bc.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON bc.IdGiamDoc = nvGD.Id

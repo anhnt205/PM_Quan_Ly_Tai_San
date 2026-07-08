@@ -26,7 +26,6 @@ import IncidentInspectionPreview from "../../Maintenance/components/preview/Inci
 import AcceptanceVehiclePreview from "../../Maintenance/components/preview/AcceptanceVehiclePreview";
 import AcceptanceTestPreview from "../../Maintenance/components/preview/AcceptanceTestPreview";
 import InspectionRecordPreview from "../../Maintenance/components/preview/InspectionRecordPreview";
-import InspectionRecordVehiclePreview from "../../Maintenance/components/preview/InspectionRecordVehiclePreview";
 import MaterialPreview from "../../Maintenance/components/preview/MaterialPreview";
 import RepairRequestPreview from "../../Maintenance/components/preview/RepairRequestPreview";
 import { BienBanSuaChua } from "../types";
@@ -87,22 +86,10 @@ const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
           congty={values?.congTy || ""}
         />
       );
-    case "GIAM_DINH_MAY_MOC":
+    case "GIAM_DINH":
       return (
         <InspectionRecordPreview
-          formik={undefined}
-          plan={undefined}
-          repairRequest={undefined}
-          tieude={values?.ten || ""}
-          congty={values?.congTy || ""}
-        />
-      );
-    case "GIAM_DINH_PHUONG_TIEN":
-      return (
-        <InspectionRecordVehiclePreview
-          formik={undefined}
-          tieude={values?.ten || ""}
-          congty={values?.congTy || ""}
+          data={values}
         />
       );
     case "NGHIEM_THU_MAY_MOC":

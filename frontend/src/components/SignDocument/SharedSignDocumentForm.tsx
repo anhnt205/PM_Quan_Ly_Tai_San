@@ -56,6 +56,10 @@ interface SharedSignDocumentFormProps {
   initialNote?: string;
   onSaveNote?: (note: string) => Promise<void>;
   onReject?: () => Promise<void>;
+  coordinates?: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
 }
 
 export default function SharedSignDocumentForm({
@@ -75,6 +79,7 @@ export default function SharedSignDocumentForm({
   initialNote,
   onSaveNote,
   onReject,
+  coordinates,
 }: SharedSignDocumentFormProps) {
   const [signatureType, setSignatureType] = useState(0);
   const [openSnackbar, setOpenSnackbar] = useState(false);
@@ -133,6 +138,11 @@ export default function SharedSignDocumentForm({
     const displayWidth = canvasDisplaySizes[0]?.width || 800;
     const baseWidthPx = 120;
 
+    const userCoords = coordinates?.[user?.taiKhoan?.tenDangNhap];
+    const defaultX = userCoords ? userCoords.xRatio : 0.2;
+    const defaultY = userCoords ? userCoords.yRatio : 0.8;
+    const defaultPage = userCoords ? (userCoords.page ?? 1) : 1;
+
     const newSignature: SignaturesData = {
       stt: signatures.length + 1,
       id: `temp-${Date.now()}`,
@@ -140,8 +150,8 @@ export default function SharedSignDocumentForm({
       idNguoiKy: user?.taiKhoan?.tenDangNhap,
       loaiKy: signatureType,
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      x: 0.2,
-      y: 0.8,
+      x: defaultX,
+      y: defaultY,
       chuKyNhay:
         (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
       chuKyThuong:
@@ -151,7 +161,7 @@ export default function SharedSignDocumentForm({
       scale: 1,
       chuKySo: result,
       isLocked: false,
-      page: 1,
+      page: defaultPage,
     };
 
     setSignatures((prev) => [...prev, newSignature]);
@@ -196,6 +206,11 @@ export default function SharedSignDocumentForm({
     const displayWidth = canvasDisplaySizes[0]?.width || 800;
     const baseWidthPx = 120;
 
+    const userCoords = coordinates?.[user?.taiKhoan?.tenDangNhap];
+    const defaultX = userCoords ? userCoords.xRatio : 0.2;
+    const defaultY = userCoords ? userCoords.yRatio : 0.8;
+    const defaultPage = userCoords ? (userCoords.page ?? 1) : 1;
+
     const newSignature: SignaturesData = {
       stt: signatures.length + 1,
       id: `temp-${Date.now()}`,
@@ -203,8 +218,8 @@ export default function SharedSignDocumentForm({
       idNguoiKy: user?.taiKhoan?.tenDangNhap,
       loaiKy: signatureType,
       ngayKy: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      x: 0.2,
-      y: 0.8,
+      x: defaultX,
+      y: defaultY,
       chuKyNhay:
         (signatureType === 1 || signatureType === 5) && employee.chuKyNhay,
       chuKyThuong:
@@ -214,7 +229,7 @@ export default function SharedSignDocumentForm({
       scale: signatureType === 2 || signatureType === 4 ? 2 : 1,
       chuKySo: key,
       isLocked: false,
-      page: 1,
+      page: defaultPage,
     };
 
     setSignatures([...signatures, newSignature]);

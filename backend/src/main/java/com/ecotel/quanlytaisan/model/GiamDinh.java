@@ -4,19 +4,15 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class GiamDinhMayMoc {
+public class GiamDinh {
     private String id;
     private String idCongTy;
     private String congTy;
     private String tenMauBienBan;
-    private String idBienBan;
-    private String loaiBienBan; // sua_chua, su_co
-    private String soPhieu;
+    private String idBaoCaoKyThuat;
     private String ngayGiamDinh;
-    private String viTri;
-    private Integer soDeLaiPhucHoi;
-    private Integer soDeLamPheLieu;
-    private Integer soLuongHuy;
+    private String donViGiamDinh;
+    private String noiDung;
     private String ghiChuBienBan;
     
     // Người lập phiếu
@@ -49,6 +45,6 @@ public class GiamDinhMayMoc {
         return share != null ? share : false;
     }
 
-    private List<GiamDinhMayMocChiTiet> danhSachChiTiet;
+    private List<GiamDinhChiTiet> danhSachChiTiet;
     private List<NguoiKy> nguoiKyList;
 }

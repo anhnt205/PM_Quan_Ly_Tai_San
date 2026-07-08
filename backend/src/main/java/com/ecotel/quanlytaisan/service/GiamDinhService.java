@@ -1,7 +1,7 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.GiamDinhMayMocDao;
-import com.ecotel.quanlytaisan.dao.GiamDinhMayMocChiTietDao;
+import com.ecotel.quanlytaisan.dao.GiamDinhDao;
+import com.ecotel.quanlytaisan.dao.GiamDinhChiTietDao;
 import com.ecotel.quanlytaisan.dao.KyTaiLieuDao;
 import com.ecotel.quanlytaisan.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,13 +11,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-public class GiamDinhMayMocService {
+public class GiamDinhService {
 
     @Autowired
-    private GiamDinhMayMocDao giamDinhMayMocDao;
+    private GiamDinhDao giamDinhDao;
 
     @Autowired
-    private GiamDinhMayMocChiTietDao giamDinhMayMocChiTietDao;
+    private GiamDinhChiTietDao giamDinhChiTietDao;
 
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
@@ -25,59 +25,61 @@ public class GiamDinhMayMocService {
     @Autowired
     private TaiSanService taiSanService;
 
-    public List<GiamDinhMayMocDTO> findAll(String idCongTy) {
-        List<GiamDinhMayMocDTO> list = giamDinhMayMocDao.findAll(idCongTy);
-        for (GiamDinhMayMocDTO item : list) {
+    public List<GiamDinhDTO> findAll(String idCongTy) {
+        List<GiamDinhDTO> list = giamDinhDao.findAll(idCongTy);
+        for (GiamDinhDTO item : list) {
             enrichData(item);
         }
         return list;
     }
 
-    public GiamDinhMayMocDTO findByIdDTO(String id) {
-        GiamDinhMayMocDTO dto = giamDinhMayMocDao.findByIdDTO(id);
+    public GiamDinhDTO findByIdDTO(String id) {
+        GiamDinhDTO dto = giamDinhDao.findByIdDTO(id);
         if (dto != null) {
             enrichData(dto);
         }
         return dto;
     }
 
-    public List<GiamDinhMayMocDTO> findByIdBienBan(String idBienBan) {
-        List<GiamDinhMayMocDTO> list = giamDinhMayMocDao.findAll(null).stream()
-                .filter(d -> idBienBan != null && idBienBan.equalsIgnoreCase(d.getIdBienBan()))
+    public List<GiamDinhDTO> findByIdBienBan(String idBienBan) {
+        List<GiamDinhDTO> list = giamDinhDao.findAll(null).stream()
+                .filter(d -> idBienBan != null && idBienBan.equalsIgnoreCase(d.getIdBaoCaoKyThuat()))
                 .collect(Collectors.toList());
-        for (GiamDinhMayMocDTO item : list) {
+        for (GiamDinhDTO item : list) {
             enrichData(item);
         }
         return list;
     }
 
-    private void enrichData(GiamDinhMayMocDTO item) {
+    public List<GiamDinhDTO> findByIdBaoCaoKyThuat(String idBaoCaoKyThuat) {
+        List<GiamDinhDTO> list = giamDinhDao.findByIdBaoCaoKyThuat(idBaoCaoKyThuat);
+        for (GiamDinhDTO item : list) {
+            enrichData(item);
+        }
+        return list;
+    }
+
+    private void enrichData(GiamDinhDTO item) {
         item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
         item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-        item.setDanhSachChiTiet(giamDinhMayMocChiTietDao.findByIdGiamDinh(item.getId()));
+        item.setDanhSachChiTiet(giamDinhChiTietDao.findByIdGiamDinh(item.getId()));
     }
 
     @Transactional
-    public GiamDinhMayMoc insert(GiamDinhMayMoc entity) {
-        GiamDinhMayMoc result = giamDinhMayMocDao.insert(entity);
+    public GiamDinh insert(GiamDinh entity) {
+        GiamDinh result = giamDinhDao.insert(entity);
         if (result != null) {
             String planId = result.getId();
             // 1. Insert details
             if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-                for (GiamDinhMayMocChiTiet chiTiet : entity.getDanhSachChiTiet()) {
+                for (GiamDinhChiTiet chiTiet : entity.getDanhSachChiTiet()) {
                     if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
                         if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    chiTiet.setIdGiamDinhMayMoc(planId);
-                    giamDinhMayMocChiTietDao.insert(chiTiet);
-                    if (chiTiet.getDanhSachVatTu() != null && !chiTiet.getDanhSachVatTu().isEmpty()) {
-                        for (GiamDinhMayMocVatTu vt : chiTiet.getDanhSachVatTu()) {
-                            vt.setIdChiTietGiamDinhMayMoc(chiTiet.getId());
-                        }
-                        giamDinhMayMocChiTietDao.batchInsertVatTu(chiTiet.getDanhSachVatTu());
-                    }
+                    chiTiet.setIdGiamDinh(planId);
+                    giamDinhChiTietDao.insert(chiTiet);
                 }
             }
             // 2. Insert signers
@@ -92,27 +94,21 @@ public class GiamDinhMayMocService {
     }
 
     @Transactional
-    public GiamDinhMayMoc update(GiamDinhMayMoc entity) {
-        GiamDinhMayMoc result = giamDinhMayMocDao.update(entity);
+    public GiamDinh update(GiamDinh entity) {
+        GiamDinh result = giamDinhDao.update(entity);
         if (result != null) {
             String planId = result.getId();
             // 1. Re-insert details
-            giamDinhMayMocChiTietDao.deleteByIdGiamDinh(planId);
+            giamDinhChiTietDao.deleteByIdGiamDinh(planId);
             if (entity.getDanhSachChiTiet() != null && !entity.getDanhSachChiTiet().isEmpty()) {
-                for (GiamDinhMayMocChiTiet chiTiet : entity.getDanhSachChiTiet()) {
+                for (GiamDinhChiTiet chiTiet : entity.getDanhSachChiTiet()) {
                     if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
                         if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    chiTiet.setIdGiamDinhMayMoc(planId);
-                    giamDinhMayMocChiTietDao.insert(chiTiet);
-                    if (chiTiet.getDanhSachVatTu() != null && !chiTiet.getDanhSachVatTu().isEmpty()) {
-                        for (GiamDinhMayMocVatTu vt : chiTiet.getDanhSachVatTu()) {
-                            vt.setIdChiTietGiamDinhMayMoc(chiTiet.getId());
-                        }
-                        giamDinhMayMocChiTietDao.batchInsertVatTu(chiTiet.getDanhSachVatTu());
-                    }
+                    chiTiet.setIdGiamDinh(planId);
+                    giamDinhChiTietDao.insert(chiTiet);
                 }
             }
             // 2. Re-insert signers
@@ -130,12 +126,12 @@ public class GiamDinhMayMocService {
     }
 
     public int updateGhiChu(String id, String ghiChuBienBan) {
-        return giamDinhMayMocDao.updateGhiChu(id, ghiChuBienBan);
+        return giamDinhDao.updateGhiChu(id, ghiChuBienBan);
     }
 
     @Transactional
     public int updateTrangThai(String id, String userId) {
-        GiamDinhMayMoc gd = giamDinhMayMocDao.findById(id);
+        GiamDinh gd = giamDinhDao.findById(id);
         if (gd == null) return 0;
 
         int trangThai = gd.getTrangThai() != null ? gd.getTrangThai() : 0;
@@ -144,13 +140,13 @@ public class GiamDinhMayMocService {
         updateTrangThaiKy(id, userId);
 
         // 2. Cập nhật xác nhận của Người lập
-        if (java.util.Objects.equals(userId, gd.getIdNguoiLap())) {
+        if (Objects.equals(userId, gd.getIdNguoiLap())) {
             gd.setNguoiLapXacNhan(true);
             trangThai = 1;
         }
 
         // 3. Cập nhật xác nhận của Giám đốc
-        if (java.util.Objects.equals(userId, gd.getIdGiamDoc())) {
+        if (Objects.equals(userId, gd.getIdGiamDoc())) {
             gd.setGiamDocXacNhan(true);
             trangThai = 1;
         }
@@ -174,22 +170,22 @@ public class GiamDinhMayMocService {
         }
 
         gd.setTrangThai(trangThai);
-        GiamDinhMayMoc result = giamDinhMayMocDao.update(gd);
+        GiamDinh result = giamDinhDao.update(gd);
 
         return result != null ? result.getTrangThai() : 0;
     }
 
     private void updateTrangThaiKy(String id, String userId) {
-        com.ecotel.quanlytaisan.model.NguoiKy nk = kyTaiLieuDao.getNguoiKy(userId, id);
+        NguoiKy nk = kyTaiLieuDao.getNguoiKy(userId, id);
         if (nk != null) {
             kyTaiLieuDao.updateTrangThai(nk.getId(), "1");
         }
     }
 
     private boolean checkAllOtherNguoiKy(String id) {
-        List<com.ecotel.quanlytaisan.model.NguoiKy> nkList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id);
+        List<NguoiKy> nkList = kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(id);
         if (nkList != null && !nkList.isEmpty()) {
-            for (com.ecotel.quanlytaisan.model.NguoiKy nk : nkList) {
+            for (NguoiKy nk : nkList) {
                 if (nk.getTrangThai() != 1) {
                     return false;
                 }
@@ -200,25 +196,25 @@ public class GiamDinhMayMocService {
 
     @Transactional
     public int huyGiamDinh(String id) {
-        return giamDinhMayMocDao.huy(id); 
+        return giamDinhDao.huy(id); 
     }
 
     @Transactional
-    public void bulkUpdate(List<GiamDinhMayMoc> list) {
-        for (GiamDinhMayMoc e : list) {
-            giamDinhMayMocDao.update(e);
+    public void bulkUpdate(List<GiamDinh> list) {
+        for (GiamDinh e : list) {
+            giamDinhDao.update(e);
         }
     }
 
     @Transactional
     public int delete(String id) {
-        giamDinhMayMocChiTietDao.deleteByIdGiamDinh(id);
+        giamDinhChiTietDao.deleteByIdGiamDinh(id);
         kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
-        return giamDinhMayMocDao.delete(id);
+        return giamDinhDao.delete(id);
     }
 
-    public PageResponse<GiamDinhMayMocDTO> findAllPaged(
+    public PageResponse<GiamDinhDTO> findAllPaged(
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
@@ -227,14 +223,14 @@ public class GiamDinhMayMocService {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<GiamDinhMayMocDTO> sourceList = giamDinhMayMocDao.findAll(idCongTy);
+        List<GiamDinhDTO> sourceList = giamDinhDao.findAll(idCongTy);
 
         // Turn-based filter
         if (userid != null && !userid.trim().isEmpty()) {
             boolean shouldFilter = !"admin".equalsIgnoreCase(userid) || (isSign != null && isSign);
             if (shouldFilter) {
-                List<GiamDinhMayMocDTO> filtered = new ArrayList<>();
-                for (GiamDinhMayMocDTO item : sourceList) {
+                List<GiamDinhDTO> filtered = new ArrayList<>();
+                for (GiamDinhDTO item : sourceList) {
                     if (isSign != null && isSign) {
                         if (isNeedToSign(item, userid)) filtered.add(item);
                     } else {
@@ -247,7 +243,7 @@ public class GiamDinhMayMocService {
 
         // Count statuses
         Map<String, Long> trangThaiCounts = new HashMap<>();
-        for (GiamDinhMayMocDTO item : sourceList) {
+        for (GiamDinhDTO item : sourceList) {
             if (item.getTrangThai() != null) {
                 String key = item.getTrangThai().toString();
                 trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
@@ -275,8 +271,7 @@ public class GiamDinhMayMocService {
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
-                    .filter(i -> (i.getSoPhieu() != null && i.getSoPhieu().toLowerCase().contains(q))
-                            || (i.getViTri() != null && i.getViTri().toLowerCase().contains(q)))
+                    .filter(i -> (i.getId() != null && i.getId().toLowerCase().contains(q)))
                     .collect(Collectors.toList());
         }
 
@@ -285,19 +280,19 @@ public class GiamDinhMayMocService {
         long total = sourceList.size();
         int from = Math.min(page * size, sourceList.size());
         int to   = Math.min(from + size, sourceList.size());
-        List<GiamDinhMayMocDTO> items = new ArrayList<>(sourceList.subList(from, to));
+        List<GiamDinhDTO> items = new ArrayList<>(sourceList.subList(from, to));
 
         // Enrich
-        for (GiamDinhMayMocDTO item : items) {
+        for (GiamDinhDTO item : items) {
             enrichData(item);
         }
 
-        PageResponse<GiamDinhMayMocDTO> response = new PageResponse<>(items, total, page, size);
+        PageResponse<GiamDinhDTO> response = new PageResponse<>(items, total, page, size);
         response.setTrangThaiCounts(trangThaiCounts);
         return response;
     }
 
-    public boolean isNeedToSign(GiamDinhMayMocDTO item, String userId) {
+    public boolean isNeedToSign(GiamDinhDTO item, String userId) {
         if (userId == null || userId.isEmpty()) return false;
         
         // ===== Trạng thái nháp/hoàn thành/hủy bỏ (trangThai 2, 3 bỏ qua) =====
@@ -384,7 +379,7 @@ public class GiamDinhMayMocService {
         return false;
     }
 
-    public boolean isUserTurnToSign(GiamDinhMayMocDTO item, String userId) {
+    public boolean isUserTurnToSign(GiamDinhDTO item, String userId) {
         if (userId != null && userId.equals(item.getNguoiTao())) return true;
         if (!Boolean.TRUE.equals(item.getShare())) return false;
 
@@ -426,7 +421,7 @@ public class GiamDinhMayMocService {
         return false;
     }
 
-    public int getPermissionSigning(GiamDinhMayMocDTO item, String tenDangNhap) {
+    public int getPermissionSigning(GiamDinhDTO item, String tenDangNhap) {
         List<Map<String, Object>> flow = new ArrayList<>();
 
         if (item.getIdNguoiLap() != null && !item.getIdNguoiLap().isEmpty()) {
@@ -476,29 +471,26 @@ public class GiamDinhMayMocService {
         return prevNotSigned ? 1 : 0;
     }
 
-    private Comparator<GiamDinhMayMocDTO> getComparator(String sortBy, String sortDir) {
+    private Comparator<GiamDinhDTO> getComparator(String sortBy, String sortDir) {
         if (sortBy == null || sortBy.trim().isEmpty()) {
             Map<Integer, Integer> pm = new HashMap<>();
             pm.put(0, 1); pm.put(1, 2); pm.put(3, 3); pm.put(2, 4);
-            return Comparator.<GiamDinhMayMocDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
+            return Comparator.<GiamDinhDTO>comparingInt(i -> pm.getOrDefault(i.getTrangThai(), 5))
                     .thenComparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
                             Comparator.nullsLast(Comparator.reverseOrder()));
         }
         boolean asc = "asc".equalsIgnoreCase(sortDir);
-        Comparator<GiamDinhMayMocDTO> comp;
+        Comparator<GiamDinhDTO> comp;
         switch (sortBy.trim().toLowerCase()) {
-            case "sophieu":
-                comp = Comparator.comparing(i -> i.getSoPhieu() != null ? i.getSoPhieu() : "",
+            case "id":
+                comp = Comparator.comparing(i -> i.getId() != null ? i.getId() : "",
                         Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)); break;
             case "trangthai":
-                comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,
-                        Comparator.nullsLast(Integer::compareTo)); break;
+                comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0); break;
             case "ngaygiamdinh":
-                comp = Comparator.comparing(i -> i.getNgayGiamDinh() != null ? i.getNgayGiamDinh() : "",
-                        Comparator.nullsLast(String::compareTo)); break;
+                comp = Comparator.comparing(i -> i.getNgayGiamDinh() != null ? i.getNgayGiamDinh() : ""); break;
             case "ngaytao": default:
-                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : "",
-                        Comparator.nullsLast(String::compareTo)); break;
+                comp = Comparator.comparing(i -> i.getNgayTao() != null ? i.getNgayTao() : ""); break;
         }
         return asc ? comp : comp.reversed();
     }

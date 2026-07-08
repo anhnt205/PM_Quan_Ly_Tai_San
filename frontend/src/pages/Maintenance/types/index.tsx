@@ -494,20 +494,27 @@ export interface MaintenancePlanAssetItem {
 export interface InspectionRecordData {
   id?: string;
   idCongTy?: string;
-  idBienBan?: string;
-  loaiBienBan?: TypeBienBanType;
-  soPhieu?: string;
+  congTy?: string;
+  tenMauBienBan?: string;
+  idBaoCaoKyThuat?: string;
   ngayGiamDinh?: string;
-  viTri?: string;
-  soDeLaiPhucHoi?: number;
-  soDeLamPheLieu?: number;
-  soLuongHuy?: number;
+  donViGiamDinh?: string;
+  noiDung?: string;
+  ghiChuBienBan?: string;
+
+  // Người lập phiếu
   idNguoiLap?: string;
   nguoiLapXacNhan?: boolean;
+
+  // Giám đốc duyệt
   idGiamDoc?: string;
   giamDocXacNhan?: boolean;
+
+  // Workflow & trạng thái
   share?: boolean;
-  trangThai?: number;
+  trangThai?: number; // 0:nháp, 1:duyệt, 2:hủy, 3:hoàn thành
+
+  // Audit
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
@@ -516,53 +523,30 @@ export interface InspectionRecordData {
   // Join fields
   tenNguoiLap?: string;
   tenGiamDoc?: string;
-  soPhieuSuaChua?: string;
+  soPhieuBienBan?: string;
   daCoBienPhap?: number;
   daCoNghiemThu?: number;
 
-  tenMauBienBan?: string;
-  congTy?: string;
-
+  // Danh sách chi tiết
   danhSachChiTiet?: InspectionRecordDetailData[];
-  nguoiKyList?: any[];
+
+  // Workflow tracking
   chuKyList?: any[];
+  nguoiKyList?: any[];
 }
 
 export interface InspectionRecordDetailData {
   id?: string;
-  idGiamDinhMayMoc?: string;
+  idGiamDinh?: string;
+  idBaoCaoKyThuatChiTiet?: string;
   idTaiSan?: string;
-  idBienBanChiTiet?: string;
-  ngayTao?: string;
-  ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-
-  // View fields
   tenTaiSan?: string;
   donViTinh?: string;
-  soLuong?: string | number;
-
-  // Nested materials
-  danhSachVatTu?: InspectionRecordVatTuData[];
-  action?: ActionType;
-}
-
-export interface InspectionRecordVatTuData {
-  id?: string;
-  idChiTietGiamDinhMayMoc?: string;
-  idVatTu?: string;
-  idChiTietVatTu?: string;
   soLuong?: number;
   tinhTrang?: string;
-  soLuongSuaChua?: number;
-  soLuongThayMoi?: number;
+  thayMoi?: number;
+  suaChua?: number;
   ghiChu?: string;
-
-  // View fields
-  tenVatTu?: string;
-  donViTinh?: string;
-  action?: ActionType;
 }
 
 // nghiệm thu
@@ -618,63 +602,6 @@ export interface AcceptanceTestRecordToolData {
   soLuong?: number;
   ghiChu?: string;
   idVatTu?: string;
-  tenVatTu?: string;
-  donViTinh?: string;
-  action?: ActionType;
-}
-
-// giám định phương tiện
-export interface VehicleInspectionRecordData {
-  id?: string;
-  idCongTy?: string;
-  idBienBan?: string;
-  loaiBienBan?: TypeBienBanType;
-  soPhieu?: string;
-  ngayGiamDinh?: string;
-  viTri?: string;
-  tinhTrang?: string;
-  noiDungKhac?: string;
-  idTaiSan?: string;
-  capBaoDuong?: string;
-  donViSuaChua?: string;
-  idNguoiLap?: string;
-  nguoiLapXacNhan?: boolean;
-  idGiamDoc?: string;
-  giamDocXacNhan?: boolean;
-  share?: boolean;
-  trangThai?: number;
-  ngayTao?: string;
-  ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-
-  // Join fields
-  tenNguoiLap?: string;
-  tenGiamDoc?: string;
-  soPhieuBienBan?: string;
-  tenTaiSan?: string;
-  daCoNghiemThu?: number;
-
-  tenMauBienBan?: string;
-  congTy?: string;
-
-  danhSachChiTiet?: VehicleInspectionRecordDetailData[];
-  nguoiKyList?: any[];
-  chuKyList?: any[];
-}
-
-export interface VehicleInspectionRecordDetailData {
-  id?: string;
-  idGiamDinhPhuongTien?: string;
-  idVatTu?: string;
-  idChiTietVatTu?: string;
-  soLuong?: number;
-  tinhTrang?: string;
-  soLuongSuaChua?: number;
-  soLuongThayMoi?: number;
-  ghiChu?: string;
-
-  // View fields
   tenVatTu?: string;
   donViTinh?: string;
   action?: ActionType;
@@ -754,14 +681,15 @@ export interface TechnicalReportData {
   noiDungSuaChua?: string;
   ghiChu?: string;
   ghiChuBienBan?: string;
-  
+  daCoGiamDinh?: number;
+
   idNguoiLap?: string;
   nguoiLapXacNhan?: boolean;
   idGiamDoc?: string;
   giamDocXacNhan?: boolean;
   share?: boolean;
   trangThai?: number;
-  
+
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
@@ -783,7 +711,7 @@ export interface TechnicalReportDetailData {
   idBaoCaoKyThuat?: string;
   idTaiSan?: string;
   idKeHoachChiTiet?: string;
-  
+
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
@@ -795,4 +723,3 @@ export interface TechnicalReportDetailData {
   donViQuanLy?: string;
   action?: ActionType;
 }
-

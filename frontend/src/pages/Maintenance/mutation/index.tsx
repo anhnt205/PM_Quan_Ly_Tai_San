@@ -1,8 +1,7 @@
 export * from "./Maintenance";
 export * from "./Repair";
 export * from "./Planning";
-export * from "./MachineInspection";
-export * from "./VehicleInspection";
+export * from "./Inspection";
 export * from "./MaterialAssessment";
 export * from "./Incident";
 export * from "./IncidentInspection";
@@ -11,3 +10,4 @@ export * from "./VehicleMeasure";
 export * from "./MachineAcceptance";
 export * from "./VehicleAcceptance";
 export * from "./RepairCycle";
+export * from "./TechnicalReport";

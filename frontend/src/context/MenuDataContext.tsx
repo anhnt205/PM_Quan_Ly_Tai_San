@@ -28,7 +28,6 @@ import {
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
-  useMaintenanceVehicleInspectionPageQuery,
 } from "../pages/Maintenance/mutation";
 import { setMaxTabLimit } from "../redux/tabsSlice";
 
@@ -255,7 +254,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
   const { data: inspectionVehicle = { items: [], totalItems: 0 } } =
-    useMaintenanceVehicleInspectionPageQuery(
+    useMaintenanceInspectionPageQuery(
       0,
       10,
       undefined,

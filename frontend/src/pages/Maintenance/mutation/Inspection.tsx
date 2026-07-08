@@ -1,9 +1,8 @@
-
-// --- GIÁM ĐỊNH Máy Móc ---
+// --- GIÁM ĐỊNH ---
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Action, CongTy } from "../../../utils/const";
 import api from "../../../config/api.config";
+import { CongTy } from "../../../utils/const";
 import { InspectionAdapter } from "../Adapter";
 import dayjs from "dayjs";
 import { useSelector } from "react-redux";
@@ -36,7 +35,7 @@ export const useMaintenanceInspectionPageQuery = (
       dateTo,
     ],
     queryFn: async () => {
-      const res = await api.get("/giamdinh-maymoc/paged", {
+      const res = await api.get("/giamdinh/paged", {
         params: {
           page: page,
           size: pageSize,
@@ -58,18 +57,33 @@ export const useMaintenanceInspectionPageQuery = (
 
 export const useMaintenanceInspectionByBienBanQuery = (
   idBienBan?: string,
-  enabled: boolean = true,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: ["inspectionByBienBan", idBienBan],
     queryFn: async () => {
-      const res = await api.get(`/giamdinh-maymoc/bienban/${idBienBan}`);
-      const data = (res.data.data || res.data || []).map((item: any) =>
+      const res = await api.get(`/giamdinh/bienban/${idBienBan}`);
+      return (res.data.data || res.data || []).map((item: any) =>
         InspectionAdapter(item),
       );
-      return data;
     },
     enabled: !!idBienBan && enabled,
+  });
+};
+
+export const useMaintenanceInspectionByBaoCaoQuery = (
+  idBaoCao?: string,
+  enabled = true,
+) => {
+  return useQuery({
+    queryKey: ["inspectionByBaoCao", idBaoCao],
+    queryFn: async () => {
+      const res = await api.get(`/giamdinh/baocaokythuat/${idBaoCao}`);
+      return (res.data.data || res.data || []).map((item: any) =>
+        InspectionAdapter(item),
+      );
+    },
+    enabled: !!idBaoCao && enabled,
   });
 };
 
@@ -78,10 +92,12 @@ export const useMaintenanceInspectionMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
+
+
   const createMutation = useMutation({
     mutationFn: async (data: InspectionRecordData) => {
       return (
-        await api.post("/giamdinh-maymoc", {
+        await api.post("/giamdinh", {
           ...data,
           nguoiTao: user?.taiKhoan?.tenDangNhap,
           ngayTao: now,
@@ -89,11 +105,15 @@ export const useMaintenanceInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      if (response.success || response.id) {
+      if (response.success || response.id || response.data?.id) {
+
+        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["inspectionByBienBan"],
         });
         queryClient.invalidateQueries({
           queryKey: ["incidentDetailByIncident"],
@@ -101,15 +121,17 @@ export const useMaintenanceInspectionMutation = () => {
         queryClient.invalidateQueries({
           queryKey: ["maintenancePlanningDetailsByMonth"],
         });
-
-        showSuccessAlert("Tạo biên bản giám định thành công");
+        showSuccessAlert("Tạo biên bản giám định phương tiện thành công");
       } else {
-        showErrorAlert(response.message || "Tạo biên bản giám định thất bại");
+        showErrorAlert(
+          response.message || "Tạo biên bản giám định phương tiện thất bại",
+        );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Tạo biên bản giám định thất bại",
+        error.response?.data?.message ||
+          "Tạo biên bản giám định phương tiện thất bại",
       );
     },
   });
@@ -117,7 +139,7 @@ export const useMaintenanceInspectionMutation = () => {
   const updateMutation = useMutation({
     mutationFn: async (data: InspectionRecordData) => {
       return (
-        await api.put(`/giamdinh-maymoc/${data.id}`, {
+        await api.put(`/giamdinh/${data.id}`, {
           ...data,
           ngayCapNhat: now,
           nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
@@ -125,42 +147,62 @@ export const useMaintenanceInspectionMutation = () => {
       ).data;
     },
     onSuccess: async (response, variables) => {
-      if (response.success || response.id) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-        queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
+      if (response.success || response.id || response.data?.id) {
+        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
+        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
         });
-        showSuccessAlert("Cập nhật biên bản giám định thành công");
+        queryClient.invalidateQueries({
+          queryKey: ["inspectionByBienBan"],
+        });
+        showSuccessAlert("Cập nhật biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
-          response.message || "Cập nhật biên bản giám định thất bại",
+          response.message ||
+            "Cập nhật biên bản giám định phương tiện thất bại",
         );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Cập nhật biên bản giám định thất bại",
+        error.response?.data?.message ||
+          "Cập nhật biên bản giám định phương tiện thất bại",
       );
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.delete(`/giamdinh-maymoc/${id}`)).data;
+      return (await api.delete(`/giamdinh/${id}`)).data;
     },
     onSuccess: (res: any) => {
-      if (res.success || res.id) {
+      if (res.success || res.id || res > 0) {
+        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
         queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({ queryKey: ["inspectionByBienBan"] });
-        showSuccessAlert("Xóa biên bản giám định thành công");
+        queryClient.invalidateQueries({
+          queryKey: ["incidentInspectionBySuCo"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["inspectionByBienBan"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["maintenancePlanningDetailsByMonth"],
+        });
+        showSuccessAlert("Xóa biên bản giám định phương tiện thành công");
       } else {
-        showErrorAlert(res.message || "Xóa biên bản giám định thất bại");
+        showErrorAlert(
+          res.message || "Xóa biên bản giám định phương tiện thất bại",
+        );
       }
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || "Xóa biên bản giám định thất bại",
+        error.response?.data?.message ||
+          "Xóa biên bản giám định phương tiện thất bại",
       );
     },
   });
@@ -169,13 +211,13 @@ export const useMaintenanceInspectionMutation = () => {
     mutationFn: async ({ id, userId }: { id: string; userId: string }) => {
       return (
         await api.post(
-          `/giamdinh-maymoc/capnhattrangthai?id=${id}&userId=${userId}`,
+          `/giamdinh/capnhattrangthai?id=${id}&userId=${userId}`,
         )
       ).data;
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
         showSuccessAlert("Cập nhật trạng thái thành công");
       } else {
         showErrorAlert(res.message || "Cập nhật trạng thái thất bại");
@@ -190,11 +232,11 @@ export const useMaintenanceInspectionMutation = () => {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      return (await api.post(`/giamdinh-maymoc/huy?id=${id}`)).data;
+      return (await api.post(`/giamdinh/huy?id=${id}`)).data;
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
+        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
         showSuccessAlert("Hủy biên bản thành công");
       } else {
         showErrorAlert(res.message || "Hủy biên bản thất bại");
@@ -205,36 +247,11 @@ export const useMaintenanceInspectionMutation = () => {
     },
   });
 
-  const updateManyMutation = useMutation({
-    mutationFn: async (data: InspectionRecordData[]) => {
-      return (
-        await api.put(
-          `/giamdinh-maymoc/batch`,
-          data.map((i) => ({
-            ...i,
-            ngayCapNhat: now,
-            nguoiCapNhat: user?.taiKhoan?.tenDangNhap,
-          })),
-        )
-      ).data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["inspectionByRepair"] });
-      showSuccessAlert("Cập nhật danh sách thành công");
-    },
-    onError: (error: any) => {
-      showErrorAlert(
-        error.response?.data?.message || "Cập nhật danh sách thất bại",
-      );
-    },
-  });
-
   return {
     createMutation,
     updateMutation,
     deleteMutation,
     updateStatusMutation,
     cancelMutation,
-    updateManyMutation,
   };
 };

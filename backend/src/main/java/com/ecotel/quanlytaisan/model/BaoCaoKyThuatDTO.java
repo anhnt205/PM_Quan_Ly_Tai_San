@@ -20,6 +20,7 @@ public class BaoCaoKyThuatDTO {
     private String noiDungSuaChua;
     private String ghiChu;
     private String ghiChuBienBan;
+    private Integer daCoGiamDinh;
     
     // Người lập phiếu
     private String idNguoiLap;

@@ -1,11 +1,11 @@
 package com.ecotel.quanlytaisan.controller;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
-import com.ecotel.quanlytaisan.model.GiamDinhMayMoc;
-import com.ecotel.quanlytaisan.model.GiamDinhMayMocDTO;
+import com.ecotel.quanlytaisan.model.GiamDinh;
+import com.ecotel.quanlytaisan.model.GiamDinhDTO;
 import com.ecotel.quanlytaisan.model.PageResponse;
 import com.ecotel.quanlytaisan.model.UpdateGhiChuRequest;
-import com.ecotel.quanlytaisan.service.GiamDinhMayMocService;
+import com.ecotel.quanlytaisan.service.GiamDinhService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,11 +17,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/giamdinh-maymoc")
-public class GiamDinhMayMocController {
+@RequestMapping("/api/giamdinh")
+public class GiamDinhController {
 
     @Autowired
-    private GiamDinhMayMocService service;
+    private GiamDinhService service;
 
     @GetMapping("/paged")
     public ResponseEntity<ApiResponse<Object>> getAllPaged(
@@ -38,7 +38,7 @@ public class GiamDinhMayMocController {
             @RequestParam(value = "dateTo", required = false) String dateTo
     ) {
         try {
-            PageResponse<GiamDinhMayMocDTO> response = service.findAllPaged(
+            PageResponse<GiamDinhDTO> response = service.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search, trangThai, userid, isSign, dateFrom, dateTo);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
@@ -50,7 +50,7 @@ public class GiamDinhMayMocController {
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(@RequestParam(value = "idcongty", required = false) String idCongTy) {
         try {
-            List<GiamDinhMayMocDTO> list = service.findAll(idCongTy);
+            List<GiamDinhDTO> list = service.findAll(idCongTy);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -61,7 +61,7 @@ public class GiamDinhMayMocController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id) {
         try {
-            GiamDinhMayMocDTO dto = service.findByIdDTO(id);
+            GiamDinhDTO dto = service.findByIdDTO(id);
             if (dto == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.failure("Không tìm thấy biên bản giám định", null));
             return ResponseEntity.ok(ApiResponse.success("Lấy thông tin thành công", dto, 1));
@@ -74,7 +74,18 @@ public class GiamDinhMayMocController {
     @GetMapping("/bienban/{idBienBan}")
     public ResponseEntity<ApiResponse<Object>> getByIdBienBan(@PathVariable("idBienBan") String idBienBan) {
         try {
-            List<GiamDinhMayMocDTO> list = service.findByIdBienBan(idBienBan);
+            List<GiamDinhDTO> list = service.findByIdBienBan(idBienBan);
+            return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
+    @GetMapping("/baocaokythuat/{idBaoCaoKyThuat}")
+    public ResponseEntity<ApiResponse<Object>> getByIdBaoCaoKyThuat(@PathVariable("idBaoCaoKyThuat") String idBaoCaoKyThuat) {
+        try {
+            List<GiamDinhDTO> list = service.findByIdBaoCaoKyThuat(idBaoCaoKyThuat);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", list, list.size()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -83,9 +94,9 @@ public class GiamDinhMayMocController {
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody GiamDinhMayMoc entity) {
+    public ResponseEntity<ApiResponse<Object>> create(@Valid @RequestBody GiamDinh entity) {
         try {
-            GiamDinhMayMoc created = service.insert(entity);
+            GiamDinh created = service.insert(entity);
             return ResponseEntity.ok(ApiResponse.success("Tạo biên bản thành công", created, 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -94,10 +105,10 @@ public class GiamDinhMayMocController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody GiamDinhMayMoc entity) {
+    public ResponseEntity<ApiResponse<Object>> update(@PathVariable("id") String id, @Valid @RequestBody GiamDinh entity) {
         try {
             entity.setId(id);
-            GiamDinhMayMoc updated = service.update(entity);
+            GiamDinh updated = service.update(entity);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật thành công", updated, 1));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -130,7 +141,7 @@ public class GiamDinhMayMocController {
     }
 
     @PutMapping("/batch")
-    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid GiamDinhMayMoc> list) {
+    public ResponseEntity<ApiResponse<Object>> updateBatch(@RequestBody List<@Valid GiamDinh> list) {
         try {
             service.bulkUpdate(list);
             return ResponseEntity.ok(ApiResponse.success("Cập nhật danh sách thành công", null, list.size()));
@@ -168,7 +179,7 @@ public class GiamDinhMayMocController {
             @RequestParam("tenDangNhap") String tenDangNhap
     ) {
         try {
-            GiamDinhMayMocDTO item = service.findByIdDTO(id);
+            GiamDinhDTO item = service.findByIdDTO(id);
             if (item == null) return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.failure("Không tìm thấy biên bản giám định với ID: " + id, null));
 
@@ -197,7 +208,7 @@ public class GiamDinhMayMocController {
         }
     }
 
-   @PatchMapping("/{id}/ghi-chu")
+    @PatchMapping("/{id}/ghi-chu")
     public ResponseEntity<ApiResponse<Object>> updateGhiChu(
             @PathVariable("id") String id,
             @Valid @RequestBody UpdateGhiChuRequest body) {
