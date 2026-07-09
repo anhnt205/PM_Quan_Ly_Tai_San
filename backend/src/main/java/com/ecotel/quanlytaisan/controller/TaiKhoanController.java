@@ -1,14 +1,17 @@
 package com.ecotel.quanlytaisan.controller;
 
+import com.ecotel.quanlytaisan.annotation.PublicApi;
 import com.ecotel.quanlytaisan.model.TaiKhoan;
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.PageResponse;
+import com.ecotel.quanlytaisan.security.OtcStore;
 import com.ecotel.quanlytaisan.service.TaiKhoanService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,6 +23,8 @@ import java.util.Map;
 public class TaiKhoanController {
     @Autowired
     private TaiKhoanService taiKhoanService;
+    @Autowired
+    private OtcStore otcStore;
 
     @GetMapping
     public List<TaiKhoan> getAll() {
@@ -210,4 +215,23 @@ public class TaiKhoanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
         }
     }
+
+    @PublicApi  // Không cần Bearer token — client đang đổi OTC code lấy appToken
+    @PostMapping("/exchange-code")
+    public ResponseEntity<ExchangeCodeResponse> exchangeCode(
+            @RequestBody ExchangeCodeRequest request
+    ) {
+        OtcStore.OtcEntry entry = otcStore.consume(request.code())
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.UNAUTHORIZED, "Invalid or expired code"
+                ));
+
+        return ResponseEntity.ok(new ExchangeCodeResponse(
+                entry.appToken(),
+                entry.refreshToken()
+        ));
+    }
+
+    public record ExchangeCodeRequest(String code) {}
+    public record ExchangeCodeResponse(String appToken, String refreshToken) {}
 }

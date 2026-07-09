@@ -2,7 +2,9 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { ROUTES } from "./utils/routes";
 import Login from "./pages/Auth/Login";
 import Main from "./layout/Main";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { logout } from "./redux/userSlice";
+import { isTokenValid } from "./utils/auth";
 import Staff from "./pages/Staff/Staff";
 import DashBoard from "./pages/Dashboard/DashBoard";
 import Department from "./pages/Department/Department";
@@ -65,8 +67,7 @@ const ProtectedRoute = ({
   if (!user) {
     return <Navigate to={ROUTES.LOGIN} />;
   }
-  const listRole =
-    user?.role?.filter((r: any) => r.canRead).map((item: any) => item.permissionCode) || [];
+  const listRole = user?.role?.map((item: any) => item.permissionCode) || [];
   if (!allowedRoles.some((r: any) => listRole.includes(r))) {
     return <Navigate to={ROUTES.NOT_FOUND} />;
   }
@@ -76,6 +77,14 @@ const ProtectedRoute = ({
 function App() {
   const { user } = useSelector((state: RootState) => state.user);
   const queryClient = useQueryClient();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user?.token && !isTokenValid(user.token)) {
+      dispatch(logout());
+    }
+  }, [user, dispatch]);
+
   useEffect(() => {
     if (user?.taiKhoan?.tenDangNhap) {
       socketService.connect(user.taiKhoan.tenDangNhap);
