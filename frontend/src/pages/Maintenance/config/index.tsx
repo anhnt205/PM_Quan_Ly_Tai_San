@@ -3491,4 +3491,236 @@ export const generateTechnicalReportPdf = async (
     pdf: new Uint8Array(doc.output("arraybuffer")),
     coordinates,
   };
-};  
+};
+
+export const generatePhieuGiaoViecPdf = async (
+  data: any,
+  staffs: any[],
+  departments: any[],
+  positions: any[],
+): Promise<{
+  pdf: Uint8Array;
+  coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  >;
+}> => {
+  const doc = new jsPDF("p", "mm", "a4");
+
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(14);
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const centerX = pageWidth / 2;
+
+
+  doc.text((currentBrandConfig.company).toUpperCase(), centerX, 20, { align: "center" });
+  doc.setFont("times_new_roman", "bold");
+  doc.text(`Đơn vị: ${data?.tenDonViQuanLy}`, centerX, 26, { align: "center" });
+
+  doc.setFontSize(18);
+  doc.text("PHIẾU GIAO VIỆC", centerX, 40, { align: "center" });
+  
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(12);
+  doc.text(`Số phiếu: ${data?.soPhieu || "........................"}`, centerX, 46, { align: "center" });
+
+  let y = 55;
+  doc.text(`Ca ${data?.caBatDau || "..."} ${formatted(data?.ngayBatDau)}.`, 15, y);
+  y += 6;
+  doc.text("Phân xưởng giao cho: Tổ sửa chữa thực hiện các công việc sau.", 15, y);
+  y += 6;
+  const dsTaiSan = data?.danhSachTaiSan || [];
+  const thietBiBKS = dsTaiSan.map((ts: any) => ts.tenTaiSan).join("; ");
+  
+  const thietBiText = doc.splitTextToSize(`Bảo dưỡng thiết bị: ${thietBiBKS || "..................................................................................."}`, pageWidth - 30);
+  doc.text(thietBiText, 15, y);
+  y += 6 * thietBiText.length;
+
+  doc.setFont("times_new_roman", "bold");
+  doc.text("I. Nội dung công việc:", 15, y);
+  y += 2;
+
+  const table1Data = dsTaiSan.map((ts: any, idx: number) => {
+    const userInfo = findById(staffs, ts.nguoiThucHien);
+    const tenNguoiTH = userInfo?.hoTen || ts.tenNguoiThucHien || ts.nguoiThucHien || "";
+    return [
+      idx + 1,
+      ts.maCongViec || "",
+      ts.noiDung || ts.tenTaiSan || "",
+      tenNguoiTH,
+      "",
+    ];
+  });
+
+  autoTable(doc, {
+    startY: y + 2,
+    margin: { left: 15, right: 15 },
+    head: [["TT", "Mã công việc", "Nội dung công việc", "Đại diện nhóm người TH", "Ký nhận việc"]],
+    body: table1Data.length > 0 ? table1Data : [["", "", "Chưa có nội dung công việc", "", ""]],
+    theme: "grid",
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      font: "times_new_roman",
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: {
+      font: "times_new_roman",
+      fontSize: 10,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+    },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      1: { cellWidth: 30, halign: "center" },
+      3: { cellWidth: 40, halign: "center" },
+      4: { cellWidth: 30, halign: "center" },
+    },
+  });
+
+  let finalY = (doc as any).lastAutoTable.finalY + 10;
+  
+  doc.setFont("times_new_roman", "bold");
+  doc.setFontSize(12);
+  doc.text("II. Vật tư:", 15, finalY);
+  
+  const dsVatTu = data?.danhSachVatTu || [];
+  const table2Data = dsVatTu.map((vt: any, idx: number) => [
+    idx + 1,
+    vt.idVatTu || "",
+    vt.tenVatTu || "",
+    vt.kyHieu || "",
+    vt.donViTinh || "",
+    vt.soLuong || "",
+    vt.ghiChu || "",
+  ]);
+
+  autoTable(doc, {
+    startY: finalY + 4,
+    margin: { left: 15, right: 15 },
+    head: [["TT", "Mã số vật tư", "Tên vật tư", "Mã hiệu, quy cách", "ĐVT", "Số lượng", "Ghi chú"]],
+    body: table2Data.length > 0 ? table2Data : [["", "", "Chưa có vật tư", "", "", "", ""]],
+    theme: "grid",
+    headStyles: {
+      fillColor: false,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+      font: "times_new_roman",
+      fontStyle: "bold",
+      halign: "center",
+    },
+    bodyStyles: {
+      font: "times_new_roman",
+      fontSize: 10,
+      textColor: 0,
+      lineWidth: 0.1,
+      lineColor: 0,
+    },
+    columnStyles: {
+      0: { cellWidth: 10, halign: "center" },
+      1: { cellWidth: 25, halign: "center" },
+      3: { cellWidth: 30, halign: "center" },
+      4: { cellWidth: 15, halign: "center" },
+      5: { cellWidth: 20, halign: "center" },
+      6: { cellWidth: 25, halign: "center" },
+    },
+  });
+
+  finalY = (doc as any).lastAutoTable.finalY + 10;
+  
+  doc.setFont("times_new_roman", "normal");
+  doc.setFontSize(12);
+  
+  const footer1 = `Dự kiến thời gian hoàn thành ca ${data?.caDuKien || "..."} ${formatted(data?.ngayDuKien)}.`;
+  doc.text(footer1, 15, finalY);
+  finalY += 6;
+  
+  const footer2 = "Người lao động làm các công việc trên phải thực hiện đầy đủ các quy trình kỹ thuật và các biện pháp đảm bảo an toàn.";
+  const splitFooter = doc.splitTextToSize(footer2, pageWidth - 30);
+  doc.text(splitFooter, 15, finalY);
+  finalY += splitFooter.length * 6 + 10;
+  
+  if (finalY > pageHeight - 60) {
+    doc.addPage();
+    finalY = 20;
+  }
+  const listSigneInfos: any[] = listSigneInfo(
+    data,
+    staffs,
+    departments,
+    positions,
+  );
+
+  const coordinates: Record<
+    string,
+    { xRatio: number; yRatio: number; page?: number }
+  > = {};
+  
+  if (listSigneInfos.length === 0) {
+    doc.setFont("times_new_roman", "italic");
+    doc.text("Chưa có người ký", centerX, finalY, { align: "center" });
+  } else {
+    const marginX = 20;
+    const printableWidth = pageWidth - 2 * marginX;
+    const maxPerRow = 3;
+    const rowGap = 50;
+    const baseWidthPx = 120;
+    const displayWidth = 800;
+
+    listSigneInfos.forEach((s: any, index: number) => {
+      const rowIndex = Math.floor(index / maxPerRow);
+      const colIndex = index % maxPerRow;
+      const itemsInRow = Math.min(
+        maxPerRow,
+        listSigneInfos.length - rowIndex * maxPerRow,
+      );
+
+      let x;
+      if (itemsInRow === 1) x = pageWidth / 2;
+      else {
+        const gapSize = printableWidth / (itemsInRow - 1);
+        x = marginX + colIndex * gapSize;
+      }
+
+      let yPos = finalY + rowIndex * rowGap;
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        finalY = 20 - rowIndex * rowGap;
+        yPos = 20;
+      }
+      const sigWidthMm = (baseWidthPx / displayWidth) * pageWidth;
+
+      coordinates[s.idNhanVien || s.idNguoiKy || s.userId] = {
+        xRatio: Math.max(0, Math.min((x - sigWidthMm / 2) / pageWidth, 1)),
+        yRatio: Math.max(0, Math.min((yPos + 10) / pageHeight, 1)),
+        page: (doc as any).internal.getNumberOfPages(),
+      };
+
+      let label = "";
+      if (index === 0) label = "Người giao việc";
+      else if (index === 1) label = "Người nhận việc";
+      else label = s.chucVu || s.title || s.donVi || "Phê duyệt";
+
+      doc.setFont("times_new_roman", "bold");
+      doc.setFontSize(10);
+      const splitLabel = doc.splitTextToSize(label, 45);
+      doc.text(splitLabel, x, yPos, { align: "center" });
+
+      const nameY = yPos + 35;
+      const name = s.hoTen || s.userName || s.tenNguoiKy || "";
+      const splitName = doc.splitTextToSize(name, 45);
+      doc.text(splitName, x, nameY, { align: "center" });
+    });
+  }
+  
+  return {
+    pdf: new Uint8Array(doc.output("arraybuffer")),
+    coordinates,
+  };
+};

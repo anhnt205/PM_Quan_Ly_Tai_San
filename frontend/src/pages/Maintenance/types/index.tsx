@@ -85,6 +85,8 @@ export interface MaintenanceRepairData {
   tenGiamDoc?:string;
   tenNguoiLap?:string;
   tenLoaiSuaChua?:string;
+  daCoPhieuGiaoViec?:number;
+  ghiChuBienBan?:string;
 
   danhSachTaiSan?: MaintenanceRepairDetailData[];
   danhSachVatTu?: MaintenanceRepairMaterialData[];
@@ -109,6 +111,65 @@ export interface MaintenanceRepairMaterialData {
   // Extras for UI
   tenVatTu?: string;
   donViTinh?: string;
+}
+
+export interface JobAssignmentData {
+  id?: string;
+  idSuaChua?: string;
+  soPhieu?: string;
+  donViQuanLy?: string;
+  caBatDau?: number;
+  ngayBatDau?: string;
+  caDuKien?: number;
+  ngayDuKien?: string;
+
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  // View fields
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenDonViQuanLy?: string;
+
+  danhSachTaiSan?: JobAssignmentAssetData[];
+  danhSachVatTu?: JobAssignmentMaterialData[];
+  nguoiKyList?: any[];
+  chuKyList?: any[];
+}
+
+export interface JobAssignmentAssetData {
+  id?: string;
+  idPhieuGiaoViec?: string;
+  idSuaChuaChiTiet?: string;
+  idTaiSan?: string;
+  tenTaiSan?: string;
+  maCongViec?: string;
+  noiDung?: string;
+  nguoiThucHien?: string;
+  tenNguoiThucHien?: string;
+}
+
+export interface JobAssignmentMaterialData {
+  id?: string;
+  idPhieuGiaoViec?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  soLuong?: number;
+  ghiChu?: string;
+
+  // View fields
+  tenVatTu?: string;
+  donViTinh?: string;
+  kyHieu?: string;
 }
 
 // Đánh giá vật tư thu hồi

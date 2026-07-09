@@ -11,3 +11,4 @@ export * from "./MachineAcceptance";
 export * from "./VehicleAcceptance";
 export * from "./RepairCycle";
 export * from "./TechnicalReport";
+export * from "./JobAssignment";

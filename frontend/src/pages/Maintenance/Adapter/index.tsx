@@ -155,3 +155,13 @@ export const NghiemThuPhuongTienAdapter = (s: any) => ({
   ngayTao: s.ngayTao,
   trangThai: s.trangThai,
 });
+export const JobAssignmentAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+});

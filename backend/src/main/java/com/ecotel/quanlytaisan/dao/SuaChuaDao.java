@@ -62,7 +62,13 @@ public class SuaChuaDao {
                 sc.NguoiTao,
                 sc.NguoiCapNhat,
                 pb1.TenPhongBan AS tenDonViQuanLy,
-                pb2.TenPhongBan AS tenDonViGiamSat
+                pb2.TenPhongBan AS tenDonViGiamSat,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM PhieuGiaoViec pgv
+                        WHERE pgv.IdSuaChua = sc.Id
+                    ) THEN 1 ELSE 0 
+                END as daCoPhieuGiaoViec
             FROM suachua sc
                 LEFT JOIN NhanVien nvLap ON sc.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON sc.IdGiamDoc = nvGD.Id

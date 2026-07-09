@@ -23,6 +23,8 @@ public class SuaChuaDTO {
     private String ngayBaoDuongGanNhat;
 
     private String ghiChuBienBan;
+
+    private Integer daCoPhieuGiaoViec;
     
     // Người lập phiếu
     private String idNguoiLap;

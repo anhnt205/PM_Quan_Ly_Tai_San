@@ -1,0 +1,18 @@
+package com.ecotel.quanlytaisan.model;
+
+import lombok.Data;
+import java.util.List;
+
+@Data
+public class PhieuGiaoViecDTO extends PhieuGiaoViec {
+    private String tenNguoiLap;
+    private String tenGiamDoc;
+    private String tenDonViQuanLy;
+
+    private List<PhieuGiaoViecChiTietTaiSan> danhSachTaiSan;
+    private List<PhieuGiaoViecChiTietVatTu> danhSachVatTu;
+
+    // Workflow signature details
+    private List<KyTaiLieu> chuKyList;
+    private List<NguoiKy> nguoiKyList;
+}

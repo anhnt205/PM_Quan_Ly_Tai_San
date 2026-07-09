@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { TableRow, TableCell, Typography, Box, Chip } from "@mui/material";
+import { TableRow, TableCell, Typography, Box, Chip, IconButton } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { TreeConnector, ROW_H, CONNECTOR_WIDTH } from "./TreeConnector";
 import { ActionCell } from "./ActionCell";
 import { showStatus } from "../../../config";
@@ -9,6 +11,9 @@ import type {
 } from "../../../types";
 import { useMaintenanceRepairMutation } from "../../../mutation";
 import RepairRequestDialog from "../../dialog/RepairRequestDialog";
+import { useJobAssignmentByRepairQuery } from "../../../mutation/JobAssignment";
+import JobAssignmentDialog from "../../dialog/JobAssignmentDialog";
+import { JobAssignmentRow } from "./JobAssignmentRow";
 import { useAppSelector } from "../../../../../redux/store";
 import { useLocation } from "react-router-dom";
 import DraftIndicator from "../../../../../components/common/DraftIndicator";
@@ -18,6 +23,7 @@ interface Props {
   plan?: MaintenancePlanData|null;
   isLast: boolean;
   depth?: number;
+  useConnector?: boolean;
 }
 
 export const RepairRequestRow = ({
@@ -25,12 +31,26 @@ export const RepairRequestRow = ({
   plan,
   isLast,
   depth = 3,
+  useConnector = true,
 }: Props) => {
+  const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const { createMutation, deleteMutation, updateMutation } =
-    useMaintenanceRepairMutation();
+  const [jobAssignmentDialogOpen, setJobAssignmentDialogOpen] = useState(false);
+
+  const { deleteMutation } = useMaintenanceRepairMutation();
 
   const isDraft = repairRequest.trangThai === 0;
+  const isCompleted =
+    repairRequest.trangThai === 3 && repairRequest.daCoPhieuGiaoViec !== 1;
+
+  const { data: jobAssignments = [] } = useJobAssignmentByRepairQuery(
+    expanded ? repairRequest.id : "",
+  );
+  const existingJobAssignment =
+    jobAssignments.length > 0 ? jobAssignments[0] : null;
+
+  const hasChildren =
+    (repairRequest.daCoPhieuGiaoViec && repairRequest.daCoPhieuGiaoViec > 0) || jobAssignments.length > 0;
 
   const handleDelete = () => {
     deleteMutation.mutateAsync(repairRequest);
@@ -41,29 +61,44 @@ export const RepairRequestRow = ({
       <TableRow hover>
         <TableCell
           sx={{
-            pl: 2,
+            pl: useConnector ? 2 : depth * 4,
             position: "relative",
             height: ROW_H,
             display: "flex",
             alignItems: "center",
           }}
         >
-          <Box
-            sx={{
-              position: "absolute",
-              left: 0,
-              top: 0,
-              height: "100%",
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <TreeConnector depth={depth} isLast={isLast} />
-          </Box>
+          {useConnector && (
+            <Box
+              sx={{
+                position: "absolute",
+                left: 0,
+                top: 0,
+                height: "100%",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <TreeConnector depth={depth} isLast={isLast && !hasChildren} />
+            </Box>
+          )}
+          {hasChildren && (
+            <IconButton
+              size="small"
+              sx={{
+                ml: useConnector ? `${CONNECTOR_WIDTH * depth - 6}px` : 0,
+              }}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          )}
           <Typography
             variant="body2"
             sx={{
-              ml: `${CONNECTOR_WIDTH * depth + 36}px`,
+              ml: hasChildren
+                ? useConnector ? `${CONNECTOR_WIDTH * depth + 8}px` : "8px"
+                : useConnector ? `${CONNECTOR_WIDTH * depth + 36}px` : "36px",
             }}
           >
             {repairRequest.id}
@@ -76,7 +111,10 @@ export const RepairRequestRow = ({
         <TableCell>{showStatus(repairRequest.trangThai ?? 0)}</TableCell>
         <TableCell align="right">
           <ActionCell
-            isAdd={false}
+            isAdd={isCompleted}
+            onAdd={() => setJobAssignmentDialogOpen(true)}
+            addTooltip={"Tạo Phiếu giao việc"}
+            addColor="success"
             isEdit={isDraft}
             onEdit={() => setEditDialogOpen(true)}
             editTooltip="Sửa Lệnh sửa chữa"
@@ -87,11 +125,31 @@ export const RepairRequestRow = ({
         </TableCell>
       </TableRow>
 
+      {expanded &&
+        jobAssignments.map((assignment: any, idx: number) => (
+          <JobAssignmentRow
+            key={assignment.id}
+            jobAssignment={assignment}
+            repairRequest={repairRequest}
+            depth={depth + 1}
+            isLast={isLast && idx === jobAssignments.length - 1}
+          />
+        ))}
+
       {editDialogOpen && (
         <RepairRequestDialog
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
           initialData={repairRequest}
+        />
+      )}
+
+      {jobAssignmentDialogOpen && (
+        <JobAssignmentDialog
+          open={jobAssignmentDialogOpen}
+          onClose={() => setJobAssignmentDialogOpen(false)}
+          repairRequest={repairRequest}
+          initialData={existingJobAssignment}
         />
       )}
     </>
