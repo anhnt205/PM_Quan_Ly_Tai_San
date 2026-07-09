@@ -11,8 +11,6 @@ import {
   Backdrop,
   CircularProgress,
 } from "@mui/material";
-import backgroundImage from "../../assets/images/background.jpg";
-import logo from "../../assets/images/logo_1.png";
 import {
   EmailOutlined,
   LockOutline,
@@ -25,6 +23,7 @@ import FieldInput from "../../components/TextField/FieldInput";
 import { validationSchema } from "./validation";
 
 import { useAuthMutation } from "./Mutation";
+import { currentBrandConfig } from "../../config/brandConfig";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginSuccess } from "../../redux/userSlice";
@@ -120,7 +119,7 @@ export default function Login() {
       sx={{
         width: "100%",
         height: "100vh",
-        background: `url(${backgroundImage})`,
+        background: `url(${currentBrandConfig.backgroundImage})`,
         backgroundSize: "cover",
         position: "relative",
       }}
@@ -138,7 +137,7 @@ export default function Login() {
                     rgba(255, 255, 255, 0.15) 1px, 
                     transparent 2px, 
                     transparent 40px
-                ),linear-gradient(to right,rgb(0, 158, 96, 1) 0%,rgb(2, 110, 66, 1) 100%)`,
+                ),linear-gradient(to right,${currentBrandConfig.primaryColor} 0%,${currentBrandConfig.primaryColor} 100%)`,
         }}
       >
         <Typography fontSize={50} fontWeight={700} sx={{ color: "white" }}>
@@ -166,7 +165,11 @@ export default function Login() {
             gap: 3,
           }}
         >
-          <Avatar src={logo} alt="logo" sx={{ width: 80, height: 80 }} />
+          <Avatar
+            src={currentBrandConfig.logo}
+            alt="logo"
+            sx={{ width: 80, height: 80 }}
+          />
           <Typography fontWeight={700} fontSize={24}>
             Đăng nhập
           </Typography>
