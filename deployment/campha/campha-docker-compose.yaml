@@ -65,68 +65,7 @@ services:
       - backnet
 
 volumes:
-  cp_qlts_mysql_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: /mnt/hdd/cp_qlts_mysql_data
-      o: bind
-networks:
-  frontnet:
-  backnet:
-
-      - frontnet
-      - backnet
-    depends_on:
-      - qlts_frontend_service
-      - qlts_backend_service
-
-  qlts_frontend_service:
-    image:
-      ${REGISTRY}/qlts_frontend_img:${VERSION}
-      # target: development
-    ports:
-      # HOST_PORT:CONTAINER_PORT
-      - "9999:80"
-    stdin_open: true
-    environment:
-      - TZ=Asia/Ho_Chi_Minh
-    volumes:
-      # For development only, to synced src code to container
-      - /usr/src/app/node_modules
-      # restart: always
-    networks:
-      - frontnet
-
-  qlts_backend_service:
-    env_file:
-      - .env_backend
-    image: ${REGISTRY}/qlts_backend_img:${VERSION}
-    depends_on:
-      - qlts_mysql
-    ports:
-      - "8386:8386"
-    networks:
-      - backnet
-    restart: unless-stopped
-
-  qlts_mysql:
-    image: mysql:8.0.36
-    command: --lower_case_table_names=1
-    environment:
-      MYSQL_ROOT_PASSWORD: admin
-      MYSQL_DATABASE: QuanLyTaiSan
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
-    ports:
-      - "3311:3306"
-    volumes:
-      - qlts_mysql_data:/var/lib/mysql
-    networks:
-      - backnet
-
-volumes:
- qlts_mysql_data: # ✅ Cho postgres
+  qlts_mysql_data: # ✅ Cho postgres
     driver: local
     driver_opts:
       type: none
