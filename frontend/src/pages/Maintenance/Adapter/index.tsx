@@ -8,6 +8,17 @@ export const PlanAdapter = (s: any) => ({
   trangThai: s.trangThai,
 });
 
+export const MaterialRequisitionAdapter = (s: any) => ({
+  ...s,
+  id: s.id,
+  idTrinhDuyetGiamDoc: s.idGiamDoc,
+  tenTrinhDuyetGiamDoc: s.tenGiamDoc,
+  trinhDuyetGiamDocXacNhan: s.giamDocXacNhan,
+  idNguoiLapBieu: s.idNguoiLap,
+  tenNguoiLapBieu: s.tenNguoiLap,
+  nguoiLapBieuXacNhan: s.nguoiLapXacNhan,
+});
+
 export const TechnicalReportAdapter = (s: any) => ({
   ...s,
   id: s.id,

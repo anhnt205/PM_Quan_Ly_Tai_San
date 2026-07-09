@@ -15,13 +15,13 @@ public class PhieuGiaoViecChiTietVatTuDao {
     private JdbcTemplate jdbcTemplate;
 
     public List<PhieuGiaoViecChiTietVatTu> findByIdPhieuGiaoViec(String idPhieuGiaoViec) {
-        String sql = "SELECT v.*, c.KyHieu as kyHieu, c.Ten as tenVatTu, c.DonViTinh as donViTinh FROM phieugiaoviec_chitietvattu v LEFT JOIN ccdcvattu c ON v.IdVatTu = c.Id WHERE v.IdPhieuGiaoViec = ?";
+        String sql = "SELECT v.*, COALESCE(NULLIF(v.KyHieu, ''), c.KyHieu) as kyHieu, COALESCE(NULLIF(v.TenVatTu, ''), c.Ten) as tenVatTu, c.DonViTinh as donViTinh FROM phieugiaoviec_chitietvattu v LEFT JOIN ccdcvattu c ON v.IdVatTu = c.Id WHERE v.IdPhieuGiaoViec = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(PhieuGiaoViecChiTietVatTu.class), idPhieuGiaoViec);
     }
 
     public void batchInsert(List<PhieuGiaoViecChiTietVatTu> list) {
         if (list == null || list.isEmpty()) return;
-        String sql = "INSERT INTO phieugiaoviec_chitietvattu (Id, IdPhieuGiaoViec, IdVatTu, IdChiTietVatTu, SoLuong, GhiChu) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO phieugiaoviec_chitietvattu (Id, IdPhieuGiaoViec, IdVatTu, IdChiTietVatTu, SoLuong, GhiChu, TenVatTu, KyHieu) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         jdbcTemplate.batchUpdate(sql, list, 100, (ps, e) -> {
             ps.setString(1, e.getId());
             ps.setString(2, e.getIdPhieuGiaoViec());
@@ -29,6 +29,8 @@ public class PhieuGiaoViecChiTietVatTuDao {
             ps.setString(4, e.getIdChiTietVatTu());
             ps.setObject(5, e.getSoLuong());
             ps.setString(6, e.getGhiChu());
+            ps.setString(7, e.getTenVatTu());
+            ps.setString(8, e.getKyHieu());
         });
     }
 

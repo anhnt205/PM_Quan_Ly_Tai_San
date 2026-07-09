@@ -1,8 +1,5 @@
 import { useState } from "react";
-import {
-  showConfirmAlert,
-  showSuccessAlert,
-} from "../../components/Alert";
+import { showConfirmAlert, showSuccessAlert } from "../../components/Alert";
 import {
   Box,
   Chip,
@@ -35,6 +32,7 @@ import {
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
   useMaintenanceRepairPageQuery,
+  useMaterialRequisitionPageQuery,
 } from "./mutation";
 import { useMaintenanceJobAssignmentPageQuery } from "./mutation/JobAssignment";
 import {
@@ -51,6 +49,7 @@ import {
   handleSendToSigner,
   showDownloadFile,
   generateTechnicalReportPdf,
+  generatePhieuLinhVatTuPdf,
 } from "./config";
 import SignDocumentForm from "./components/signdocument/SignDocumentForm";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -62,6 +61,7 @@ import {
   InspectionAdapter,
   JobAssignmentAdapter,
   MaterialAssessmentAdapter,
+  MaterialRequisitionAdapter,
   PlanAdapter,
   RepairAdapter,
   TechnicalReportAdapter,
@@ -119,7 +119,7 @@ export default function MaintenanceRecordPage() {
               : activeTab === 4
                 ? "jobAssignmentPage"
                 : activeTab === 5
-                  ? "nghiemThuMayMocPage"
+                  ? "materialRequisitionPage"
                   : activeTab === 6
                     ? "materialAssessmentPage"
                     : "",
@@ -134,7 +134,7 @@ export default function MaintenanceRecordPage() {
               : activeTab === 4
                 ? "phieugiaoviec"
                 : activeTab === 5
-                  ? "nghiemthu-maymoc"
+                  ? "phieulinhvattu"
                   : activeTab === 6
                     ? "danhgia-vattu"
                     : "",
@@ -197,25 +197,29 @@ export default function MaintenanceRecordPage() {
   );
 
   // sửa chữa
-    const {
-      data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-      isLoading: isLoadingRepair,
-    } = useMaintenanceRepairPageQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      searchDebounce,
-      statusFilter !== "" ? Number(statusFilter) : undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      undefined,
-      dateFrom,
-      dateTo,
-      activeTab === 3,
-    );
-
-// phiếu giao việc
   const {
-    data: jobAssignmentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
+    isLoading: isLoadingRepair,
+  } = useMaintenanceRepairPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 3,
+  );
+
+  // phiếu giao việc
+  const {
+    data: jobAssignmentPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
     isLoading: isLoadingJobAssignment,
   } = useMaintenanceJobAssignmentPageQuery(
     paginationModel.page,
@@ -228,6 +232,27 @@ export default function MaintenanceRecordPage() {
     dateFrom,
     dateTo,
     activeTab === 4,
+  );
+
+  // phiếu vật tư
+  const {
+    data: materialRequisitionPaged = {
+      items: [],
+      totalItems: 0,
+      trangThaiCounts: {},
+    },
+    isLoading: isLoadingMaterialRequisition,
+  } = useMaterialRequisitionPageQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter !== "" ? Number(statusFilter) : undefined,
+    undefined,
+    user?.taiKhoan?.tenDangNhap,
+    undefined,
+    dateFrom,
+    dateTo,
+    activeTab === 5,
   );
 
   const {
@@ -291,7 +316,18 @@ export default function MaintenanceRecordPage() {
       label: "Phiếu giao việc",
       icon: <AssignmentOutlined />,
       idLabel: "Số phiếu",
+      field: "id",
+    },
+    {
+      label: "Phiếu giao việc",
+      icon: <AssignmentOutlined />,
+      idLabel: "Số phiếu",
       field: "soPhieu",
+    },
+    {
+      label: "Phiếu vật tư",
+      icon: <PlaylistAddCheckOutlined />,
+      idLabel: "Số phiếu vật tư",
     },
     {
       label: "BB Nghiệm thu",
@@ -316,11 +352,9 @@ export default function MaintenanceRecordPage() {
         headerName: "Mã báo cáo kỹ thuật",
       },
     ],
-    3: [
-      { field: "idGiamDinh", headerName: "Mã giám định" }
-    ],
+    3: [{ field: "idGiamDinh", headerName: "Mã giám định" }],
     4: [{ field: "idSuaChua", headerName: "Mã lệnh SC" }],
-    5: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
+    5: [{ field: "idPhieuGiaoViec", headerName: "Mã phiếu giao việc" }],
   };
 
   const allRows = [
@@ -331,7 +365,14 @@ export default function MaintenanceRecordPage() {
     },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
     { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
-    { ...jobAssignmentPaged, items: jobAssignmentPaged.items.map(JobAssignmentAdapter) },
+    {
+      ...jobAssignmentPaged,
+      items: jobAssignmentPaged.items.map(JobAssignmentAdapter),
+    },
+    {
+      ...materialRequisitionPaged,
+      items: materialRequisitionPaged.items.map(MaterialRequisitionAdapter),
+    },
     {
       ...acceptanceTestPaged,
       items: (acceptanceTestPaged.items || []).map(AcceptanceTestAdapter),
@@ -560,7 +601,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateNghiemThuPdf(
+              generatePhieuLinhVatTuPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -847,6 +888,12 @@ export default function MaintenanceRecordPage() {
               {
                 label: "Phiếu giao việc",
                 subLabel: "Bàn giao công việc ",
+                icon: AlertTriangle,
+                count: counts.totalIncident,
+              },
+              {
+                label: "Phiếu lĩnh vật tư",
+                subLabel: "Lĩnh vật tư sửa chữa",
                 icon: AlertTriangle,
                 count: counts.totalIncident,
               },

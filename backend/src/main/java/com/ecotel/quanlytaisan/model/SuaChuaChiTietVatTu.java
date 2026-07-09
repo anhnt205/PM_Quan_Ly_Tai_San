@@ -13,4 +13,5 @@ public class SuaChuaChiTietVatTu {
 
     private String tenVatTu;
     private String donViTinh;
+    private String kyHieu;
 }

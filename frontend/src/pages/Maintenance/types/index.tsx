@@ -139,6 +139,8 @@ export interface JobAssignmentData {
   tenNguoiLap?: string;
   tenGiamDoc?: string;
   tenDonViQuanLy?: string;
+  ghiChuBienBan?: string;
+  daCoPhieuLinhVatTu?:number;
 
   danhSachTaiSan?: JobAssignmentAssetData[];
   danhSachVatTu?: JobAssignmentMaterialData[];

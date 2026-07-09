@@ -36,6 +36,7 @@ public class BatchShareController {
             Map.entry("suachua", "suachua"),
             Map.entry("giamdinh", "giamdinh"),
             Map.entry("phieugiaoviec", "PhieuGiaoViec"),
+            Map.entry("phieulinhvattu", "PhieuLinhVatTu"),
             Map.entry("giamdinh-maymoc", "giamdinh_maymoc"),
             Map.entry("giamdinh-phuongtien", "giamdinh_phuongtien"),
             Map.entry("bienphap-maymoc", "bienphap_maymoc"),

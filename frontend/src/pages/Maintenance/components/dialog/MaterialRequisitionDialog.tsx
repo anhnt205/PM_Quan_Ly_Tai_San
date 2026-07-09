@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,15 +9,6 @@ import {
   Typography,
   Divider,
   IconButton,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
-import { useFormik } from "formik";
-import { useLocation } from "react-router-dom";
-import dayjs from "dayjs";
-import { Remove } from "@mui/icons-material";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteIcon from "@mui/icons-material/Delete";
-import {
   Table,
   TableBody,
   TableCell,
@@ -26,63 +17,73 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-
-import JobAssignmentPreview from "../preview/JobAssignmentPreview";
-import FieldInput from "../../../../components/TextField/FieldInput";
-import FieldDate from "../../../../components/TextField/FieldDate";
-import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
-import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { Remove } from "@mui/icons-material";
+import CloseIcon from "@mui/icons-material/Close";
+import { useFormik } from "formik";
+import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
+import dayjs from "dayjs";
+import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
-import { useJobAssignmentMutation } from "../../mutation";
-import { JobAssignmentData } from "../../types";
+
+import FieldInput from "../../../../components/TextField/FieldInput";
+import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
+import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
+import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import MaterialRequisitionPreview from "../preview/MaterialRequisitionPreview";
+
+import { useMaterialRequisitionMutation } from "../../mutation";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
-import { listSigneInfo } from "../../config";
-import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
+import { useAllPositionsQuery } from "../../../Position/Mutation";
 import { generateCode } from "../../../../utils/helpers";
 import { PlanSigner } from "../../../../mockdata/mockPlans";
-import { useAllPositionsQuery } from "../../../Position/Mutation";
+import { listSigneInfo } from "../../config";
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  repairRequest?: any;
-  initialData?: JobAssignmentData | null;
+  jobAssignment?: any;
+  initialData?: any | null;
 }
 
-const JobAssignmentDialog = ({
+const MaterialRequisitionDialog = ({
   open,
   onClose,
-  repairRequest,
+  jobAssignment,
   initialData,
 }: Props) => {
+  const [tabIndex, setTabIndex] = useState(0);
   const location = useLocation();
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
+  const draftId = initialData?.id || jobAssignment?.id || "new";
+
+  const savedDraft = useAppSelector((state: any) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.[`materialRequisitionDraft_${draftId}`] ?? null;
+  });
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
   const { data: apiPositions = [] } = useAllPositionsQuery();
   const { data: allToolDetail = [] } = useAllToolDetailQuery();
-  const { createMutation, updateMutation } = useJobAssignmentMutation();
+  const { createMutation, updateMutation } = useMaterialRequisitionMutation();
 
   const formik = useFormik({
     initialValues: {
       id: "",
-      idSuaChua: repairRequest?.id || "",
+      idPhieuGiaoViec: jobAssignment?.id || "",
       soPhieu: "",
-      donViQuanLy: repairRequest?.donViQuanLy || "",
-      caBatDau: 1,
-      ngayBatDau: dayjs().format("YYYY-MM-DD"),
-      caDuKien: 1,
-      ngayDuKien: dayjs().add(3, "day").format("YYYY-MM-DD"),
+      soQuyetDinh: "",
+      donViDeNghi: jobAssignment?.donViQuanLy || "",
+      mucDichSuDung: "",
+      ghiChu: "",
       danhSachTaiSan: [] as any[],
       danhSachVatTu: [] as any[],
       nguoiKyList: [] as any[],
-      idNguoiLap: "",
-      idGiamDoc: "",
     },
     onSubmit: (values) => {
       const idNguoiLapBieu =
@@ -98,54 +99,30 @@ const JobAssignmentDialog = ({
               .slice(1, -1)
               .map((s: PlanSigner, idx: number) => ({
                 id: `${generateCode("SIG-")}-${idx}`,
+                idTaiLieu: values.id,
                 idNguoiKy: s.userId,
-                tenNguoiKy: s.userName,
-                idPhongBan: s.departmentId,
                 trangThai: 0,
+                idPhongBan: s.departmentId,
+                chucVu: s.position,
               }))
           : [];
 
-      const req: JobAssignmentData = {
+      const submitData = {
         ...values,
         idNguoiLap: idNguoiLapBieu,
         idGiamDoc: idTrinhDuyetGiamDoc,
         nguoiKyList: intermediateSigners,
-        ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-        ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        nguoiLapXacNhan: false,
+        giamDocXacNhan: false,
+        trangThai: 0,
       };
 
-      const draftId =
-        initialData?.id || initialData?.idSuaChua || repairRequest?.id || "new";
-      dispatch(
-        updateTabFormData({
-          path: tabPath,
-          data: { [`jobAssignmentDraft_${draftId}`]: null },
-        }),
-      );
-
-      if (initialData?.id) {
-        updateMutation.mutate(req, {
-          onSuccess: () => {
-            formik.resetForm();
-            onClose();
-          },
-        });
+      if (values.id) {
+        updateMutation.mutate(submitData, { onSuccess: handleClose });
       } else {
-        createMutation.mutate(req, {
-          onSuccess: () => {
-            formik.resetForm();
-            onClose();
-          },
-        });
+        createMutation.mutate(submitData, { onSuccess: handleClose });
       }
     },
-  });
-
-  const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    const draftId =
-      initialData?.id || initialData?.idSuaChua || repairRequest?.id || "new";
-    return tab?.formData?.[`jobAssignmentDraft_${draftId}`] ?? null;
   });
 
   useEffect(() => {
@@ -181,33 +158,9 @@ const JobAssignmentDialog = ({
       return;
     }
 
-    if (repairRequest) {
-      // Auto-fill from repairRequest
-      const assetsList = (repairRequest?.danhSachTaiSan || []).map(
-        (ts: any) => ({
-          idSuaChuaChiTiet: ts.id,
-          idTaiSan: ts.idTaiSan,
-          tenTaiSan: ts.tenTaiSan,
-          maCongViec: "",
-          noiDung: `Bảo dưỡng ${ts.tenTaiSan || ""}`,
-          nguoiThucHien: "",
-        }),
-      );
-
-      const materialsList = (repairRequest?.danhSachVatTu || []).map(
-        (vt: any) => ({
-          idVatTu: vt.idVatTu,
-          idChiTietVatTu: vt.idChiTietVatTu,
-          tenVatTu: vt.tenVatTu,
-          kyHieu: vt.kyHieu || "",
-          donViTinh: vt.donViTinh || "",
-          soLuong: vt.soLuong || 1,
-          ghiChu: vt.ghiChu || "",
-        }),
-      );
-
+    if (jobAssignment) {
       const signersList = listSigneInfo(
-        repairRequest,
+        jobAssignment,
         apiUsers,
         apiDepartments,
         apiPositions,
@@ -221,19 +174,40 @@ const JobAssignmentDialog = ({
         order: idx + 1,
       }));
 
+      const materialsList = (jobAssignment.danhSachVatTu || []).map(
+        (vt: any) => ({
+          id: `SVT_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+          idChiTietVatTu: vt.idChiTietVatTu || "",
+          idVatTu: vt.idVatTu || "",
+          tenVatTu: vt.tenVatTu || "",
+          kyHieu: vt.kyHieu || vt.maHieu || "",
+          donViTinh: vt.donViTinh || "",
+          soLuongDeNghi: vt.soLuong || 1,
+          soLuongDuyet: vt.soLuong || 1,
+          soLuongThuCu: 0,
+        }),
+      );
+
+      const assetsList = (jobAssignment?.danhSachTaiSan || []).map(
+        (ts: any) => ({
+          idBienBan: ts.id,
+          idTaiSan: ts.idTaiSan,
+        }),
+      );
+
       formik.setValues({
         ...formik.initialValues,
-        idSuaChua: repairRequest.id,
-        donViQuanLy: repairRequest.donViQuanLy || "",
-        danhSachTaiSan: assetsList,
-        danhSachVatTu: materialsList,
+        idPhieuGiaoViec: jobAssignment.id,
+        donViDeNghi: jobAssignment.donViQuanLy || "",
         nguoiKyList: signersList,
+        danhSachVatTu: materialsList,
+        danhSachTaiSan: assetsList,
       });
     }
   }, [
     open,
     initialData,
-    repairRequest,
+    jobAssignment,
     savedDraft,
     apiUsers?.length,
     apiDepartments?.length,
@@ -248,8 +222,9 @@ const JobAssignmentDialog = ({
       tenVatTu: "",
       kyHieu: "",
       donViTinh: "",
-      soLuong: 1,
-      ghiChu: "",
+      soLuongDeNghi: 1,
+      soLuongDuyet: 1,
+      soLuongThuCu: 0,
     };
     formik.setFieldValue("danhSachVatTu", [
       ...(formik.values.danhSachVatTu || []),
@@ -276,15 +251,10 @@ const JobAssignmentDialog = ({
   };
 
   const handleClose = () => {
-    const draftId =
-      initialData?.id || initialData?.idSuaChua || repairRequest?.id || "new";
     dispatch(
       updateTabFormData({
         path: tabPath,
-        data: {
-          [`jobAssignmentDraft_${draftId}`]: null,
-          lastMinimizedDialog: null,
-        },
+        data: { [`materialRequisitionDraft_${draftId}`]: null },
       }),
     );
     formik.resetForm();
@@ -292,15 +262,10 @@ const JobAssignmentDialog = ({
   };
 
   const handleMinimize = () => {
-    const draftId =
-      initialData?.id || initialData?.idSuaChua || repairRequest?.id || "new";
     dispatch(
       updateTabFormData({
         path: tabPath,
-        data: {
-          [`jobAssignmentDraft_${draftId}`]: formik.values,
-          lastMinimizedDialog: "jobAssignment",
-        },
+        data: { [`materialRequisitionDraft_${draftId}`]: formik.values },
       }),
     );
     onClose();
@@ -323,7 +288,9 @@ const JobAssignmentDialog = ({
         }}
       >
         <Typography variant="h6" fontWeight={600}>
-          Tạo Phiếu giao việc
+          {initialData?.id
+            ? "Chỉnh sửa Phiếu Lĩnh Vật Tư"
+            : "Tạo Phiếu Lĩnh Vật Tư"}
         </Typography>
         <Box sx={{ display: "flex", gap: 0.5 }}>
           <IconButton size="small" onClick={handleMinimize}>
@@ -352,50 +319,43 @@ const JobAssignmentDialog = ({
                 }}
               >
                 <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  Thông tin Phiếu giao việc
+                  Thông tin Phiếu lĩnh vật tư
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <FieldInput
-                    title="Số phiếu"
-                    field="soPhieu"
-                    formik={formik}
-                  />
+                  <Box sx={{ display: "flex", gap: 2 }}>
+                    <FieldInput
+                      title="Số phiếu"
+                      field="soPhieu"
+                      formik={formik}
+                    />
+                    <FieldInput
+                      title="Số quyết định"
+                      field="soQuyetDinh"
+                      formik={formik}
+                    />
+                  </Box>
                   <FieldAutoCompleted
                     data={apiDepartments}
                     labelkey="tenPhongBan"
                     labelOption="id"
-                    title="Đơn vị quản lý"
-                    field="donViQuanLy"
+                    title="Đơn vị đề nghị"
+                    field="donViDeNghi"
                     formik={formik}
                   />
-
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <FieldInput
-                      title="Ca bắt đầu"
-                      field="caBatDau"
-                      formik={formik}
-                      type="number"
-                    />
-                    <FieldDate
-                      title="Ngày bắt đầu"
-                      field="ngayBatDau"
-                      formik={formik}
-                    />
-                  </Box>
-
-                  <Box sx={{ display: "flex", gap: 2 }}>
-                    <FieldInput
-                      title="Ca dự kiến hoàn thành"
-                      field="caDuKien"
-                      formik={formik}
-                      type="number"
-                    />
-                    <FieldDate
-                      title="Ngày dự kiến hoàn thành"
-                      field="ngayDuKien"
-                      formik={formik}
-                    />
-                  </Box>
+                  <FieldInput
+                    title="Mục đích sử dụng"
+                    field="mucDichSuDung"
+                    formik={formik}
+                    multiline
+                    rows={3}
+                  />
+                  <FieldInput
+                    title="Ghi chú"
+                    field="ghiChu"
+                    formik={formik}
+                    multiline
+                    rows={3}
+                  />
                 </Box>
               </Box>
             </Box>
@@ -407,118 +367,84 @@ const JobAssignmentDialog = ({
 
           <Box>
             <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-              Nội dung công việc (Tài sản)
+              Danh sách vật tư đề nghị
             </Typography>
             <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
               <Table size="small">
                 <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: 700, width: 40 }}>
+                  <TableRow>
+                    <TableCell rowSpan={2} sx={{ fontWeight: 700, width: 40 }}>
                       STT
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 150 }}>
-                      Mã công việc
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>
-                      Nội dung công việc
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 300 }}>
-                      Đại diện nhóm người TH
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {(formik.values.danhSachTaiSan || []).map(
-                    (item: any, rowIdx: number) => (
-                      <TableRow key={item.id || item.idTaiSan || rowIdx}>
-                        <TableCell sx={{ pl: 2 }}>{rowIdx + 1}</TableCell>
-                        <TableCell>
-                          <FieldInput
-                            title=""
-                            field={`danhSachTaiSan.${rowIdx}.maCongViec`}
-                            formik={formik}
-                            noBorder={true}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <FieldInput
-                            title=""
-                            field={`danhSachTaiSan.${rowIdx}.noiDung`}
-                            formik={formik}
-                            noBorder={true}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <FieldAutoCompleted
-                            title=""
-                            data={apiUsers}
-                            labelkey="hoTen"
-                            field={`danhSachTaiSan.${rowIdx}.nguoiThucHien`}
-                            formik={formik}
-                            noBorder={true}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ),
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-
-            <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 1 }}>
-              Vật tư
-            </Typography>
-            <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: 700, width: 40 }}>
-                      STT
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 150 }}>
+                    <TableCell rowSpan={2} sx={{ fontWeight: 700, width: 250 }}>
                       Mã vật tư
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700 }}>Tên vật tư</TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 150 }}>
-                      Mã hiệu, quy cách
+                    <TableCell rowSpan={2} sx={{ fontWeight: 700, width: 250 }}>
+                      Tên vật tư
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 80 }}>
-                      ĐVT
+                    <TableCell rowSpan={2} sx={{ fontWeight: 700, width: 80 }}>
+                      Quy cách
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 80 }}>
-                      Số lượng
+                    <TableCell rowSpan={2} sx={{ fontWeight: 700, width: 80 }}>
+                      Đơn vị tính
                     </TableCell>
-                    <TableCell sx={{ fontWeight: 700, width: 150 }}>
-                      Ghi chú
+                    <TableCell
+                      colSpan={2}
+                      sx={{ fontWeight: 700, width: 100 }}
+                      align="center"
+                    >
+                      Số lượng vật tư cấp mới
                     </TableCell>
-                    <TableCell sx={{ width: 40 }}>
+                    <TableCell
+                      rowSpan={2}
+                      sx={{ fontWeight: 700, width: 100 }}
+                      align="center"
+                    >
+                      SL Thu cũ
+                    </TableCell>
+                    <TableCell sx={{ width: 40 }} align="center" rowSpan={2}>
                       <IconButton
                         size="small"
                         onClick={addMaterialRow}
                         color="primary"
+                        sx={{ border: "1px dashed", borderRadius: 1 }}
                       >
                         <AddIcon fontSize="small" />
                       </IconButton>
                     </TableCell>
                   </TableRow>
+                  <TableRow>
+                    <TableCell
+                      sx={{ fontWeight: 700, width: 100 }}
+                      align="center"
+                    >
+                      Đề nghị
+                    </TableCell>
+                    <TableCell
+                      sx={{ fontWeight: 700, width: 100 }}
+                      align="center"
+                    >
+                      Duyệt
+                    </TableCell>
+                  </TableRow>
                 </TableHead>
                 <TableBody>
                   {(formik.values.danhSachVatTu || []).map(
-                    (item: any, rowIdx: number) => (
-                      <TableRow key={item.id || item.idVatTu || rowIdx}>
+                    (row: any, rowIdx: number) => (
+                      <TableRow key={row.id || row.idVatTu || rowIdx}>
                         <TableCell sx={{ pl: 2 }}>{rowIdx + 1}</TableCell>
-                        <TableCell sx={{ width: "200px" }}>
+                        <TableCell>
                           <FieldAutoCompleted
-                            title=""
                             data={allToolDetail}
                             labelkey="tenTaiSan"
                             labelOption="idTaiSan"
-                            limitOptions={10}
-                            value={item.idChiTietVatTu}
+                            title=""
                             noBorder={true}
+                            formik={formik}
+                            value={row.idChiTietVatTu}
                             onChange={(value: any) => {
                               if (value) {
-                                updateMaterial(item.id || item.idVatTu, {
+                                updateMaterial(row.id || row.idVatTu, {
                                   idChiTietVatTu: value.id,
                                   idVatTu: value.idTaiSan,
                                   tenVatTu: value.tenTaiSan,
@@ -526,7 +452,7 @@ const JobAssignmentDialog = ({
                                   kyHieu: value.kyHieu,
                                 });
                               } else {
-                                updateMaterial(item.id || item.idVatTu, {
+                                updateMaterial(row.id || row.idVatTu, {
                                   idChiTietVatTu: "",
                                   idVatTu: "",
                                   tenVatTu: "",
@@ -536,55 +462,82 @@ const JobAssignmentDialog = ({
                             }}
                           />
                         </TableCell>
-                        <TableCell
-                          sx={{
-                            maxWidth: "150px",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {item.tenVatTu}
-                        </TableCell>
                         <TableCell>
                           <FieldInput
                             title=""
-                            field={`danhSachVatTu.${rowIdx}.kyHieu`}
-                            formik={formik}
+                            field="tenVatTu"
                             noBorder={true}
+                            formik={{
+                              values: { tenVatTu: row.tenVatTu },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { tenVatTu: v }),
+                            }}
                           />
                         </TableCell>
                         <TableCell>
                           <FieldInput
                             title=""
-                            field={`danhSachVatTu.${rowIdx}.donViTinh`}
-                            formik={formik}
+                            field="kyHieu"
                             noBorder={true}
+                            formik={{
+                              values: { kyHieu: row.kyHieu },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { kyHieu: v }),
+                            }}
                           />
                         </TableCell>
                         <TableCell>
+                          <FieldInput
+                            title=""
+                            field="donViTinh"
+                            noBorder={true}
+                            formik={{
+                              values: { donViTinh: row.donViTinh },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { donViTinh: v }),
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
                           <TextFieldNumber
-                            title=""
-                            field={`danhSachVatTu.${rowIdx}.soLuong`}
-                            formik={formik}
+                            field="soLuongDeNghi"
                             noBorder={true}
+                            formik={{
+                              values: { soLuongDeNghi: row.soLuongDeNghi },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { soLuongDeNghi: v }),
+                            }}
                           />
                         </TableCell>
-                        <TableCell>
-                          <FieldInput
-                            title=""
-                            field={`danhSachVatTu.${rowIdx}.ghiChu`}
-                            formik={formik}
+                        <TableCell align="center">
+                          <TextFieldNumber
+                            field="soLuongDuyet"
                             noBorder={true}
+                            formik={{
+                              values: { soLuongDuyet: row.soLuongDuyet },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { soLuongDuyet: v }),
+                            }}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          <TextFieldNumber
+                            field="soLuongThuCu"
+                            noBorder={true}
+                            formik={{
+                              values: { soLuongThuCu: row.soLuongThuCu },
+                              setFieldValue: (_f: string, v: any) =>
+                                updateMaterial(row.id, { soLuongThuCu: v }),
+                            }}
                           />
                         </TableCell>
                         <TableCell align="center">
                           <IconButton
                             size="small"
-                            onClick={() =>
-                              removeMaterialRow(item.id || item.idVatTu)
-                            }
                             color="error"
+                            onClick={() =>
+                              removeMaterialRow(row.id || row.idVatTu)
+                            }
                           >
                             <DeleteIcon fontSize="small" />
                           </IconButton>
@@ -598,7 +551,7 @@ const JobAssignmentDialog = ({
           </Box>
 
           <Box>
-            <JobAssignmentPreview
+            <MaterialRequisitionPreview
               data={formik.values}
               apiDepartments={apiDepartments}
               apiUsers={apiUsers}
@@ -614,15 +567,16 @@ const JobAssignmentDialog = ({
           Hủy
         </Button>
         <Button
+          onClick={() => formik.handleSubmit()}
           variant="contained"
           color="primary"
-          onClick={() => formik.handleSubmit()}
+          disabled={createMutation.isPending || updateMutation.isPending}
         >
-          Lưu &amp; Gửi duyệt
+          {initialData?.id ? "Cập nhật" : "Lưu & Gửi duyệt"}
         </Button>
       </DialogActions>
     </Dialog>
   );
 };
 
-export default JobAssignmentDialog;
+export default MaterialRequisitionDialog;

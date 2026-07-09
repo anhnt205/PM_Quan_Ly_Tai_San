@@ -8,6 +8,7 @@ public class PhieuGiaoViecDTO extends PhieuGiaoViec {
     private String tenNguoiLap;
     private String tenGiamDoc;
     private String tenDonViQuanLy;
+    private Integer daCoPhieuLinhVatTu;
 
     private List<PhieuGiaoViecChiTietTaiSan> danhSachTaiSan;
     private List<PhieuGiaoViecChiTietVatTu> danhSachVatTu;
