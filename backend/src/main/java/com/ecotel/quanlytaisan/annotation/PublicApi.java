@@ -7,7 +7,4 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RequirePermission {
-    String resource()        default "";
-    String action()          default ""; // Rỗng → tự suy từ HTTP method
-}
+public @interface PublicApi {}

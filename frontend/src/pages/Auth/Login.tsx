@@ -8,6 +8,8 @@ import {
   InputAdornment,
   TextField,
   Typography,
+  Backdrop,
+  CircularProgress,
 } from "@mui/material";
 import {
   EmailOutlined,
@@ -22,10 +24,19 @@ import { validationSchema } from "./validation";
 
 import { useAuthMutation } from "./Mutation";
 import { currentBrandConfig } from "../../config/brandConfig";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { loginSuccess } from "../../redux/userSlice";
+import api from "../../config/api.config";
+import { decodeJwt, mapPortalPermissionsToRoles } from "../../utils/auth";
+import { showErrorAlert } from "../../components/Alert";
 
 export default function Login() {
   const [showPassWord, setShowPassWord] = useState(true);
+  const [exchanging, setExchanging] = useState(false);
 
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { loginMutation } = useAuthMutation();
 
   const formik = useFormik({
@@ -38,6 +49,57 @@ export default function Login() {
       loginMutation.mutate(values);
     },
   });
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (code) {
+      setExchanging(true);
+
+      // Xóa code khỏi URL ngay lập tức để tránh exchange lại khi reload
+      params.delete("code");
+      const cleanSearch = params.toString();
+      const cleanPath =
+        window.location.pathname +
+        (cleanSearch ? `?${cleanSearch}` : "") +
+        window.location.hash;
+      window.history.replaceState({}, document.title, cleanPath);
+
+      api
+        .post("/taikhoan/exchange-code", { code })
+        .then((res) => {
+          const { appToken } = res.data;
+          const payload = decodeJwt(appToken);
+          if (payload) {
+            const userData = {
+              taiKhoan: {
+                id: payload.userId || payload.sub,
+                tenDangNhap: payload.username || payload.sub,
+                hoTen: payload.fullName || payload.sub,
+              },
+              token: appToken,
+              isPortal: true,
+              role: mapPortalPermissionsToRoles(payload.permissions || {}),
+            };
+            dispatch(loginSuccess(userData));
+            navigate("/");
+          } else {
+            throw new Error("Token từ portal không hợp lệ");
+          }
+        })
+        .catch((err) => {
+          console.error("Lỗi exchange code:", err);
+          showErrorAlert(
+            err.response?.data?.message ||
+              "Xác thực qua Portal thất bại hoặc mã code đã hết hạn.",
+          );
+        })
+        .finally(() => {
+          setExchanging(false);
+        });
+    }
+  }, [dispatch, navigate]);
   useEffect(() => {
     const handleKeyDown = (e: any) => {
       if (e.key === "Enter") {
@@ -154,13 +216,46 @@ export default function Login() {
             variant="contained"
             fullWidth
             sx={{
-              p: 2,
+              p: 1.8,
               borderRadius: "12px",
+              background: "rgb(0, 158, 96, 1)",
               fontWeight: "bold",
+              "&:hover": {
+                background: "rgb(2, 110, 66, 1)",
+              },
             }}
             onClick={() => formik.submitForm()}
           >
             Đăng nhập
+          </Button>
+          <Box display="flex" alignItems="center" width="100%">
+            <Box flex={1} height="1px" bgcolor="#e0e0e0" />
+            <Typography variant="body2" sx={{ mx: 2, color: "text.secondary" }}>
+              Hoặc
+            </Typography>
+            <Box flex={1} height="1px" bgcolor="#e0e0e0" />
+          </Box>
+          <Button
+            variant="outlined"
+            fullWidth
+            sx={{
+              p: 1.8,
+              borderRadius: "12px",
+              borderColor: "rgb(0, 158, 96, 1)",
+              color: "rgb(0, 158, 96, 1)",
+              fontWeight: "bold",
+              "&:hover": {
+                borderColor: "rgb(2, 110, 66, 1)",
+                background: "rgba(0, 158, 96, 0.04)",
+              },
+            }}
+            onClick={() => {
+              const portalUrl =
+                import.meta.env.VITE_PORTAL_URL || "http://localhost:8080";
+              window.location.href = `${portalUrl}?redirect=hrm`;
+            }}
+          >
+            Đăng nhập qua Portal
           </Button>
         </Container>
       </Box>
@@ -169,6 +264,17 @@ export default function Login() {
           quanlytaisan-Version:dev_3.0_18/06/2026
         </Typography>
       </Box>
+      <Backdrop
+        sx={(theme) => ({ color: "#fff", zIndex: theme.zIndex.drawer + 1 })}
+        open={exchanging}
+      >
+        <Box display="flex" flexDirection="column" alignItems="center" gap={2}>
+          <CircularProgress color="inherit" />
+          <Typography variant="h6" sx={{ color: "#fff" }}>
+            Đang xác thực thông tin với Portal...
+          </Typography>
+        </Box>
+      </Backdrop>
     </Box>
   );
 }
