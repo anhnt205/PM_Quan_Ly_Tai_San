@@ -9,7 +9,9 @@ import type { MaintenancePlanData } from "../../../types";
 import {
   useMaintenanceInspectionMutation,
 } from "../../../mutation";
-
+import { useMaintenanceRepairByInspectionQuery } from "../../../mutation/Repair";
+import { RepairRequestRow } from "./RepairRequestRow";
+import RepairRequestDialog from "../../dialog/RepairRequestDialog";
 import InspectionRecordDialog from "../../dialog/InspectionRecordDialog";
 import { useAppSelector } from "../../../../../redux/store";
 import { useLocation } from "react-router-dom";
@@ -37,7 +39,6 @@ export const InspectionRow = ({
   const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addBienPhapDialogOpen, setAddBienPhapDialogOpen] = useState(false);
-  const [addAcceptanceDialogOpen, setAddAcceptanceDialogOpen] = useState(false);
 
   const location = useLocation();
   const tabPath = location.pathname;
@@ -54,15 +55,19 @@ export const InspectionRow = ({
   
 
 
+  const { data: repairs = [] } = useMaintenanceRepairByInspectionQuery(
+    expanded ? inspection.id : "",
+  );
+
   const { deleteMutation: deleteInspMachine } = useMaintenanceInspectionMutation();
 
   const isDraft = inspection.trangThai === 0;
-  const canAddBienPhap =
+  const canAddRepair =
     inspection.trangThai === 3 &&
-    (!inspection.daCoSuaChua || inspection.daCoSuaChua === 0)
+    (!inspection.daCoLenhSuaChua || inspection.daCoLenhSuaChua === 0);
 
   const hasChildren =
-    (inspection.daCoSuaChua && inspection.daCoSuaChua > 0)
+    (inspection.daCoLenhSuaChua && inspection.daCoLenhSuaChua > 0) || repairs.length > 0;
 
   const handleDelete = () => {
     deleteInspMachine.mutateAsync(inspection.id);
@@ -129,7 +134,7 @@ export const InspectionRow = ({
         <TableCell align="right">
           <ActionCell
             onAdd={() => setAddBienPhapDialogOpen(true)}
-            isAdd={canAddBienPhap}
+            isAdd={canAddRepair}
             addTooltip="Tạo lệnh sửa chữa"
             addColor="error"
             isEdit={isDraft}
@@ -142,19 +147,15 @@ export const InspectionRow = ({
         </TableCell>
       </TableRow>
 
-      {/* {expanded &&
-        directAcceptances.map((acc: any, idx: number) => (
-          <AcceptanceRow
-            key={acc.id}
-            acceptance={acc}
-            depth={depth + 1}
-            isLast={idx === directAcceptances.length - 1}
+      {expanded &&
+        repairs.map((req: any, idx: number) => (
+          <RepairRequestRow
+            key={req.id}
+            repairRequest={req}
             plan={plan}
-            inspection={inspection}
-            useConnector={useConnector}
-            isMachine={isMachine}
+            isLast={isLast && idx === repairs.length - 1}
           />
-        ))} */}
+        ))}
 
       {editDialogOpen && (
           <InspectionRecordDialog
@@ -163,6 +164,15 @@ export const InspectionRow = ({
             technicalReport={null}
             initData={inspection}
           />
+      )}
+
+      {addBienPhapDialogOpen && (
+        <RepairRequestDialog
+          open={addBienPhapDialogOpen}
+          onClose={() => setAddBienPhapDialogOpen(false)}
+          inspection={inspection}
+          initialData={{ idGiamDinh: inspection.id }}
+        />
       )}
 
       {lastMinimizedDialog === "repair" && hasRrepairDraft && (

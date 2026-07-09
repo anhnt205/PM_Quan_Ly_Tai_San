@@ -57,25 +57,37 @@ export interface IncidenDetailData {
 export interface MaintenanceRepairData {
   id?: string;
   idCongTy?: string;
-  soPhieu?: string;
-  idKeHoach?: string;
-  thang?: number;
-  nam?: number;
-  ghiChu?: string;
+  idGiamDinh?: string;
+  donViQuanLy?: string;
+  donViGiamSat?: string;
+  gioHoatDong?: string;
+  loaiSuaChua?: string;
+  tinhTrang?: string;
+  nhanCongThucHien?: string;
+  thoiGian?: string;
+  diaDiem?: string;
+  ngayBaoDuongGanNhat?: string;
   idNguoiLap?: string;
   nguoiLapXacNhan?: boolean;
   idGiamDoc?: string;
   giamDocXacNhan?: boolean;
   share?: boolean;
   trangThai?: number;
-  daCoGiamDinh?: number;
   ngayTao?: string;
   ngayCapNhat?: string;
   nguoiTao?: string;
   nguoiCapNhat?: string;
   tenMauBienBan?: string;
   congTy?: string;
+
+  tenDonViQuanLy?: string;
+  tenDonViGiamSat?: string;
+  tenGiamDoc?:string;
+  tenNguoiLap?:string;
+  tenLoaiSuaChua?:string;
+
   danhSachTaiSan?: MaintenanceRepairDetailData[];
+  danhSachVatTu?: MaintenanceRepairMaterialData[];
   nguoiKyList?: any[];
 }
 
@@ -84,18 +96,19 @@ export interface MaintenanceRepairDetailData {
   idSuaChua?: string;
   idTaiSan?: string;
   tenTaiSan?: string;
-  nhomTaiSan?: string;
-  donViTinh?: string;
-  capSuaChua?: string;
+  idChiTietGiamDinh?: string;
+}
+
+export interface MaintenanceRepairMaterialData {
+  id?: string;
+  idSuaChua?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
   soLuong?: number;
-  donViQuanLy?: string;
-  donViBaoTri?: string;
-  idKeHoachChiTiet: string;
-  ngayTao?: string;
-  ngayCapNhat?: string;
-  nguoiTao?: string;
-  nguoiCapNhat?: string;
-  action?: ActionType;
+  ghiChu?: string;
+  // Extras for UI
+  tenVatTu?: string;
+  donViTinh?: string;
 }
 
 // Đánh giá vật tư thu hồi

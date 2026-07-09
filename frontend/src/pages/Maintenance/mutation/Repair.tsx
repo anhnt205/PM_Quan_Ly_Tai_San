@@ -54,16 +54,17 @@ export const useMaintenanceRepairPageQuery = (
     enabled,
   });
 };
-export const useMaintenanceRepairByPlanQuery = (idKeHoach?: string) => {
+export const useMaintenanceRepairByInspectionQuery = (idGiamDinh?: string) => {
   return useQuery({
-    queryKey: ["repairByPlan", idKeHoach],
+    queryKey: ["repairByInspection", idGiamDinh],
     queryFn: async () => {
-      const res = await api.get(`/suachua/kehoach/${idKeHoach}`);
+      const res = await api.get(`/suachua/giamdinh/${idGiamDinh}`);
       return (res.data.data || res.data || []).map((item: any) =>
         RepairAdapter(item),
       );
     },
     placeholderData: (previousData) => previousData,
+    enabled: !!idGiamDinh,
   });
 };
 export const useMaintenanceRepairMutation = () => {
@@ -90,7 +91,7 @@ export const useMaintenanceRepairMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ["incidentDetailByIncident"],
       });
-      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByInspection"] });
       showSuccessAlert("Tạo giấy đề nghị sửa chữa thành công");
     },
     onError: (error: any) => {
@@ -112,7 +113,7 @@ export const useMaintenanceRepairMutation = () => {
     },
     onSuccess: async (response, variables) => {
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
-      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByInspection"] });
       queryClient.invalidateQueries({
         queryKey: ["maintenancePlanningDetailsByMonth"],
       });
@@ -157,7 +158,7 @@ export const useMaintenanceRepairMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["repairPage"] });
-      queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
+      queryClient.invalidateQueries({ queryKey: ["repairByInspection"] });
       queryClient.invalidateQueries({
         queryKey: ["maintenancePlanningDetailsByMonth"],
       });

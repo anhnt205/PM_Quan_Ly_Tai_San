@@ -32,6 +32,7 @@ import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { currentBrandConfig } from "../../../../config/brandConfig";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldDate from "../../../../components/TextField/FieldDate";
+import { useTechnicalReportMutation } from "../../mutation";
 
 interface Props {
   open: boolean;
@@ -39,7 +40,6 @@ interface Props {
   plan: MaintenancePlanData;
   selectedDeviceIds: string[];
   selectedMonth: number;
-  onSubmit: (req: TechnicalReportData) => void;
   initialData?: TechnicalReportData | null;
 }
 
@@ -49,7 +49,6 @@ const TechnicalReportDialog = ({
   plan,
   selectedDeviceIds,
   selectedMonth,
-  onSubmit,
   initialData,
 }: Props) => {
   const sourceDeptId = plan.idDonViGiao || "";
@@ -60,6 +59,11 @@ const TechnicalReportDialog = ({
   const location = useLocation();
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
+
+  const {
+    createMutation: createTechMutation,
+    updateMutation: updateTechMutation,
+  } = useTechnicalReportMutation();
 
   // Tạo Tên thiết bị chung từ danh sách thiết bị
   const tenTaiSanDefault = selectedDeviceIds
@@ -131,9 +135,21 @@ const TechnicalReportDialog = ({
           data: { [`techReportDraft_${plan.id}`]: null },
         }),
       );
-      onSubmit(req);
-      formik.resetForm();
-      onClose();
+      if (initialData?.id) {
+        updateTechMutation.mutateAsync(req, {
+          onSuccess: () => {
+            formik.resetForm();
+            onClose();
+          },
+        });
+      } else {
+        createTechMutation.mutateAsync(req, {
+          onSuccess: () => {
+            formik.resetForm();
+            onClose();
+          },
+        });
+      }
     },
   });
 

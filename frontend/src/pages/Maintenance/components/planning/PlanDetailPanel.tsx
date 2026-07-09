@@ -27,20 +27,16 @@ import PostAddIcon from "@mui/icons-material/PostAdd";
 import CheckIcon from "@mui/icons-material/Check";
 import { maintenanceLevelColors } from "../../../../mockdata/mockPlans";
 
-import RepairRequestDialog from "../dialog/RepairRequestDialog";
 import { MaintenancePlanData } from "../../types";
 import { MaintenanceRepairData } from "../../types";
 import { useAppSelector } from "../../../../redux/store";
 import { useLocation } from "react-router-dom";
 import DraftIndicator from "../../../../components/common/DraftIndicator";
 import {
-  useMaintenanceRepairByPlanQuery,
   useMaintenanceRepairMutation,
   useMaintenancePlanningDetailsByMonthQuery,
 } from "../../mutation";
 import { showStatus } from "../../config";
-import { AssetGroup } from "../../../../utils/const";
-import { RepairRequestRow } from "./tree/RepairRequestRow";
 import { TechnicalReportRow } from "./tree/TechnicalReportRow";
 import TechnicalReportDialog from "../dialog/TechnicalReportDialog";
 import {
@@ -66,7 +62,6 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     return [new Date().getMonth() + 1];
   });
   const [selectedDeviceIds, setSelectedDeviceIds] = useState<string[]>([]);
-  const [repairDialogOpen, setRepairDialogOpen] = useState(false);
   const [techReportDialogOpen, setTechReportDialogOpen] = useState(false);
 
   const location = useLocation();
@@ -76,26 +71,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.lastMinimizedDialog ?? null;
   });
-  const hasRepairDraft = useAppSelector((state) => {
+  const hasTechReportDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return !!tab?.formData?.[`repairDraft_${plan?.id}`];
+    return !!tab?.formData?.[`techReportDraft_${plan?.id}`];
   });
-
-  const [selectedReq, setSelectedReq] = useState<MaintenanceRepairData | null>(
-    null,
-  );
-
-  // sua chua
-  const {
-    createMutation: createRepairMutation,
-    updateMutation: updateRepairMutation,
-  } = useMaintenanceRepairMutation();
-
-  // bao cao ky thuat
-  const {
-    createMutation: createTechMutation,
-    updateMutation: updateTechMutation,
-  } = useTechnicalReportMutation();
 
   useEffect(() => {
     setSelectedDeviceIds([]);
@@ -143,9 +122,6 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
     return Object.values(devicesMap);
   }, [selectedMonths, allMonthsData]);
-
-  const { data: maintenanceRepairByPlan = [] } =
-    useMaintenanceRepairByPlanQuery(plan?.id);
 
   const { data: technicalReports = [] } = useTechnicalReportByPlanQuery(
     plan?.id,
@@ -503,9 +479,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                       {selectedMonths.length === 1 && (
                         <TableCell>
                           <Chip
-                            label={PLAN_STATUS_CONFIG[statusVal]?.label || "Chưa lập"}
+                            label={
+                              PLAN_STATUS_CONFIG[statusVal]?.label || "Chưa lập"
+                            }
                             size="small"
-                            color={PLAN_STATUS_CONFIG[statusVal]?.color || "default"}
+                            color={
+                              PLAN_STATUS_CONFIG[statusVal]?.color || "default"
+                            }
                           />
                         </TableCell>
                       )}
@@ -584,42 +564,20 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         </Box>
       )}
 
-      {/* Dialogs */}
-      <RepairRequestDialog
-        open={repairDialogOpen}
-        onClose={() => setRepairDialogOpen(false)}
-        plan={plan}
-        initialData={selectedReq}
-        selectedDeviceIds={selectedDeviceIds}
-        selectedMonth={selectedMonths[0]}
-        onSubmit={(req) => {
-          if (selectedReq) {
-            updateRepairMutation.mutateAsync(req);
-          } else {
-            createRepairMutation.mutateAsync(req);
-          }
-          setSelectedDeviceIds([]);
-          setRepairDialogOpen(false);
-          setSelectedReq(null);
-        }}
-      />
-
       <TechnicalReportDialog
         open={techReportDialogOpen}
-        onClose={() => setTechReportDialogOpen(false)}
+        onClose={() => {
+          setSelectedDeviceIds([]);
+          setTechReportDialogOpen(false);
+        }}
         plan={plan}
         initialData={null}
         selectedDeviceIds={selectedDeviceIds}
         selectedMonth={selectedMonths[0]}
-        onSubmit={(req) => {
-          createTechMutation.mutateAsync(req);
-          setSelectedDeviceIds([]);
-          setTechReportDialogOpen(false);
-        }}
       />
 
-      {lastMinimizedDialog === "repair" && hasRepairDraft && (
-        <DraftIndicator onClick={() => setRepairDialogOpen(true)} />
+      {lastMinimizedDialog === "techReport" && hasTechReportDraft && (
+        <DraftIndicator onClick={() => setTechReportDialogOpen(true)} />
       )}
     </Box>
   );

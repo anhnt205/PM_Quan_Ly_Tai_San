@@ -40,7 +40,13 @@ public class GiamDinhDao {
                 gd.Share, gd.TrangThai, gd.NgayTao, gd.NgayCapNhat, gd.NguoiTao, gd.NguoiCapNhat,
                 nvLap.HoTen AS tenNguoiLap,
                 nvGD.HoTen AS tenGiamDoc,
-                pb.TenPhongBan AS tenDonViGiamDinh
+                pb.TenPhongBan AS tenDonViGiamDinh,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM suachua sc
+                        WHERE sc.IdGiamDinh = gd.id
+                    ) THEN 1 ELSE 0 
+                END as daCoLenhSuaChua
             FROM giamdinh gd
                 LEFT JOIN NhanVien nvLap ON gd.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON gd.IdGiamDoc = nvGD.Id

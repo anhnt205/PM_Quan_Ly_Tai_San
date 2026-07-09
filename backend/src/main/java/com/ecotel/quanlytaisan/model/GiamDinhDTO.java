@@ -14,6 +14,7 @@ public class GiamDinhDTO {
     private String donViGiamDinh;
     private String noiDung;
     private String ghiChuBienBan;
+    private Integer daCoLenhSuaChua;
     
     // Người lập phiếu
     private String idNguoiLap;
@@ -38,8 +39,6 @@ public class GiamDinhDTO {
     private String tenGiamDoc;
     private String tenDonViGiamDinh;
     private String soPhieuBienBan;
-    private Integer daCoBienPhap;
-    private Integer daCoNghiemThu;
 
     // Danh sách chi tiết
     private List<GiamDinhChiTiet> danhSachChiTiet;

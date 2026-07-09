@@ -38,6 +38,7 @@ export const IncidentAdapter = (s: any) => ({
 export const RepairAdapter = (s: any) => ({
   ...s,
   id: s.id,
+  idGiamDinh: s.idGiamDinh,
   planId: s.idKeHoach,
   idTrinhDuyetGiamDoc: s.idGiamDoc,
   tenTrinhDuyetGiamDoc: s.tenGiamDoc,

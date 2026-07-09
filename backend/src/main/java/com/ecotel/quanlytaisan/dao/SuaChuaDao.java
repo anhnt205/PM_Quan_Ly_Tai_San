@@ -38,11 +38,16 @@ public class SuaChuaDao {
                 sc.IdCongTy,
                 sc.CongTy,
                 sc.TenMauBienBan,
-                sc.SoPhieu,
-                sc.IdKeHoach,
-                sc.Thang,
-                sc.Nam,
-                sc.GhiChu,
+                sc.IdGiamDinh,
+                sc.DonViQuanLy,
+                sc.DonViGiamSat,
+                sc.NgayBaoDuongGanNhat,
+                sc.GioHoatDong,
+                sc.LoaiSuaChua,
+                sc.TinhTrang,
+                sc.NhanCongThucHien,
+                sc.ThoiGian,
+                sc.DiaDiem,
                 sc.GhiChuBienBan,
                 sc.IdNguoiLap,
                 nvLap.HoTen AS tenNguoiLap,
@@ -56,17 +61,13 @@ public class SuaChuaDao {
                 sc.NgayCapNhat,
                 sc.NguoiTao,
                 sc.NguoiCapNhat,
-                kh.TenKeHoach AS tenKeHoach,
-                CASE 
-                    WHEN EXISTS (
-                        SELECT 1 FROM giamdinh gd
-                        WHERE gd.IdBienBan = sc.id
-                    ) THEN 1 ELSE 0 
-                END as daCoGiamDinh
+                pb1.TenPhongBan AS tenDonViQuanLy,
+                pb2.TenPhongBan AS tenDonViGiamSat
             FROM suachua sc
-                LEFT JOIN kehoachsuachua kh ON sc.IdKeHoach = kh.Id
                 LEFT JOIN NhanVien nvLap ON sc.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON sc.IdGiamDoc = nvGD.Id
+                LEFT JOIN phongban pb1 ON sc.DonViQuanLy = pb1.Id
+                LEFT JOIN phongban pb2 ON sc.DonViGiamSat = pb2.Id
             """;
     }
 
@@ -99,10 +100,10 @@ public class SuaChuaDao {
         } catch (Exception e) { return null; }
     }
 
-    public List<SuaChuaDTO> findByIdKeHoach(String idKeHoach) {
+    public List<SuaChuaDTO> findByIdGiamDinh(String idGiamDinh) {
         refreshCache();
         return cache.stream()
-                .filter(d -> idKeHoach != null && idKeHoach.equalsIgnoreCase(d.getIdKeHoach()))
+                .filter(d -> idGiamDinh != null && idGiamDinh.equalsIgnoreCase(d.getIdGiamDinh()))
                 .collect(Collectors.toList());
     }
 
@@ -135,13 +136,14 @@ public class SuaChuaDao {
         e.setId(generateNextId());
         String sql = """
             INSERT INTO suachua (
-                Id, IdCongTy, CongTy, TenMauBienBan, SoPhieu, IdKeHoach, Thang, Nam, GhiChu,
+                Id, IdCongTy, CongTy, TenMauBienBan, IdGiamDinh, DonViQuanLy, DonViGiamSat, GioHoatDong, LoaiSuaChua, TinhTrang, NhanCongThucHien, ThoiGian, DiaDiem, NgayBaoDuongGanNhat,
                 IdNguoiLap, NguoiLapXacNhan, IdGiamDoc, GiamDocXacNhan,
                 Share, TrangThai, NgayTao, NgayCapNhat, NguoiTao, NguoiCapNhat, GhiChuBienBan
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         int r = jdbcTemplate.update(sql,
-                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
+                e.getId(), e.getIdCongTy(), e.getCongTy(), e.getTenMauBienBan(), 
+                e.getIdGiamDinh(), e.getDonViQuanLy(), e.getDonViGiamSat(), e.getGioHoatDong(), e.getLoaiSuaChua(), e.getTinhTrang(), e.getNhanCongThucHien(), e.getThoiGian(), e.getDiaDiem(), e.getNgayBaoDuongGanNhat(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai() != null ? e.getTrangThai() : 0, 
                 e.getNgayTao(), e.getNgayCapNhat(), e.getNguoiTao(), e.getNguoiCapNhat(), e.getGhiChuBienBan()
@@ -153,13 +155,14 @@ public class SuaChuaDao {
     public SuaChua update(SuaChua e) {
         String sql = """
             UPDATE suachua SET
-                CongTy = ?, TenMauBienBan = ?, SoPhieu = ?, IdKeHoach = ?, Thang = ?, Nam = ?, GhiChu = ?,
+                CongTy = ?, TenMauBienBan = ?, IdGiamDinh = ?, DonViQuanLy = ?, DonViGiamSat = ?, GioHoatDong = ?, LoaiSuaChua = ?, TinhTrang = ?, NhanCongThucHien = ?, ThoiGian = ?, DiaDiem = ?, NgayBaoDuongGanNhat = ?,
                 IdNguoiLap = ?, NguoiLapXacNhan = ?, IdGiamDoc = ?, GiamDocXacNhan = ?,
                 Share = ?, TrangThai = ?, NgayCapNhat = ?, NguoiCapNhat = ?, GhiChuBienBan = ?
             WHERE Id = ?
             """;
         int r = jdbcTemplate.update(sql,
-                e.getCongTy(), e.getTenMauBienBan(), e.getSoPhieu(), e.getIdKeHoach(), e.getThang(), e.getNam(), e.getGhiChu(),
+                e.getCongTy(), e.getTenMauBienBan(), 
+                e.getIdGiamDinh(), e.getDonViQuanLy(), e.getDonViGiamSat(), e.getGioHoatDong(), e.getLoaiSuaChua(), e.getTinhTrang(), e.getNhanCongThucHien(), e.getThoiGian(), e.getDiaDiem(), e.getNgayBaoDuongGanNhat(),
                 e.getIdNguoiLap(), e.getNguoiLapXacNhan(), e.getIdGiamDoc(), e.getGiamDocXacNhan(),
                 e.getShare(), e.getTrangThai(), e.getNgayCapNhat(), e.getNguoiCapNhat(), e.getGhiChuBienBan(),
                 e.getId()

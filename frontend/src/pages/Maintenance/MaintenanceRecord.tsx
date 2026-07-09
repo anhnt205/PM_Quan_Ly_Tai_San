@@ -121,11 +121,11 @@ export default function MaintenanceRecordPage() {
           : activeTab === 2
             ? "inspectionPage"
           : activeTab === 3
-            ? "incidentPage"
+            ? "repairPage"
             : activeTab === 4
-              ? "incidentInspectionPage"
+              ? "incidentPage"
               : activeTab === 5
-                ? "repairPage"
+                ? "incidentInspectionPage"
                   : activeTab === 6
                     ? "bienPhapMayMocPage"
                     : activeTab === 7
@@ -140,11 +140,11 @@ export default function MaintenanceRecordPage() {
           : activeTab === 2
             ? "giamdinh"
           : activeTab === 3
-            ? "suco-thietbi"
+            ? "suachua"
             : activeTab === 4
-              ? "kiemtra-suco"
+              ? "suco-thietbi"
               : activeTab === 5
-                ? "suachua"
+                ? "kiemtra-suco"
                   : activeTab === 6
                     ? "bienphap-maymoc"
                     : activeTab === 7
@@ -206,7 +206,7 @@ export default function MaintenanceRecordPage() {
     dateFrom,
     dateTo,
     undefined,
-    activeTab === 1,
+    activeTab === 4,
   );
 
   const {
@@ -226,7 +226,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 4,
+    activeTab === 5,
   );
 
   const {
@@ -242,7 +242,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 5,
+    activeTab === 3,
   );
 
   // giám định
@@ -333,6 +333,12 @@ export default function MaintenanceRecordPage() {
       idLabel: "Số BB giám định",
     },
     {
+      label: "Lệnh sửa chữa",
+      icon: <BuildOutlined />,
+      idLabel: "Lệnh sửa chữa",
+      field: "id",
+    },
+    {
       label: "Phiếu báo sự cố",
       icon: <WarningOutlined />,
       idLabel: "Số phiếu",
@@ -342,12 +348,6 @@ export default function MaintenanceRecordPage() {
       label: "BB Kiểm tra sự cố",
       icon: <SearchOutlined />,
       idLabel: "Số BB kiểm tra",
-    },
-    {
-      label: "Lệnh sửa chữa",
-      icon: <BuildOutlined />,
-      idLabel: "Số lệnh SC",
-      field: "soPhieu",
     },
     {
       label: "Biện pháp sửa chữa",
@@ -378,9 +378,12 @@ export default function MaintenanceRecordPage() {
         headerName: "Mã báo cáo kỹ thuật",
       },
     ],
-    3: [{ field: "planId", headerName: "Mã kế hoạch" }],
-    4: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
-    5: [
+    3: [
+      { field: "idGiamDinh", headerName: "Mã giám định" }
+    ],
+    4: [{ field: "planId", headerName: "Mã kế hoạch" }],
+    5: [{ field: "idSuCo", headerName: "Mã phiếu báo SC" }],
+    6: [
       {
         field: "idBienBanSuaChua",
         headerName: "Mã lệnh SC",
@@ -392,7 +395,6 @@ export default function MaintenanceRecordPage() {
         key: TypeBienBan.SU_CO,
       },
     ],
-    6: [{ field: "idGiamDinh", headerName: "Mã BB giám định" }],
     7: [{ field: "soPhieu", headerName: "Mã biện pháp" }],
     8: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
   };
@@ -404,6 +406,7 @@ export default function MaintenanceRecordPage() {
       items: technicalReportPaged.items.map(TechnicalReportAdapter),
     },
     { ...inspectionPaged, items: inspectionPaged.items.map(InspectionAdapter) },
+    { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     { ...incidentPaged, items: incidentPaged.items.map(IncidentAdapter) },
     {
       ...incidentInspectionPaged,
@@ -411,7 +414,6 @@ export default function MaintenanceRecordPage() {
         IncidentInspectionAdapter,
       ),
     },
-    { ...repairPaged, items: repairPaged.items.map(RepairAdapter) },
     {
       ...bienPhapPaged,
       items: (bienPhapPaged.items || []).map(BienPhapMayMocAdapter),
@@ -625,7 +627,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generatePhieuSuCoPdf(
+              generateSuaChuaPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -642,7 +644,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateKiemTraSuCoPdf(
+              generatePhieuSuCoPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -659,7 +661,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateSuaChuaPdf(
+              generateKiemTraSuCoPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -972,6 +974,12 @@ export default function MaintenanceRecordPage() {
                   (counts.shareCounts?.totalInspectionVehicle || 0),
               },
               {
+                label: "Lệnh sửa chữa",
+                subLabel: "Lệnh xử lý kỹ thuật",
+                icon: Wrench,
+                count: counts.shareCounts?.totalRepair || 0,
+              },
+              {
                 label: "Phiếu báo sự cố",
                 subLabel: "Báo cáo sự cố thiết bị",
                 icon: AlertTriangle,
@@ -982,12 +990,6 @@ export default function MaintenanceRecordPage() {
                 subLabel: "Kiểm tra hiện trạng SC",
                 icon: FileWarning,
                 count: counts.shareCounts?.totalIncidentInspection || 0,
-              },
-              {
-                label: "Lệnh sửa chữa",
-                subLabel: "Lệnh xử lý kỹ thuật",
-                icon: Wrench,
-                count: counts.shareCounts?.totalRepair || 0,
               },
               {
                 label: "Biện pháp sửa chữa",

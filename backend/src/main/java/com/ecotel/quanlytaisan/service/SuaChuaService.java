@@ -1,6 +1,7 @@
 package com.ecotel.quanlytaisan.service;
 
-import com.ecotel.quanlytaisan.dao.SuaChuaChiTietDao;
+import com.ecotel.quanlytaisan.dao.SuaChuaChiTietTaiSanDao;
+import com.ecotel.quanlytaisan.dao.SuaChuaChiTietVatTuDao;
 import com.ecotel.quanlytaisan.dao.SuaChuaDao;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,10 @@ public class SuaChuaService {
     private SuaChuaDao suaChuaDao;
 
     @Autowired
-    private SuaChuaChiTietDao suaChuaChiTietDao;
+    private SuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
+
+    @Autowired
+    private SuaChuaChiTietVatTuDao suaChuaChiTietVatTuDao;
 
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
@@ -89,9 +93,9 @@ public class SuaChuaService {
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
-                    .filter(i -> (i.getSoPhieu() != null && i.getSoPhieu().toLowerCase().contains(q))
-                            || (i.getTenKeHoach() != null && i.getTenKeHoach().toLowerCase().contains(q))
-                            || (i.getGhiChu() != null && i.getGhiChu().toLowerCase().contains(q)))
+                    .filter(i -> (i.getIdGiamDinh() != null && i.getIdGiamDinh().toLowerCase().contains(q))
+                            || (i.getSoPhieuGiamDinh() != null && i.getSoPhieuGiamDinh().toLowerCase().contains(q))
+                            || (i.getGhiChuBienBan() != null && i.getGhiChuBienBan().toLowerCase().contains(q)))
                     .collect(Collectors.toList());
         }
 
@@ -106,7 +110,8 @@ public class SuaChuaService {
         for (SuaChuaDTO item : items) {
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-            item.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachVatTu(suaChuaChiTietVatTuDao.findByIdSuaChua(item.getId()));
         }
 
         PageResponse<SuaChuaDTO> response = new PageResponse<>(items, total, page, size);
@@ -254,8 +259,8 @@ public class SuaChuaService {
         boolean asc = "asc".equalsIgnoreCase(sortDir);
         Comparator<SuaChuaDTO> comp;
         switch (sortBy.trim().toLowerCase()) {
-            case "sophieu":
-                comp = Comparator.comparing(i -> i.getSoPhieu() != null ? i.getSoPhieu() : "",
+            case "idgiamdinh":
+                comp = Comparator.comparing(i -> i.getIdGiamDinh() != null ? i.getIdGiamDinh() : "",
                         Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)); break;
             case "trangthai":
                 comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,
@@ -270,17 +275,19 @@ public class SuaChuaService {
     public SuaChuaDTO findByIdDTO(String id) {
         SuaChuaDTO dto = suaChuaDao.findByIdDTO(id);
         if (dto != null) {
-            dto.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(id));
+            dto.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdSuaChua(id));
+            dto.setDanhSachVatTu(suaChuaChiTietVatTuDao.findByIdSuaChua(id));
         }
         return dto;
     }
 
-    public List<SuaChuaDTO> findByIdKeHoach(String idKeHoach) {
-        List<SuaChuaDTO> list = suaChuaDao.findByIdKeHoach(idKeHoach);
+    public List<SuaChuaDTO> findByIdGiamDinh(String idGiamDinh) {
+        List<SuaChuaDTO> list = suaChuaDao.findByIdGiamDinh(idGiamDinh);
         for (SuaChuaDTO item : list) {
             item.setChuKyList(kyTaiLieuDao.findById(item.getId()));
             item.setNguoiKyList(kyTaiLieuDao.getAllNguoiKyByIdTaiLieu(item.getId()));
-            item.setDanhSachTaiSan(suaChuaChiTietDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachTaiSan(suaChuaChiTietTaiSanDao.findByIdSuaChua(item.getId()));
+            item.setDanhSachVatTu(suaChuaChiTietVatTuDao.findByIdSuaChua(item.getId()));
         }
         return list;
     }
@@ -297,18 +304,27 @@ public class SuaChuaService {
         if (result != null) {
             String planId = result.getId();
             
-            // 1. Insert details
+            // 1. Insert details (Tai san)
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
-                for (SuaChuaChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                for (SuaChuaChiTietTaiSan chiTiet : dto.getDanhSachTaiSan()) {
                     if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
                         if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    chiTiet.setId(suaChuaChiTietDao.generateNextId());
+                    chiTiet.setId(java.util.UUID.randomUUID().toString());
                     chiTiet.setIdSuaChua(planId);
                 }
-                suaChuaChiTietDao.batchInsert(dto.getDanhSachTaiSan());
+                suaChuaChiTietTaiSanDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            // 1b. Insert details (Vat tu)
+            if (dto.getDanhSachVatTu() != null && !dto.getDanhSachVatTu().isEmpty()) {
+                for (SuaChuaChiTietVatTu chiTiet : dto.getDanhSachVatTu()) {
+                    chiTiet.setId(java.util.UUID.randomUUID().toString());
+                    chiTiet.setIdSuaChua(planId);
+                }
+                suaChuaChiTietVatTuDao.batchInsert(dto.getDanhSachVatTu());
             }
 
             // 2. Insert signers
@@ -331,18 +347,28 @@ public class SuaChuaService {
             String planId = result.getId();
 
             // 1. Re-insert details
-            suaChuaChiTietDao.deleteByIdSuaChua(planId);
+            suaChuaChiTietTaiSanDao.deleteByIdSuaChua(planId);
+            suaChuaChiTietVatTuDao.deleteByIdSuaChua(planId);
+
             if (dto.getDanhSachTaiSan() != null && !dto.getDanhSachTaiSan().isEmpty()) {
-                for (SuaChuaChiTiet chiTiet : dto.getDanhSachTaiSan()) {
+                for (SuaChuaChiTietTaiSan chiTiet : dto.getDanhSachTaiSan()) {
                     if (chiTiet.getIdTaiSan() != null && !chiTiet.getIdTaiSan().isEmpty()) {
                         if (taiSanService.getById(chiTiet.getIdTaiSan()) == null) {
                             throw new IllegalArgumentException("Tài sản không tồn tại: " + chiTiet.getIdTaiSan());
                         }
                     }
-                    chiTiet.setId(suaChuaChiTietDao.generateNextId());
+                    chiTiet.setId(java.util.UUID.randomUUID().toString());
                     chiTiet.setIdSuaChua(planId);
                 }
-                suaChuaChiTietDao.batchInsert(dto.getDanhSachTaiSan());
+                suaChuaChiTietTaiSanDao.batchInsert(dto.getDanhSachTaiSan());
+            }
+
+            if (dto.getDanhSachVatTu() != null && !dto.getDanhSachVatTu().isEmpty()) {
+                for (SuaChuaChiTietVatTu chiTiet : dto.getDanhSachVatTu()) {
+                    chiTiet.setId(java.util.UUID.randomUUID().toString());
+                    chiTiet.setIdSuaChua(planId);
+                }
+                suaChuaChiTietVatTuDao.batchInsert(dto.getDanhSachVatTu());
             }
 
             // 2. Re-insert signers
@@ -443,7 +469,8 @@ public class SuaChuaService {
     @Transactional
     public int delete(String id) {
         // Cascade delete details and signers
-        suaChuaChiTietDao.deleteByIdSuaChua(id);
+        suaChuaChiTietTaiSanDao.deleteByIdSuaChua(id);
+        suaChuaChiTietVatTuDao.deleteByIdSuaChua(id);
         kyTaiLieuDao.deleteAllNguoiKy(id);
         kyTaiLieuDao.delete(id);
         return suaChuaDao.delete(id);
@@ -452,7 +479,8 @@ public class SuaChuaService {
     @Transactional
     public void bulkDelete(List<String> ids) {
         for (String id : ids) {
-            suaChuaChiTietDao.deleteByIdSuaChua(id);
+            suaChuaChiTietTaiSanDao.deleteByIdSuaChua(id);
+            suaChuaChiTietVatTuDao.deleteByIdSuaChua(id);
             kyTaiLieuDao.deleteAllNguoiKy(id);
             kyTaiLieuDao.delete(id);
         }

@@ -126,13 +126,6 @@ export const TechnicalReportRow = ({ report, plan, isLast }: Props) => {
           initialData={report}
           selectedDeviceIds={[]}
           selectedMonth={report.thang || 0}
-          onSubmit={(updatedData: TechnicalReportData) => {
-            updateMutation.mutate(updatedData, {
-              onSuccess: () => {
-                setEditDialogOpen(false);
-              },
-            });
-          }}
         />
       )}
       {createDialogOpen && (
