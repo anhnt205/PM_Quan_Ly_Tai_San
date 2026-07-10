@@ -1,5 +1,5 @@
 services:
-  qlts_demo_reverse_proxy_service:
+  qlts-demo-reverse-proxy-service:
     image: ${REGISTRY}/qlts_demo_reverse_proxy_img:${VERSION}
     ports:
       # HOST_PORT:CONTAINER_PORT
@@ -11,10 +11,10 @@ services:
       - frontnet
       - backnet
     depends_on:
-      - qlts_demo_frontend_service
-      - qlts_demo_backend_service
+      - qlts-demo-frontend-service
+      - qlts-demo-backend-service
 
-  qlts_demo_frontend_service:
+  qlts-demo-frontend-service:
     image:
       ${REGISTRY}/qlts_demo_frontend_img:${VERSION}
       # target: development
@@ -28,19 +28,19 @@ services:
     networks:
       - frontnet
 
-  qlts_demo_backend_service:
+  qlts-demo-backend-service:
     env_file:
       - .env_backend
     image: ${REGISTRY}/qlts_demo_backend_img:${VERSION}
     depends_on:
-      - qlts_demo_mysql
+      - qlts-demo-mysql
     ports:
       - "8387:8386"
     networks:
       - backnet
     restart: unless-stopped
 
-  qlts_demo_mysql:
+  qlts-demo-mysql:
     image: mysql:8.0.36
     command: --lower_case_table_names=1
     environment:
