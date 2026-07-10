@@ -31,6 +31,7 @@ jobs:
           echo "VITE_BASE_API=${{ secrets.VITE_BASE_API}}" > ./frontend/.env
           echo "VITE_SOCKET_API=${{ secrets.VITE_SOCKET_API}}" >> ./frontend/.env
           echo "VITE_KONG_API=${{ secrets.VITE_KONG_API}}" >> ./frontend/.env
+          cat ./frontend/.env
           echo "VITE_BRAND=UB" >> ./frontend/.env
 
       - name: List Files
