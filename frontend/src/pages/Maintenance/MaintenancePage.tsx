@@ -54,15 +54,11 @@ import {
   useMaintenanceRepairPageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
-  useMaintenanceAcceptanceTestPageQuery,
+  useAcceptancePageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceMaterialConsumptionQuery,
   useGetTaiSanByIdQuery,
-  useMaintenanceVehicleInspectionPageQuery,
-  useMaintenanceAcceptanceTestVehiclePageQuery,
-  useMaintenanceBienPhapMayMocPageQuery,
-  useMaintenanceBienPhapPhuongTienPageQuery,
 } from "./mutation";
 import {
   PlanAdapter,
@@ -74,7 +70,6 @@ import {
   IncidentInspectionAdapter,
 } from "./Adapter";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
-import { useAssetByDonViQuery } from "../AssetTransfer/Mutation";
 import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
 import { findById } from "../../utils/helpers";
 import PageAction from "../../components/common/PageAction";
@@ -715,25 +710,6 @@ export default function MaintenanceStatPage() {
     dateTo || undefined,
   );
 
-  // biện pháp máy móc
-  const {
-    data: measurePaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceBienPhapMayMocPageQuery(
-    pageModels.measure,
-    10,
-    "",
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-  );
-
-
   // vật tư
   const {
     data: materialPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
@@ -754,7 +730,7 @@ export default function MaintenanceStatPage() {
       totalItems: 0,
       trangThaiCounts: {},
     },
-  } = useMaintenanceAcceptanceTestPageQuery(
+  } = useAcceptancePageQuery(
     pageModels.acceptance,
     10,
     "",
@@ -813,10 +789,6 @@ export default function MaintenanceStatPage() {
       ma: item.idGiamDinhMayMoc || item.id,
       trang: item.trangThai,
     }));
-  const measureItems = measurePaged.items.map((item: any) => ({
-    ma: item.idBienPhap || item.id,
-    trang: item.trangThai,
-  }));
   const materialItems = materialPaged.items
     .map(MaterialAssessmentAdapter)
     .map((item: any) => ({
@@ -882,14 +854,6 @@ export default function MaintenanceStatPage() {
       color: "#22c55e",
       items: inspectionItems,
       type: "inspection",
-    },
-    {
-      step: 6,
-      title: "BIỆN PHÁP SỬA CHỮA",
-      icon: <TrendingUpOutlined sx={{ fontSize: 16 }} />,
-      color: "#aa22c5",
-      items: measureItems,
-      type: "measure",
     },
     {
       step: 7,
@@ -1091,15 +1055,6 @@ export default function MaintenanceStatPage() {
                   main={inspectionPaged.totalItems}
                   mainLabel="Tổng bản giám định"
                   sub={inspectionPaged.trangThaiCounts["1"] || 0}
-                  subLabel="Chờ duyệt"
-                />
-                <SummaryCard
-                  icon={<TrendingUpOutlined sx={{ fontSize: 20 }} />}
-                  title="Biện pháp"
-                  color="#aa22c5"
-                  main={measurePaged.totalItems}
-                  mainLabel="Tổng bản biện pháp"
-                  sub={measurePaged.trangThaiCounts["1"] || 0}
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
@@ -1626,11 +1581,7 @@ const MaterialConsumptionRows = ({
   dateTo: string;
 }) => {
   const { data: materials = [], isLoading } =
-    useMaintenanceMaterialConsumptionQuery(
-      idTaiSan,
-      dateFrom,
-      dateTo,
-    );
+    useMaintenanceMaterialConsumptionQuery(idTaiSan, dateFrom, dateTo);
 
   if (isLoading) {
     return (

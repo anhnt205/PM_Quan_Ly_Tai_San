@@ -19,15 +19,13 @@ import {
   FactCheckOutlined,
   PlaylistAddCheckOutlined,
   InventoryOutlined,
-  WarningOutlined,
-  SearchOutlined,
 } from "@mui/icons-material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { useSignBatch } from "../../hooks/useSignBatch";
 import { SignBatchModal } from "../../components/SignDocument/Signbatchmodal";
 import {
-  useMaintenanceAcceptanceTestPageQuery,
+  useAcceptancePageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
@@ -81,9 +79,7 @@ import {
 } from "lucide-react";
 import { useMaintenanceMutation } from "./mutation";
 import { SignaturesData } from "../../components/SignDocument/types";
-import { TypeBienBan } from "../../utils/const";
 import { useMenuData } from "../../hooks/useMenuData";
-import S3Service from "../../services/S3Service";
 import Filter from "./components/Filter";
 import { currentBrandConfig } from "../../config/brandConfig";
 import {
@@ -238,7 +234,7 @@ export default function MaintenanceApprovalPage() {
       trangThaiCounts: {},
     },
     isLoading: isLoadingNghiemThuMayMoc,
-  } = useMaintenanceAcceptanceTestPageQuery(
+  } = useAcceptancePageQuery(
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
@@ -248,7 +244,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 5,
+    activeTab === 6,
   );
 
   const {
@@ -267,7 +263,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    activeTab === 6,
+    activeTab === 7,
   );
 
   const { signMutation } = useMaintenanceMutation(
@@ -284,8 +280,10 @@ export default function MaintenanceApprovalPage() {
               : activeTab === 5
                 ? "materialRequisitionPage"
                 : activeTab === 6
-                  ? "materialAssessmentPage"
-                  : "",
+                  ? "nghiemThuPage"
+                  : activeTab === 7
+                    ? "materialAssessmentPage"
+                    : "",
     activeTab === 0
       ? "kehoach-suachua"
       : activeTab === 1
@@ -299,8 +297,10 @@ export default function MaintenanceApprovalPage() {
               : activeTab === 5
                 ? "phieulinhvattu"
                 : activeTab === 6
-                  ? "danhgia-vattu"
-                  : "",
+                  ? "nghiemthu"
+                  : activeTab === 7
+                    ? "danhgia-vattu"
+                    : "",
     activeTab,
   );
 
@@ -388,6 +388,8 @@ export default function MaintenanceApprovalPage() {
     3: [{ field: "idGiamDinh", headerName: "Mã giám định" }],
     4: [{ field: "idSuaChua", headerName: "Mã lệnh SC" }],
     5: [{ field: "idPhieuGiaoViec", headerName: "Mã phiếu giao việc" }],
+    6: [{ field: "idBienBan", headerName: "Mã phiếu lĩnh vật tư" }],
+    7: [{ field: "idDanhGia", headerName: "Mã đánh giá" }],
   };
 
   const currentAllRows = allRows[activeTab];
@@ -976,7 +978,7 @@ export default function MaintenanceApprovalPage() {
           }
         />
       )}
-      {/* {selectedRow && isSigning && activeTab === 6 && (
+      {selectedRow && isSigning && activeTab === 6 && (
         <SignDocumentForm
           selectedIds={[selectedRow?.id]}
           onCancel={() => {
@@ -991,31 +993,12 @@ export default function MaintenanceApprovalPage() {
           fullscreen={true}
           showSignerSidebar={true}
           generatePdf={() =>
-            generateBienPhapMayMocPdf(
+            generateNghiemThuPdf(
               selectedRow,
               staffs || [],
               departments || [],
               positions || [],
             )
-          }
-        />
-      )} */}
-      {selectedRow && isSigning && activeTab === 7 && (
-        <SignDocumentForm
-          selectedIds={[selectedRow?.id]}
-          onCancel={() => {
-            setIsSigning(false);
-            setSelectedRow(null);
-          }}
-          onSign={handleSign}
-          data={selectedRow}
-          staffs={staffs || []}
-          departments={departments || []}
-          positions={positions || []}
-          fullscreen={true}
-          showSignerSidebar={true}
-          generatePdf={() =>
-            generateNghiemThuPdf(selectedRow, staffs, departments, positions)
           }
         />
       )}
@@ -1116,18 +1099,6 @@ export default function MaintenanceApprovalPage() {
                 subLabel: "Lĩnh vật tư sửa chữa",
                 icon: AlertTriangle,
                 count: counts.totalIncident,
-              },
-              {
-                label: "BB Kiểm tra sự cố",
-                subLabel: "Kiểm tra hiện trạng SC",
-                icon: FileWarning,
-                count: counts.totalIncidentInspection,
-              },
-              {
-                label: "Biện pháp sửa chữa",
-                subLabel: "Biện pháp xử lý thiết bị",
-                icon: Wrench,
-                count: counts.totalMeasureMachine + counts.totalMeasureVehicle,
               },
               {
                 label: "BB Nghiệm thu",

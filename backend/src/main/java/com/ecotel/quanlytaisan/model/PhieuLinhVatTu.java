@@ -12,6 +12,8 @@ public class PhieuLinhVatTu {
     private String mucDichSuDung;
     private String ghiChu;
 
+    private Integer daCoNghiemThu;
+
     // Người lập phiếu
     private String idNguoiLap;
     private Boolean nguoiLapXacNhan;

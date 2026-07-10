@@ -20,14 +20,12 @@ import {
   FactCheckOutlined,
   PlaylistAddCheckOutlined,
   InventoryOutlined,
-  WarningOutlined,
-  SearchOutlined,
 } from "@mui/icons-material";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { useDebounce } from "../../hooks/useDebounce";
 import {
-  useMaintenanceAcceptanceTestPageQuery,
+  useAcceptancePageQuery,
   useMaintenanceInspectionPageQuery,
   useMaintenanceMaterialAssessmentPageQuery,
   useMaintenancePlanningPageQuery,
@@ -39,7 +37,6 @@ import {
   generateBienBanKeHoachPdf,
   generateSuaChuaPdf,
   generateGiamDinhPdf,
-  generateNghiemThuPdf,
   generateDanhGiaVatTuPdf,
   generatePhieuGiaoViecPdf,
   showStatus,
@@ -50,6 +47,7 @@ import {
   showDownloadFile,
   generateTechnicalReportPdf,
   generatePhieuLinhVatTuPdf,
+  generateNghiemThuPdf,
 } from "./config";
 import SignDocumentForm from "./components/signdocument/SignDocumentForm";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
@@ -69,8 +67,6 @@ import {
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import { useMaintenanceMutation } from "./mutation";
 import { useMenuData } from "../../hooks/useMenuData";
-import S3Service from "../../services/S3Service";
-import { TypeBienBan } from "../../utils/const";
 import Filter from "./components/Filter";
 import {
   ClipboardList,
@@ -121,7 +117,7 @@ export default function MaintenanceRecordPage() {
                 : activeTab === 5
                   ? "materialRequisitionPage"
                   : activeTab === 6
-                    ? "materialAssessmentPage"
+                    ? "nghiemThuPage"
                     : "",
       activeTab === 0
         ? "kehoach-suachua"
@@ -136,7 +132,7 @@ export default function MaintenanceRecordPage() {
                 : activeTab === 5
                   ? "phieulinhvattu"
                   : activeTab === 6
-                    ? "danhgia-vattu"
+                    ? "nghiemthu"
                     : "",
       activeTab,
     );
@@ -255,6 +251,7 @@ export default function MaintenanceRecordPage() {
     activeTab === 5,
   );
 
+  // nghiệm thu
   const {
     data: acceptanceTestPaged = {
       items: [],
@@ -262,7 +259,7 @@ export default function MaintenanceRecordPage() {
       trangThaiCounts: {},
     },
     isLoading: isLoadingNghiemThuMayMoc,
-  } = useMaintenanceAcceptanceTestPageQuery(
+  } = useAcceptancePageQuery(
     paginationModel.page,
     paginationModel.pageSize,
     searchDebounce,
@@ -272,7 +269,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 5,
+    activeTab === 6,
   );
 
   const {
@@ -291,7 +288,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    activeTab === 6,
+    activeTab === 7,
   );
 
   const tabConfigs = [
@@ -317,12 +314,6 @@ export default function MaintenanceRecordPage() {
       icon: <AssignmentOutlined />,
       idLabel: "Số phiếu",
       field: "id",
-    },
-    {
-      label: "Phiếu giao việc",
-      icon: <AssignmentOutlined />,
-      idLabel: "Số phiếu",
-      field: "soPhieu",
     },
     {
       label: "Phiếu vật tư",
@@ -355,6 +346,7 @@ export default function MaintenanceRecordPage() {
     3: [{ field: "idGiamDinh", headerName: "Mã giám định" }],
     4: [{ field: "idSuaChua", headerName: "Mã lệnh SC" }],
     5: [{ field: "idPhieuGiaoViec", headerName: "Mã phiếu giao việc" }],
+    6: [{ field: "idBienBan", headerName: "Mã phiếu lĩnh vật tư" }],
   };
 
   const allRows = [
@@ -618,7 +610,7 @@ export default function MaintenanceRecordPage() {
             showSignerSidebar={false}
             showHeader={true}
             generatePdf={() =>
-              generateDanhGiaVatTuPdf(
+              generateNghiemThuPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],
@@ -896,26 +888,6 @@ export default function MaintenanceRecordPage() {
                 subLabel: "Lĩnh vật tư sửa chữa",
                 icon: AlertTriangle,
                 count: counts.totalIncident,
-              },
-              {
-                label: "Phiếu báo sự cố",
-                subLabel: "Báo cáo sự cố thiết bị",
-                icon: AlertTriangle,
-                count: counts.shareCounts?.totalIncident || 0,
-              },
-              {
-                label: "BB Kiểm tra sự cố",
-                subLabel: "Kiểm tra hiện trạng SC",
-                icon: FileWarning,
-                count: counts.shareCounts?.totalIncidentInspection || 0,
-              },
-              {
-                label: "Biện pháp sửa chữa",
-                subLabel: "Biện pháp xử lý thiết bị",
-                icon: Wrench,
-                count:
-                  (counts.shareCounts?.totalMeasureMachine || 0) +
-                  (counts.shareCounts?.totalMeasureVehicle || 0),
               },
               {
                 label: "BB Nghiệm thu",

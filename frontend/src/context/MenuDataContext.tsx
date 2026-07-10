@@ -18,10 +18,7 @@ import {
 } from "../utils/helpers";
 import { showErrorAlert } from "../components/Alert";
 import {
-  useMaintenanceAcceptanceTestPageQuery,
-  useMaintenanceAcceptanceTestVehiclePageQuery,
-  useMaintenanceBienPhapMayMocPageQuery,
-  useMaintenanceBienPhapPhuongTienPageQuery,
+  useAcceptancePageQuery,
   useMaintenanceIncidentInspectionPageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceInspectionPageQuery,
@@ -208,20 +205,8 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     );
 
   // nghiệm thu máy móc
-  const { data: machineInspection = { items: [], totalItems: 0 } } =
-    useMaintenanceAcceptanceTestPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // nghiệm thu phương tiện
-  const { data: vehicleAcceptance = { items: [], totalItems: 0 } } =
-    useMaintenanceAcceptanceTestVehiclePageQuery(
+  const { data: acceptanceTestPage = { items: [], totalItems: 0 } } =
+    useAcceptancePageQuery(
       0,
       10,
       undefined,
@@ -264,27 +249,6 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       true,
     );
 
-  // biên pháp máy móc
-  const { data: bienPhapMayMoc = { items: [], totalItems: 0 } } =
-    useMaintenanceBienPhapMayMocPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // biên pháp phương tiện
-  const { data: bienPhapPhuongTien = { items: [], totalItems: 0 } } =
-    useMaintenanceBienPhapPhuongTienPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
   // điều chuyển tài sản
   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
     useAssetTransferPageQuery(
@@ -402,12 +366,12 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       totalRepair: repair.totalItems,
       totalIncidentInspection: incidentInspection.totalItems,
       totalMaterialAssessment: materialAssessment.totalItems,
-      totalMachineInspection: machineInspection.totalItems,
-      totalVehicleAcceptance: vehicleAcceptance.totalItems,
+      totalMachineInspection: acceptanceTestPage.totalItems,
+      totalVehicleAcceptance: acceptanceTestPage.totalItems,
       totalInspectionMachine: inspectionMachine.totalItems,
       totalInspectionVehicle: inspectionVehicle.totalItems,
-      totalMeasureMachine: bienPhapMayMoc.totalItems,
-      totalMeasureVehicle: bienPhapPhuongTien.totalItems,
+      totalMeasureMachine: 0,
+      totalMeasureVehicle: 0,
       shareCounts: {
         totalPlan: shareCountsData.totalPlan || 0,
         totalIncident: shareCountsData.totalIncident || 0,

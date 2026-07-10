@@ -1,10 +1,14 @@
 import React, { useState } from "react";
-import { TableRow, TableCell, Typography, Box, Chip } from "@mui/material";
+import { TableRow, TableCell, Typography, Box, Chip, IconButton } from "@mui/material";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import { TreeConnector, ROW_H, CONNECTOR_WIDTH } from "./TreeConnector";
 import { ActionCell } from "./ActionCell";
 import { showStatus } from "../../../config";
 import MaterialRequisitionDialog from "../../dialog/MaterialRequisitionDialog";
-import { useMaterialRequisitionMutation } from "../../../mutation";
+import AcceptanceTestDialog from "../../dialog/AcceptanceTestDialog";
+import { useMaterialRequisitionMutation, useAcceptanceByBienBanQuery } from "../../../mutation";
+import { AcceptanceRow } from "./AcceptanceRow";
 
 interface Props {
   data: any;
@@ -20,9 +24,16 @@ export const MaterialRequisitionRow = ({
   isLast,
 }: Props) => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addNghiemThuDialogOpen, setAddNghiemThuDialogOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
   const { deleteMutation } = useMaterialRequisitionMutation();
+  const { data: acceptances = [] } = useAcceptanceByBienBanQuery(
+    isExpanded ? data.id : undefined,
+  );
 
   const isDraft = data.trangThai === 0;
+  const hasChildren = data.daCoNghiemThu === 1 || acceptances.length > 0;
 
   const handleDelete = () => {
     deleteMutation.mutateAsync(data.id);
@@ -33,7 +44,7 @@ export const MaterialRequisitionRow = ({
       <TableRow hover>
         <TableCell
           sx={{
-            pl: depth * 4,
+            pl: 2,
             position: "relative",
             height: ROW_H,
             display: "flex",
@@ -50,12 +61,25 @@ export const MaterialRequisitionRow = ({
               alignItems: "center",
             }}
           >
-            <TreeConnector depth={depth} isLast={isLast} />
+            <TreeConnector depth={depth} isLast={isLast && !hasChildren} />
           </Box>
+          {hasChildren && (
+            <IconButton
+              size="small"
+              sx={{
+                ml: `${CONNECTOR_WIDTH * depth - 6}px`,
+              }}
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? <KeyboardArrowUpIcon /> : <KeyboardArrowDownIcon />}
+            </IconButton>
+          )}
           <Typography
             variant="body2"
             sx={{
-              ml: `${CONNECTOR_WIDTH * depth - 6}px`,
+              ml: hasChildren
+                ? `${CONNECTOR_WIDTH * depth + 8}px`
+                : `${CONNECTOR_WIDTH * depth - 6}px`,
             }}
           >
             {data.id}
@@ -79,9 +103,24 @@ export const MaterialRequisitionRow = ({
             editColor="primary"
             isDelete={isDraft}
             onDelete={handleDelete}
+            onAdd={() => setAddNghiemThuDialogOpen(true)}
+            isAdd={data.trangThai === 3 && data.daCoNghiemThu !== 1}
+            addTooltip="Tạo biên bản nghiệm thu"
+            addColor="success"
           />
         </TableCell>
       </TableRow>
+
+      {isExpanded &&
+        acceptances.map((acc: any, index: number) => (
+          <AcceptanceRow
+            key={acc.id}
+            acceptance={acc}
+            plan={null as any}
+            depth={depth + 1}
+            isLast={index === acceptances.length - 1}
+          />
+        ))}
 
       {editDialogOpen && (
         <MaterialRequisitionDialog
@@ -91,6 +130,16 @@ export const MaterialRequisitionRow = ({
           initialData={data}
         />
       )}
+
+      {addNghiemThuDialogOpen && (
+        <AcceptanceTestDialog
+          open={addNghiemThuDialogOpen}
+          onClose={() => setAddNghiemThuDialogOpen(false)}
+          jobAssignment={jobAssignment}
+          materialRequisition={data}
+        />
+      )}
     </>
   );
 };
+

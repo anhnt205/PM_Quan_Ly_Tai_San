@@ -19,11 +19,8 @@ import EditButton from "../../../components/Button/EditButton";
 import { useDebounce } from "../../../hooks/useDebounce";
 import { RepairReportValidation } from "../validation";
 
-import MeasureMachinPreview from "../../Maintenance/components/preview/MeasureMachinPreview";
-import MeasureVehiclePreview from "../../Maintenance/components/preview/MeasureVehiclePreview";
 import IncidentPreview from "../../Maintenance/components/preview/IncidentPreview";
 import IncidentInspectionPreview from "../../Maintenance/components/preview/IncidentInspectionPreview";
-import AcceptanceVehiclePreview from "../../Maintenance/components/preview/AcceptanceVehiclePreview";
 import AcceptanceTestPreview from "../../Maintenance/components/preview/AcceptanceTestPreview";
 import InspectionRecordPreview from "../../Maintenance/components/preview/InspectionRecordPreview";
 import MaterialPreview from "../../Maintenance/components/preview/MaterialPreview";
@@ -32,7 +29,6 @@ import { BienBanSuaChua } from "../types";
 import PlanPreview from "../../Maintenance/components/preview/PlanPreview";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import { LOAI_BIEN_BAN_OPTIONS } from "../../../utils/const";
-
 
 // ── Section label helper ──────────────────────────────────────
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -67,14 +63,9 @@ const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
     case "SUA_CHUA":
       return (
         <RepairRequestPreview
-          assets={[] as any}
-          month={0}
-          year={0}
-          number=""
-          signers={[]}
-          sourceDeptId=""
-          execDeptId=""
-          note=""
+          data={null}
+          repairLevels={[]}
+          departments={[]}
           tieude={values?.ten || ""}
           congty={values?.congTy || ""}
         />
@@ -87,16 +78,12 @@ const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
         />
       );
     case "GIAM_DINH":
-      return (
-        <InspectionRecordPreview
-          data={values}
-        />
-      );
-    case "NGHIEM_THU_MAY_MOC":
+      return <InspectionRecordPreview data={values} />;
+    case "NGHIEM_THU":
       return (
         <AcceptanceTestPreview
-          formik={undefined}
-          d={new Date()}
+          data={undefined}
+          apiDepartments={[]}
           tieude={values?.ten || ""}
           congty={values?.congTy || ""}
         />
@@ -113,30 +100,6 @@ const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
     case "KIEM_TRA_SU_CO":
       return (
         <IncidentInspectionPreview
-          tieude={values?.ten || ""}
-          congty={values?.congTy || ""}
-        />
-      );
-    case "BIEN_PHAP_MAY_MOC":
-      return (
-        <MeasureMachinPreview
-          row={{ ...values }}
-          tieude={values?.ten || ""}
-          congty={values?.congTy || ""}
-        />
-      );
-    case "BIEN_PHAP_PHUONG_TIEN":
-      return (
-        <MeasureVehiclePreview
-          row={{ ...values }}
-          tieude={values?.ten || ""}
-          congty={values?.congTy || ""}
-        />
-      );
-    case "NGHIEM_THU_PHUONG_TIEN":
-      return (
-        <AcceptanceVehiclePreview
-          row={values as any}
           tieude={values?.ten || ""}
           congty={values?.congTy || ""}
         />

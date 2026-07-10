@@ -17,12 +17,16 @@ interface Props {
   data: any;
   repairLevels?: any[];
   departments?: any[];
+  tieude?: string;
+  congty?: string;
 }
 
 const RepairRequestPreview = ({
   data,
   repairLevels = [],
   departments = [],
+  tieude,
+  congty,
 }: Props) => {
   const donViQuanLy =
     findById(departments, data?.donViQuanLy)?.tenPhongBan || "";
@@ -165,7 +169,10 @@ const RepairRequestPreview = ({
               <TableCell align="center" sx={{ fontWeight: 700, width: "50px" }}>
                 Stt
               </TableCell>
-              <TableCell align="center" sx={{ fontWeight: 700,width:"200px" }}>
+              <TableCell
+                align="center"
+                sx={{ fontWeight: 700, width: "200px" }}
+              >
                 Mã vật tư
               </TableCell>
               <TableCell align="center" sx={{ fontWeight: 700 }}>

@@ -800,3 +800,59 @@ export interface TechnicalReportDetailData {
   donViQuanLy?: string;
   action?: ActionType;
 }
+
+// Biên bản nghiệm thu (từ phiếu lĩnh vật tư)
+export interface NghiemThuData {
+  id?: string;
+  idBienBan?: string;
+  donViQuanLy?: string;
+  noiDungSuaChua?: string;
+  ketQua?: string;
+
+  idNguoiLap?: string;
+  nguoiLapXacNhan?: boolean;
+  idGiamDoc?: string;
+  giamDocXacNhan?: boolean;
+  share?: boolean;
+  trangThai?: number;
+
+  ngayTao?: string;
+  ngayCapNhat?: string;
+  nguoiTao?: string;
+  nguoiCapNhat?: string;
+
+  tenDonViQuanLy?: string;
+  tenNguoiLap?: string;
+  tenGiamDoc?: string;
+  tenMauBienBan?: string;
+  congTy?: string;
+
+  danhSachTaiSan?: NghiemThuChiTietTaiSanData[];
+  danhSachVatTu?: NghiemThuChiTietVatTuData[];
+  chuKyList?: any[];
+  nguoiKyList?: any[];
+}
+
+export interface NghiemThuChiTietTaiSanData {
+  id?: string;
+  idNghiemThu?: string;
+  idTaiSan?: string;
+  tenTaiSan?: string;
+  maCongViec?: string;
+  noiDung?: string;
+  soLuong?: number;
+  ghiChu?: string;
+}
+
+export interface NghiemThuChiTietVatTuData {
+  id?: string;
+  idNghiemThu?: string;
+  idVatTu?: string;
+  idChiTietVatTu?: string;
+  kyHieu?: string;
+  tenVatTu?: string;
+  donViTinh?: string;
+  soLuongThayThe?: number;
+  soLuongThuHoi?: number;
+  ghiChu?: string;
+}

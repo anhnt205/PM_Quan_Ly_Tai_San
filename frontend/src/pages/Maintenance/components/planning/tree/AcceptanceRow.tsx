@@ -14,15 +14,12 @@ import { ActionCell } from "./ActionCell";
 import { showStatus } from "../../../config";
 import type { MaintenancePlanData } from "../../../types";
 import {
-  useMaintenanceAcceptanceTestMutation,
-  useMaintenanceAcceptanceTestVehicleMutation,
   useMaintenanceMaterialAssessmentByInspectionQuery,
+  useAcceptanceMutation,
 } from "../../../mutation";
 import { MaterialRow } from "./MaterialRow";
 import AcceptanceTestDialog from "../../dialog/AcceptanceTestDialog";
-import NghiemThuPhuongTienDialog from "../../dialog/NghiemThuPhuongTienDialog";
 import MaterialDialog from "../../dialog/MaterialDialog";
-import { AssetGroup } from "../../../../../utils/const";
 import { useAppSelector } from "../../../../../redux/store";
 import { useLocation } from "react-router-dom";
 import DraftIndicator from "../../../../../components/common/DraftIndicator";
@@ -70,10 +67,7 @@ export const AcceptanceRow = ({
       expanded ? acceptance.id : "",
     );
 
-  const { deleteMutation: deleteAccMachine } =
-    useMaintenanceAcceptanceTestMutation();
-  const { deleteMutation: deleteAccVehicle } =
-    useMaintenanceAcceptanceTestVehicleMutation();
+  const { deleteMutation } = useAcceptanceMutation();
 
   const isDraft = acceptance.trangThai === 0;
   const canAddMaterial =
@@ -82,8 +76,7 @@ export const AcceptanceRow = ({
     acceptance.daCoDanhGiaVatTu === 1 || materials.length > 0;
 
   const handleDelete = () => {
-    const mut = isMachine ? deleteAccMachine : deleteAccVehicle;
-    mut.mutateAsync(acceptance.id);
+    deleteMutation.mutateAsync(acceptance.id);
   };
 
   return (
@@ -138,7 +131,7 @@ export const AcceptanceRow = ({
                   : "36px",
             }}
           >
-            {acceptance.soPhieu}
+            {acceptance.id || "BB Nghiệm thu"}
           </Typography>
         </TableCell>
         <TableCell>
@@ -185,22 +178,12 @@ export const AcceptanceRow = ({
         ))}
 
       {editDialogOpen &&
-        (isMachine ? (
-          <AcceptanceTestDialog
-            open={editDialogOpen}
-            onClose={() => setEditDialogOpen(false)}
-            inspectionRecord={inspection} // Might be undefined if not passed down cleanly
-            bienPhap={bienPhap}
-            initData={acceptance}
-          />
-        ) : (
-          <NghiemThuPhuongTienDialog
-            open={editDialogOpen}
-            onClose={() => setEditDialogOpen(false)}
-            bienPhap={bienPhap}
-            initData={acceptance}
-          />
-        ))}
+        <AcceptanceTestDialog
+          open={editDialogOpen}
+          onClose={() => setEditDialogOpen(false)}
+          initialData={acceptance}
+        />
+      }
 
       {addMaterialDialogOpen && (
         <MaterialDialog
