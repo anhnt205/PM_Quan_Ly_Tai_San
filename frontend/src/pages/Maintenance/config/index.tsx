@@ -1429,7 +1429,7 @@ export const generateGiamDinhPdf = async (
   (inspection.danhSachChiTiet || []).forEach((entry: any, idx: number) => {
     tableData.push([
       (idx + 1).toString(),
-      entry.tenTaiSan || entry.idTaiSan || "—",
+      entry.noiDungCongViec || `Bảo dưỡng ${entry.tenTaiSan || entry.idTaiSan || "—"}`,
       entry.donViTinh || "—",
       entry.soLuong || "",
       entry.tinhTrang || "",
@@ -1450,7 +1450,7 @@ export const generateGiamDinhPdf = async (
           styles: { halign: "center", valign: "middle" },
         },
         {
-          content: "Tên thiết bị, phụ tùng",
+          content: "Tên chi tiết/Nội dung công việc",
           rowSpan: 2,
           styles: { halign: "center", valign: "middle" },
         },

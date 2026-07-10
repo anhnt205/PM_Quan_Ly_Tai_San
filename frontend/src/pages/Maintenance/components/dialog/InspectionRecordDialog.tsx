@@ -179,6 +179,7 @@ const InspectionRecordDialog = ({
             thayMoi: e.thayMoi,
             suaChua: e.suaChua,
             ghiChu: e.ghiChu,
+            noiDungCongViec: e.noiDungCongViec,
           };
         }),
         nguoiKyList: intermediateSigners,
@@ -244,8 +245,10 @@ const InspectionRecordDialog = ({
         congTy:
           initData.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
         ngayTao: dayjs(initData.ngayTao).format("YYYY-MM-DD HH:mm:ss"),
-        danhSachChiTiet: (initData.danhSachChiTiet ??
-          []) as InspectionRecordDetailData[],
+        danhSachChiTiet: (initData.danhSachChiTiet ?? []).map((e: any) => ({
+          ...e,
+          noiDungCongViec: e.noiDungCongViec || `Bảo dưỡng ${e.tenTaiSan || "thiết bị"}`,
+        })) as InspectionRecordDetailData[],
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
           userId: item.idNhanVien,
           userName: item.hoTen,
@@ -267,6 +270,7 @@ const InspectionRecordDialog = ({
         idBaoCaoKyThuatChiTiet: e.id,
         donViTinh: e.donViTinh,
         soLuong: 1,
+        noiDungCongViec: `Bảo dưỡng ${e.tenTaiSan || "thiết bị"}`,
       }),
     ) as InspectionRecordDetailData[];
 
@@ -310,7 +314,7 @@ const InspectionRecordDialog = ({
         userName: item.hoTen || item.userName,
         departmentId: item.idDonVi || item.departmentId,
         departmentName: item.donVi || item.departmentName,
-        position: item.tenChucVu || item.position || "",
+        positionName: item.chucVu || item.position || "",
         positionId: item.idChucVu || item.positionId || "",
         order: idx + 1,
       }),
@@ -525,7 +529,14 @@ const InspectionRecordDialog = ({
                       {assetIdx + 1}
                     </TableCell>
                     <TableCell sx={{ fontWeight: 600, color: "primary.main" }}>
-                      {entry.tenTaiSan}
+                      <FieldInput
+                        title=""
+                        field={`danhSachChiTiet.${assetIdx}.noiDungCongViec`}
+                        formik={formik}
+                        noBorder={true}
+                        multiline
+                        rows={5}
+                      />
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">

@@ -89,7 +89,7 @@ const MaterialRequisitionPreview = ({
               mt: 1,
             }}
           >
-            Quảng Ninh, Ngày {formatted(data?.ngayTao)}
+            Quảng Ninh, {formatted(data?.ngayTao)}
           </Typography>
         </Box>
       </Box>

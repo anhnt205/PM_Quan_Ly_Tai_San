@@ -623,6 +623,7 @@ export interface InspectionRecordDetailData {
   thayMoi?: number;
   suaChua?: number;
   ghiChu?: string;
+  noiDungCongViec?: string;
 }
 
 // nghiệm thu

@@ -446,6 +446,8 @@ const JobAssignmentDialog = ({
                             field={`danhSachTaiSan.${rowIdx}.noiDung`}
                             formik={formik}
                             noBorder={true}
+                            multiline
+                            rows={3}
                           />
                         </TableCell>
                         <TableCell>

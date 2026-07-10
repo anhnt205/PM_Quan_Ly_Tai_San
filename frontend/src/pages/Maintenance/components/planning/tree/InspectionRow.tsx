@@ -129,7 +129,7 @@ export const InspectionRow = ({
             sx={{ color: "#fff" }}
           />
         </TableCell>
-        <TableCell>{inspection.ngayGiamDinh}</TableCell>
+        <TableCell>{inspection.ngayTao}</TableCell>
         <TableCell>{showStatus(inspection.trangThai ?? 0)}</TableCell>
         <TableCell align="right">
           <ActionCell

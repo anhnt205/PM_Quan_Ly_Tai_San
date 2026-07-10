@@ -15,4 +15,5 @@ public class GiamDinhChiTiet {
     private Integer thayMoi;
     private Integer suaChua;
     private String ghiChu;
+    private String noiDungCongViec;
 }

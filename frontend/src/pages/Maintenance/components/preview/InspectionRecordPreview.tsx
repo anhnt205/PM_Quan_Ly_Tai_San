@@ -93,7 +93,7 @@ export default function InspectionRecordPreview({ data }: { data: any }) {
               Ông: {s.userName || "………………………"}
             </Typography>
             <Typography variant="caption" sx={{ minWidth: 120 }}>
-              Chức vụ: {s.positionId || "………………………"}
+              Chức vụ: {s.positionName || "………………………"}
             </Typography>
           </Box>
         ))}
@@ -174,7 +174,7 @@ export default function InspectionRecordPreview({ data }: { data: any }) {
                   {idx + 1}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.75rem" }}>
-                  {entry.tenTaiSan || entry.idTaiSan || "—"}
+                  {entry.noiDungCongViec || `Bảo dưỡng ${entry.tenTaiSan || entry.idTaiSan || "—"}`}
                 </TableCell>
                 <TableCell sx={{ fontSize: "0.75rem" }}>
                   {entry.donViTinh || "—"}
@@ -220,7 +220,7 @@ export default function InspectionRecordPreview({ data }: { data: any }) {
             (a, b) => (a.order || 0) - (b.order || 0),
           );
           const cols = sorted.map((s) => ({
-            label: (s.departmentId || "").toUpperCase(),
+            label: (s.positionName || "").toUpperCase(),
             signer: s,
           }));
 

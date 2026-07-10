@@ -81,6 +81,7 @@ const MaterialRequisitionDialog = ({
       donViDeNghi: jobAssignment?.donViQuanLy || "",
       mucDichSuDung: "",
       ghiChu: "",
+      ngayTao: dayjs().format("YYYY-MM-DD"),
       danhSachTaiSan: [] as any[],
       danhSachVatTu: [] as any[],
       nguoiKyList: [] as any[],
@@ -192,6 +193,7 @@ const MaterialRequisitionDialog = ({
         (ts: any) => ({
           idBienBan: ts.id,
           idTaiSan: ts.idTaiSan,
+          tenTaiSan: ts.tenTaiSan,
         }),
       );
 
@@ -199,6 +201,9 @@ const MaterialRequisitionDialog = ({
         ...formik.initialValues,
         idPhieuGiaoViec: jobAssignment.id,
         donViDeNghi: jobAssignment.donViQuanLy || "",
+        mucDichSuDung: assetsList
+          .map((ts: any) => "Bảo dưỡng" + " " + ts.tenTaiSan)
+          .join(", "),
         nguoiKyList: signersList,
         danhSachVatTu: materialsList,
         danhSachTaiSan: assetsList,
@@ -349,13 +354,13 @@ const MaterialRequisitionDialog = ({
                     multiline
                     rows={3}
                   />
-                  <FieldInput
+                  {/* <FieldInput
                     title="Ghi chú"
                     field="ghiChu"
                     formik={formik}
                     multiline
                     rows={3}
-                  />
+                  /> */}
                 </Box>
               </Box>
             </Box>

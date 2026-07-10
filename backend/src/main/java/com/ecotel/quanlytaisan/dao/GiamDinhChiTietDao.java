@@ -42,8 +42,8 @@ public class GiamDinhChiTietDao {
         if (e.getId() == null) e.setId(generateNextId());
         String sql = """
             INSERT INTO giamdinh_chitiet (
-                Id, IdGiamDinh, IdBaoCaoKyThuatChiTiet, IdTaiSan, TenTaiSan, DonViTinh, SoLuong, TinhTrang, ThayMoi, SuaChua, GhiChu
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Id, IdGiamDinh, IdBaoCaoKyThuatChiTiet, IdTaiSan, TenTaiSan, DonViTinh, SoLuong, TinhTrang, ThayMoi, SuaChua, GhiChu, NoiDungCongViec
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.update(sql,
                 e.getId(), e.getIdGiamDinh(), e.getIdBaoCaoKyThuatChiTiet(), e.getIdTaiSan(), e.getTenTaiSan(), e.getDonViTinh(),
@@ -51,15 +51,15 @@ public class GiamDinhChiTietDao {
                 e.getTinhTrang(),
                 e.getThayMoi() != null ? e.getThayMoi() : 0,
                 e.getSuaChua() != null ? e.getSuaChua() : 0,
-                e.getGhiChu()
+                e.getGhiChu(), e.getNoiDungCongViec()
         );
     }
 
     public int[] batchInsert(List<GiamDinhChiTiet> list) {
         String sql = """
             INSERT INTO giamdinh_chitiet (
-                Id, IdGiamDinh, IdBaoCaoKyThuatChiTiet, IdTaiSan, TenTaiSan, DonViTinh, SoLuong, TinhTrang, ThayMoi, SuaChua, GhiChu
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                Id, IdGiamDinh, IdBaoCaoKyThuatChiTiet, IdTaiSan, TenTaiSan, DonViTinh, SoLuong, TinhTrang, ThayMoi, SuaChua, GhiChu, NoiDungCongViec
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """;
         return jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
             @Override
@@ -77,6 +77,7 @@ public class GiamDinhChiTietDao {
                 ps.setInt(9, e.getThayMoi() != null ? e.getThayMoi() : 0);
                 ps.setInt(10, e.getSuaChua() != null ? e.getSuaChua() : 0);
                 ps.setString(11, e.getGhiChu());
+                ps.setString(12, e.getNoiDungCongViec());
             }
             @Override
             public int getBatchSize() { return list.size(); }
