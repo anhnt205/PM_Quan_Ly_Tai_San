@@ -1,21 +1,19 @@
-
 services:
   # qlts_reverse_proxy_service:
   #   build:
   #     context: ./reverse_proxy
   #   image: ${REGISTRY}/qlts_reverse_proxy_img:${VERSION}
 
-
-  qlts_demo_reverse_proxy_service:
+  qlts-demo-reverse-proxy-service:
     build:
       context: ./reverse_proxy
     image: ${REGISTRY}/qlts_demo_reverse_proxy_img:${VERSION}
-  qlts_demo_frontend_service:
+  qlts-demo-frontend-service:
     build:
       context: ./frontend
     image: ${REGISTRY}/qlts_demo_frontend_img:${VERSION}
 
-  qlts_demo_backend_service:
+  qlts-demo-backend-service:
     build:
       context: ./backend
     image: ${REGISTRY}/qlts_demo_backend_img:${VERSION}
