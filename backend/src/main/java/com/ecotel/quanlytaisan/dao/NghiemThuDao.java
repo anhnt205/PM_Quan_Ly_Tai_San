@@ -40,7 +40,13 @@ public class NghiemThuDao {
                 n.NguoiTao,
                 n.NguoiCapNhat,
                 pb.TenPhongBan AS tenDonViQuanLy,
-                bb.SoPhieu AS soPhieuBienBan
+                bb.SoPhieu AS soPhieuBienBan,
+                CASE 
+                    WHEN EXISTS (
+                        SELECT 1 FROM danhgia_vattu dvt
+                        WHERE dvt.IdNghiemThu = n.Id
+                    ) THEN 1 ELSE 0 
+                END as daCoPhieuDanhGia
             FROM nghiemthu n
                 LEFT JOIN NhanVien nvLap ON n.IdNguoiLap = nvLap.Id
                 LEFT JOIN NhanVien nvGD ON n.IdGiamDoc = nvGD.Id

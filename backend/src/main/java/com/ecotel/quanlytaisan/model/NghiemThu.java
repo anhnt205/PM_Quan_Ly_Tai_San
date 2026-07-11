@@ -10,6 +10,7 @@ public class NghiemThu {
     private String noiDungSuaChua;
     private String ketQua;
 
+
     // Người lập phiếu
     private String idNguoiLap;
     private Boolean nguoiLapXacNhan;

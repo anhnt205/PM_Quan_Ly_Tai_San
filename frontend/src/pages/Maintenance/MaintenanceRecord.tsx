@@ -118,7 +118,9 @@ export default function MaintenanceRecordPage() {
                   ? "materialRequisitionPage"
                   : activeTab === 6
                     ? "nghiemThuPage"
-                    : "",
+                    : activeTab === 7
+                      ? "materialAssessmentPage"
+                      : "",
       activeTab === 0
         ? "kehoach-suachua"
         : activeTab === 1
@@ -133,7 +135,9 @@ export default function MaintenanceRecordPage() {
                   ? "phieulinhvattu"
                   : activeTab === 6
                     ? "nghiemthu"
-                    : "",
+                    : activeTab === 7
+                      ? "danhgia-vattu"
+                      : "",
       activeTab,
     );
 
@@ -347,6 +351,7 @@ export default function MaintenanceRecordPage() {
     4: [{ field: "idSuaChua", headerName: "Mã lệnh SC" }],
     5: [{ field: "idPhieuGiaoViec", headerName: "Mã phiếu giao việc" }],
     6: [{ field: "idBienBan", headerName: "Mã phiếu lĩnh vật tư" }],
+    7: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
   };
 
   const allRows = [
@@ -389,14 +394,6 @@ export default function MaintenanceRecordPage() {
       headerName: cfg.headerName,
       width: 160,
       renderCell: (params: any) => {
-        // Tab giám định: hiển thị dữ liệu vào đúng cột loại biên bản
-        if (activeTab === 2) {
-          const loai = params.row.loaiBienBan; // 'sua_chua' | 'su_co'
-          if (loai === cfg.key) {
-            return <span>{params.row.idBienBan || "—"}</span>;
-          }
-          return <span style={{ color: "#bbb" }}>—</span>;
-        }
         return (
           <span style={{ color: params.value ? "inherit" : "#bbb" }}>
             {params.value || "—"}
@@ -611,6 +608,23 @@ export default function MaintenanceRecordPage() {
             showHeader={true}
             generatePdf={() =>
               generateNghiemThuPdf(
+                selectedRow,
+                staffs || [],
+                departments || [],
+                positions || [],
+              )
+            }
+          />
+        );
+      case 7:
+        return (
+          <SignDocumentForm
+            {...commonProps}
+            fullscreen={false}
+            showSignerSidebar={false}
+            showHeader={true}
+            generatePdf={() =>
+              generateDanhGiaVatTuPdf(
                 selectedRow,
                 staffs || [],
                 departments || [],

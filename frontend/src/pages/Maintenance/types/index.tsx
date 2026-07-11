@@ -177,21 +177,13 @@ export interface JobAssignmentMaterialData {
 // Đánh giá vật tư thu hồi
 export interface DanhGiaVatTuData {
   id?: string;
-  idCongTy?: string;
-  soPhieu?: string;
-  ngayDanhGia?: string;
-  viTri?: string;
-  capSuaChua?: string;
-  tenThietBi?: string;
-  kieu?: string;
-  soDangKi?: string;
-  idDonViQuanLy?: string;
-  tenDonViQuanLy?: string;
   idNghiemThu?: string;
-
-  soLuongPhucHoi?: number;
-  soLuongPheLieu?: number;
-  soLuongHuy?: number;
+  quyetDinhSo?: string;
+  canCuHoSo?: string;
+  ngayDanhGia?: string;
+  diaDiem?: string;
+  idDonViDanhGia?: string;
+  tenDonViDanhGia?: string;
 
   // Ký duyệt
   idNguoiLap?: string;
@@ -208,27 +200,23 @@ export interface DanhGiaVatTuData {
   nguoiTao?: string;
   nguoiCapNhat?: string;
 
-  tenMauBienBan?: string;
-  congTy?: string;
-
-  danhSachChiTiet?: ChiTietVatTuThuHoiData[];
+  danhSachChiTiet?: DanhGiaVatTuChiTietData[];
   nguoiKyList?: any[];
 }
 
-export interface ChiTietVatTuThuHoiData {
+export interface DanhGiaVatTuChiTietData {
   id?: string;
-  idDanhGiaVatTu?: string;
-  idChiTietVatTu?: string;
+  idDanhGia?: string;
   idVatTu?: string;
-  soLuong?: number;
-  tinhTrang?: string;
-  bienPhapXuLy?: string;
-  ghiChu?: string;
-
-  // Join fields
-  // Join fields
+  idChiTietVatTu?: string;
   tenVatTu?: string;
   donViTinh?: string;
+  soLuong?: number;
+  khoiLuong?: number;
+  chatLuongConLai?: number;
+  donGia?: number;
+  giaTriConLai?: number;
+  ghiChu?: string;
 }
 
 // Kiểm tra sự cố
@@ -656,7 +644,7 @@ export interface AcceptanceTestRecordData {
   soPhieuBienPhapMayMoc?: string;
   tenMauBienBan?: string;
   congTy?: string;
-  daCoDanhGiaVatTu?: number;
+  daCoPhieuDanhGia?: number;
   danhSachTaiSan?: AcceptanceTestRecordAssetData[];
   chuKyList?: any[];
   nguoiKyList?: any[];

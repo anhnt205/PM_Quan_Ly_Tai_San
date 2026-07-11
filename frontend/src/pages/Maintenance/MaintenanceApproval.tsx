@@ -389,7 +389,7 @@ export default function MaintenanceApprovalPage() {
     4: [{ field: "idSuaChua", headerName: "Mã lệnh SC" }],
     5: [{ field: "idPhieuGiaoViec", headerName: "Mã phiếu giao việc" }],
     6: [{ field: "idBienBan", headerName: "Mã phiếu lĩnh vật tư" }],
-    7: [{ field: "idDanhGia", headerName: "Mã đánh giá" }],
+    7: [{ field: "idNghiemThu", headerName: "Mã BB nghiệm thu" }],
   };
 
   const currentAllRows = allRows[activeTab];
@@ -419,14 +419,6 @@ export default function MaintenanceApprovalPage() {
       headerName: cfg.headerName,
       width: 160,
       renderCell: (params: any) => {
-        // Tab giám định: hiển thị dữ liệu vào đúng cột loại biên bản
-        if (activeTab === 2) {
-          const loai = params.row.loaiBienBan; // 'sua_chua' | 'su_co'
-          if (loai === cfg.key) {
-            return <span>{params.row.idBienBan || "—"}</span>;
-          }
-          return <span style={{ color: "#bbb" }}>—</span>;
-        }
         return (
           <span style={{ color: params.value ? "inherit" : "#bbb" }}>
             {params.value || "—"}
@@ -1002,7 +994,7 @@ export default function MaintenanceApprovalPage() {
           }
         />
       )}
-      {selectedRow && isSigning && activeTab === 8 && (
+      {selectedRow && isSigning && activeTab === 7 && (
         <SignDocumentForm
           selectedIds={[selectedRow?.id]}
           onCancel={() => {

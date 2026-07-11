@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 import com.ecotel.quanlytaisan.model.*;
+import com.ecotel.quanlytaisan.model.PageResponse;
 
 @Service
 public class DanhGiaVatTuService {
@@ -20,8 +21,8 @@ public class DanhGiaVatTuService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
-    public List<DanhGiaVatTu> findAll(String idCongTy) {
-        List<DanhGiaVatTu> list = dao.findAll(idCongTy);
+    public List<DanhGiaVatTu> findAll() {
+        List<DanhGiaVatTu> list = dao.findAll();
         for (DanhGiaVatTu item : list) {
             enrichData(item);
         }
@@ -138,10 +139,6 @@ public class DanhGiaVatTuService {
         return dao.huy(id);
     }
 
-    public int updateGhiChu(String id, String ghiChuBienBan) {
-        return dao.updateGhiChu(id, ghiChuBienBan);
-    }
-
     @Transactional
     public int delete(String id) {
         dao.deleteDetailsByParentId(id);
@@ -150,12 +147,12 @@ public class DanhGiaVatTuService {
         return dao.delete(id);
     }
 
-    public PageResponse<DanhGiaVatTu> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir,
+    public PageResponse<DanhGiaVatTu> findAllPaged(int page, int size, String sortBy, String sortDir,
             String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
-        List<DanhGiaVatTu> sourceList = dao.findAll(idCongTy);
+        List<DanhGiaVatTu> sourceList = dao.findAll();
 
         // Lọc theo lượt ký (Turn to sign)
         if (userid != null && !userid.trim().isEmpty()) {
@@ -189,7 +186,7 @@ public class DanhGiaVatTuService {
         // Lọc theo trạng thái
         if (trangThai != null) {
             sourceList = sourceList.stream()
-                    .filter(i -> trangThai.equals(i.getTrangThai()))
+            .filter(i -> trangThai.equals(i.getTrangThai()))
                     .collect(Collectors.toList());
         }
 
@@ -210,9 +207,8 @@ public class DanhGiaVatTuService {
         if (search != null && !search.trim().isEmpty()) {
             String q = search.toLowerCase();
             sourceList = sourceList.stream()
-                    .filter(i -> (i.getSoPhieu() != null && i.getSoPhieu().toLowerCase().contains(q))
-                            || (i.getViTri() != null && i.getViTri().toLowerCase().contains(q))
-                            || (i.getTenThietBi() != null && i.getTenThietBi().toLowerCase().contains(q)))
+                    .filter(i -> (i.getQuyetDinhSo() != null && i.getQuyetDinhSo().toLowerCase().contains(q))
+                            || (i.getDiaDiem() != null && i.getDiaDiem().toLowerCase().contains(q)))
                     .collect(Collectors.toList());
         }
 
@@ -368,8 +364,8 @@ public class DanhGiaVatTuService {
         boolean asc = "asc".equalsIgnoreCase(sortDir);
         Comparator<DanhGiaVatTu> comp;
         switch (sortBy.trim().toLowerCase()) {
-            case "sophieu":
-                comp = Comparator.comparing(i -> i.getSoPhieu() != null ? i.getSoPhieu() : "",
+            case "quyetdinhso":
+                comp = Comparator.comparing(i -> i.getQuyetDinhSo() != null ? i.getQuyetDinhSo() : "",
                         Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)); break;
             case "trangthai":
                 comp = Comparator.comparing(i -> i.getTrangThai() != null ? i.getTrangThai() : 0,

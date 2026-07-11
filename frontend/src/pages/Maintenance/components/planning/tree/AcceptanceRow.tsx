@@ -71,9 +71,9 @@ export const AcceptanceRow = ({
 
   const isDraft = acceptance.trangThai === 0;
   const canAddMaterial =
-    acceptance.trangThai === 3 && acceptance.daCoDanhGiaVatTu !== 1;
+    acceptance.trangThai === 3 && acceptance.daCoPhieuDanhGia !== 1;
   const hasMaterials =
-    acceptance.daCoDanhGiaVatTu === 1 || materials.length > 0;
+    acceptance.daCoPhieuDanhGia === 1 || materials.length > 0;
 
   const handleDelete = () => {
     deleteMutation.mutateAsync(acceptance.id);
@@ -149,7 +149,7 @@ export const AcceptanceRow = ({
             onAdd={() => setAddMaterialDialogOpen(true)}
             isAdd={canAddMaterial}
             addTooltip={
-              acceptance.daCoDanhGiaVatTu === 1
+              acceptance.daCoPhieuDanhGia === 1
                 ? "Đã có BB Vật tư"
                 : "Tạo BB Vật tư"
             }

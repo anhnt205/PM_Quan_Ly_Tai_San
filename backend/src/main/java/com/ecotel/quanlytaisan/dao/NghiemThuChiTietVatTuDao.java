@@ -19,7 +19,7 @@ public class NghiemThuChiTietVatTuDao {
     private JdbcTemplate jdbcTemplate;
 
     public List<NghiemThuChiTietVatTu> findByIdNghiemThu(String idNghiemThu) {
-        String sql = "SELECT * FROM nghiemthu_chitietvattu WHERE IdNghiemThu = ?";
+        String sql = "SELECT ctvt.*,vt.GiaTri FROM nghiemthu_chitietvattu ctvt LEFT JOIN CCDCVatTu vt ON ctvt.IdVatTu = vt.Id  WHERE IdNghiemThu = ?";
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(NghiemThuChiTietVatTu.class), idNghiemThu);
     }
 

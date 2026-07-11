@@ -20,4 +20,5 @@ public class NghiemThuDTO extends NghiemThu {
     private String tenNguoiLap;
     private String tenGiamDoc;
     private String soPhieuBienBan; // Map from PhieuLinhVatTu or BienBan
+    private Integer daCoPhieuDanhGia;
 }

@@ -3,16 +3,17 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 
 @Data
-public class NghiemThuChiTietVatTu {
+public class DanhGiaVatTuChiTiet {
     private String id;
-    private String idNghiemThu;
+    private String idDanhGia;
     private String idVatTu;
     private String idChiTietVatTu;
-    private String kyHieu;
     private String tenVatTu;
     private String donViTinh;
-    private Float soLuongThayThe;
-    private Float soLuongThuHoi;
+    private Float soLuong;
+    private Float khoiLuong;
+    private Float chatLuongConLai;
+    private Float donGia;
+    private Float giaTriConLai;
     private String ghiChu;
-    private Double giaTri;
 }
