@@ -23,6 +23,8 @@ public class SuCoThietBiDTO {
     /** ID kế hoạch sửa chữa liên quan */
     private String idKeHoach;
 
+    private String nhomTaiSan;
+
     /** Số phiếu sự cố */
     private String soPhieu;
 

@@ -62,7 +62,7 @@ import { currentBrandConfig } from "../../../../config/brandConfig";
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   repairRequest: MaintenanceRepairData | null;
   incidentInspection?: IncidentInspectionData;
   initData?: InspectionRecordData | null;
@@ -253,7 +253,8 @@ const InspectionRecordDialog = ({
           initData.tenMauBienBan ??
           mauMacDinh?.ten ??
           "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
-        congTy: initData.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
+        congTy:
+          initData.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
         danhSachChiTiet: (initData.danhSachChiTiet ??
           []) as InspectionRecordDetailData[],
         nguoiKyList: (listInfo ?? []).map((item: any) => ({
@@ -493,7 +494,9 @@ const InspectionRecordDialog = ({
 
   const referenceLabel = repairRequest
     ? `${repairRequest.soPhieu || repairRequest.id} — Tháng ${repairRequest.thang}/${repairRequest.nam}`
-    : `Kế hoạch: ${plan.id}`;
+    : plan
+      ? `Kế hoạch: ${plan.id}`
+      : `BB Kiểm tra sự cố: ${incidentInspection?.soPhieu || ""}`;
 
   return (
     <Dialog
@@ -581,7 +584,8 @@ const InspectionRecordDialog = ({
                   </Typography>
                 ) : (
                   <Typography variant="body2" color="text.secondary">
-                    Căn cứ vào BB Kiểm tra sự cố — Kế hoạch: <b>{plan.id}</b>
+                    Căn cứ vào BB Kiểm tra sự cố{plan ? ` — Kế hoạch: ` : ""}
+                    <b>{plan?.id || ""}</b>
                   </Typography>
                 )}
               </Box>

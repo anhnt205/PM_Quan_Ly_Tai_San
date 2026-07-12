@@ -46,7 +46,8 @@ public class SuCoThietBiService {
             String sortBy, String sortDir, String search,
             String idDonViBaoCao, Integer trangThai, Integer mucDo,
             String userid, Boolean isSign,
-            String dateFrom, String dateTo
+            String dateFrom, String dateTo,
+            String nhomTaiSan
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -90,6 +91,10 @@ public class SuCoThietBiService {
         if (mucDo != null)
             sourceList = sourceList.stream()
                     .filter(i -> mucDo.equals(i.getMucDo()))
+                    .collect(Collectors.toList());
+        if (nhomTaiSan != null && !nhomTaiSan.trim().isEmpty())
+            sourceList = sourceList.stream()
+                    .filter(i -> nhomTaiSan.equalsIgnoreCase(i.getNhomTaiSan()))
                     .collect(Collectors.toList());
 
         if (dateFrom != null && !dateFrom.isEmpty()) {

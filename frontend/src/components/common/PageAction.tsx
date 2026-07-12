@@ -41,6 +41,7 @@ interface Props {
   onImportSignature?: (files: File[]) => void;
   hideActionRow?: boolean;
   onRefresh?: () => void;
+  extraActions?: React.ReactNode;
 }
 
 export default function PageAction({
@@ -55,6 +56,7 @@ export default function PageAction({
   onImportSignature,
   hideActionRow = false,
   onRefresh,
+  extraActions,
 }: Props) {
   const dispatch = useDispatch();
   const location = useLocation();
@@ -342,6 +344,8 @@ export default function PageAction({
                 </Menu>
               </>
             )}
+
+            {extraActions}
 
             {onNewClick && (
               <Button

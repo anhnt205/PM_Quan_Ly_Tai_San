@@ -1,0 +1,2 @@
+ALTER TABLE suco_thietbi ADD COLUMN NhomTaiSan VARCHAR(50) DEFAULT 'MAY_MOC';
+UPDATE suco_thietbi SET NhomTaiSan = 'MAY_MOC' WHERE NhomTaiSan IS NULL;

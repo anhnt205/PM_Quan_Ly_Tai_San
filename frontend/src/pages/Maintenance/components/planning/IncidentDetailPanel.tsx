@@ -1,4 +1,4 @@
-import  { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -34,10 +34,11 @@ import { AssetGroup } from "../../../../utils/const";
 import { useLocation } from "react-router-dom";
 import { useAppSelector } from "../../../../redux/store";
 import { IncidentInspectionRow } from "./tree/IncidentInspectionRow";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 interface Props {
   incident: IncidenData;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   onClose: () => void;
 }
 
@@ -123,7 +124,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
           mx: -2,
           mt: -2,
           mb: 2,
-          bgcolor: "#1FA463",
+          bgcolor: currentBrandConfig.primaryColor,
           color: "#fff",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
@@ -196,7 +197,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             fontSize: "0.95rem",
             color: "text.secondary",
             "&:hover": {
-              color: "#1FA463",
+              color: currentBrandConfig.primaryColor,
               opacity: 0.85,
             },
           },
@@ -223,7 +224,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 onClick={() => setIncidentInspectionParentId(incident.id)}
                 size="small"
                 sx={{
-                  bgcolor: "#1FA463",
+                  bgcolor: currentBrandConfig.primaryColor,
                   "&:hover": { bgcolor: "#17824e" },
                 }}
               >
@@ -238,7 +239,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: currentBrandConfig.primaryColor,
                       color: "#fff !important",
                       fontWeight: 700,
                     },
@@ -370,7 +371,7 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: currentBrandConfig.primaryColor,
                       color: "#fff !important",
                       fontWeight: 700,
                     },
@@ -394,14 +395,18 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 )}
 
                 {/* ─── BB Kiểm tra sự cố (Cấp 1) ─── */}
-                {incidentInspections.map((bbktksc: any) => (
-                  <IncidentInspectionRow
-                    key={bbktksc.id}
-                    incidentInspection={bbktksc}
-                    plan={plan}
-                    incidentReport={incident}
-                  />
-                ))}
+                {incidentInspections.map((bbktksc: any) => {
+                  const isMachine = incident?.nhomTaiSan === AssetGroup.MAYMOC;
+                  return (
+                    <IncidentInspectionRow
+                      key={bbktksc.id}
+                      incidentInspection={bbktksc}
+                      plan={plan}
+                      incidentReport={incident}
+                      isMachine={isMachine}
+                    />
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
@@ -423,9 +428,12 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
         />
       )}
 
-      {lastMinimizedDialog === "incidentInspection" && hasIncidentInspectionDraft && (
-        <DraftIndicator onClick={() => setIncidentInspectionParentId(incident.id)} />
-      )}
+      {lastMinimizedDialog === "incidentInspection" &&
+        hasIncidentInspectionDraft && (
+          <DraftIndicator
+            onClick={() => setIncidentInspectionParentId(incident.id)}
+          />
+        )}
     </Box>
   );
 };

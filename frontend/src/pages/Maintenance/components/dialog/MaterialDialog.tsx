@@ -60,7 +60,7 @@ import { currentBrandConfig } from "../../../../config/brandConfig";
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   repairRequest: MaintenanceRepairData;
   acceptanceRecord: any;
   initData?: DanhGiaVatTuData | null;
@@ -111,7 +111,7 @@ const MaterialDialog = ({
       tenThietBi: acceptanceRecord.tenThietBi || "",
       kieu: "",
       soDangKi: acceptanceRecord.soDangKi || "",
-      idDonViQuanLy: plan.tenDonViGiao || "",
+      idDonViQuanLy: plan?.tenDonViGiao || "",
       idNghiemThu: acceptanceRecord.id || "",
       soLuongPhucHoi: 0,
       soLuongPheLieu: 0,
@@ -229,7 +229,8 @@ const MaterialDialog = ({
           savedDraft.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: savedDraft.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
+        congTy:
+          savedDraft.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachChiTiet: savedDraft.danhSachChiTiet,
         nguoiKyList: savedDraft.nguoiKyList?.length
           ? savedDraft.nguoiKyList
@@ -273,7 +274,8 @@ const MaterialDialog = ({
           initData.tenMauBienBan ||
           mauMacDinh?.ten ||
           "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-        congTy: initData.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
+        congTy:
+          initData.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
         danhSachChiTiet: initData.danhSachChiTiet || [],
         nguoiKyList: signersList?.length ? signersList : [],
       });
@@ -288,9 +290,10 @@ const MaterialDialog = ({
         .filter((t: any) => t.danhSachVatTu && t.danhSachVatTu.length > 0)
         .forEach((t: any) => {
           (t.danhSachVatTu || []).forEach((vt: any) => {
-            const key = vt.idChiTietVatTu || vt.idVatTu || vt.tenVatTu || "unknown";
+            const key =
+              vt.idChiTietVatTu || vt.idVatTu || vt.tenVatTu || "unknown";
             const soLuong = vt.soLuong || 1;
-            
+
             if (mapVatTu.has(key)) {
               const existing = mapVatTu.get(key)!;
               existing.soLuong = (existing.soLuong || 0) + soLuong;
@@ -314,7 +317,7 @@ const MaterialDialog = ({
       (acceptanceRecord?.danhSachChiTiet || []).forEach((vt: any) => {
         const key = vt.idChiTietVatTu || vt.idVatTu || vt.tenVatTu || "unknown";
         const soLuong = vt.soLuongThayThe || vt.soLuong || 1;
-        
+
         if (mapVatTu.has(key)) {
           const existing = mapVatTu.get(key)!;
           existing.soLuong = (existing.soLuong || 0) + soLuong;
@@ -376,7 +379,7 @@ const MaterialDialog = ({
         acceptanceRecord.tenThietBi || acceptanceRecord?.idTaiSan || "",
       kieu: "",
       soDangKi: acceptanceRecord.soDangKi || "",
-      idDonViQuanLy: plan.tenDonViGiao || "",
+      idDonViQuanLy: plan?.tenDonViGiao || "",
       idNghiemThu: acceptanceRecord.id || "",
       soLuongPhucHoi: 0,
       soLuongPheLieu: 0,

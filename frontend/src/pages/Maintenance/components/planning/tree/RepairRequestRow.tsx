@@ -34,9 +34,10 @@ interface Props {
   repairRequest: MaintenanceRepairData;
   plan: MaintenancePlanData;
   isLast: boolean;
+  isMachine: boolean;
 }
 
-export const RepairRequestRow = ({ repairRequest, plan, isLast }: Props) => {
+export const RepairRequestRow = ({ repairRequest, plan, isLast, isMachine }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addInspectionDialogOpen, setAddInspectionDialogOpen] = useState(false);
@@ -58,8 +59,6 @@ export const RepairRequestRow = ({ repairRequest, plan, isLast }: Props) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return !!tab?.formData?.[`inspectionVehicleDraft_${repairRequest.id}`];
   });
-
-  const isMachine = plan?.nhomTaiSan === AssetGroup.MAYMOC;
 
   const { data: inspectionMachine = [] } =
     useMaintenanceInspectionByBienBanQuery(
@@ -161,6 +160,7 @@ export const RepairRequestRow = ({ repairRequest, plan, isLast }: Props) => {
             plan={plan}
             parentReq={repairRequest}
             useConnector={true}
+            isMachine={isMachine}
           />
         ))}
 

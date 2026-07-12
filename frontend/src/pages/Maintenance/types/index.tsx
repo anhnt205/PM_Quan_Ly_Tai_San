@@ -5,6 +5,7 @@ export interface IncidenData {
   id: string;
   idCongTy: string;
   idKeHoach: string;
+  nhomTaiSan?: string;
   soPhieu: string;
   idDonViBaoCao: string;
   tenDonViBaoCao?: string;

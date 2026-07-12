@@ -327,6 +327,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 1,
   );
 

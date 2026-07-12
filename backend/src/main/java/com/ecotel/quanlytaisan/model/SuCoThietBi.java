@@ -21,6 +21,8 @@ public class SuCoThietBi {
 
     /** ID kế hoạch sửa chữa liên quan (nếu có) */
     private String idKeHoach;
+    
+    private String nhomTaiSan;
 
     /** Số phiếu sự cố (có thể nhập tay hoặc tự sinh) */
     private String soPhieu;

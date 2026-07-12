@@ -14,7 +14,7 @@ interface Props {
   material: DanhGiaVatTuData;
   depth: number;
   isLast: boolean;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   acceptanceRecord: any;
   useConnector?: boolean;
 }

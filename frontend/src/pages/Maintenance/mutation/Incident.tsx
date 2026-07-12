@@ -18,6 +18,7 @@ export const useMaintenanceIncidentPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  nhomTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -32,6 +33,7 @@ export const useMaintenanceIncidentPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      nhomTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/suco-thietbi/paged", {
@@ -45,6 +47,7 @@ export const useMaintenanceIncidentPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          nhomTaiSan: nhomTaiSan,
         },
       });
       return res.data.data || res.data;

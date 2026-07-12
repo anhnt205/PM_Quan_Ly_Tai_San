@@ -60,7 +60,7 @@ import { currentBrandConfig } from "../../../../config/brandConfig";
 interface Props {
   open: boolean;
   onClose: () => void;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   repairRequest: MaintenanceRepairData | null;
   incidentInspection?: IncidentInspectionData;
   initData?: VehicleInspectionRecordData | null;

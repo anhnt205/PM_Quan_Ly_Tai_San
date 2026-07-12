@@ -18,20 +18,20 @@ import { AssetGroup } from "../../../../../utils/const";
 
 interface Props {
   incidentInspection: any;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   incidentReport: any;
+  isMachine: boolean;
 }
 
 export const IncidentInspectionRow = ({
   incidentInspection,
   plan,
   incidentReport,
+  isMachine,
 }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [addInspectionDialogOpen, setAddInspectionDialogOpen] = useState(false);
-
-  const isMachine = plan?.nhomTaiSan === AssetGroup.MAYMOC;
 
   const { data: inspectionMachine = [] } = useMaintenanceInspectionByBienBanQuery(
     isMachine && expanded ? incidentInspection.id : "",
@@ -122,6 +122,7 @@ export const IncidentInspectionRow = ({
             plan={plan}
             parentReq={incidentInspection}
             useConnector={false} // Incident panel doesn't use connectors
+            isMachine={isMachine}
           />
         ))}
 
@@ -129,7 +130,6 @@ export const IncidentInspectionRow = ({
         <IncidentInspectionDialog
           open={editDialogOpen}
           onClose={() => setEditDialogOpen(false)}
-          plan={plan}
           incidentReport={incidentReport}
           selectedDeviceIds={[]} // Not needed for edit
           initData={incidentInspection}

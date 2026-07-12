@@ -31,10 +31,11 @@ interface Props {
   acceptance: any;
   depth: number;
   isLast: boolean;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   bienPhap?: any;
   inspection?: any; // parent inspection if direct
   useConnector?: boolean;
+  isMachine: boolean;
 }
 
 export const AcceptanceRow = ({
@@ -45,6 +46,7 @@ export const AcceptanceRow = ({
   bienPhap,
   inspection,
   useConnector = true,
+  isMachine,
 }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -73,7 +75,6 @@ export const AcceptanceRow = ({
   const { deleteMutation: deleteAccVehicle } =
     useMaintenanceAcceptanceTestVehicleMutation();
 
-  const isMachine = plan?.nhomTaiSan === AssetGroup.MAYMOC;
   const isDraft = acceptance.trangThai === 0;
   const canAddMaterial =
     acceptance.trangThai === 3 && acceptance.daCoDanhGiaVatTu !== 1;

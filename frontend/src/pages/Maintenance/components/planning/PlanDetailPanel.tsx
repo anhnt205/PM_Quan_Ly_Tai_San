@@ -598,14 +598,18 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
 
                 {/* ─── Giấy đề nghị sửa chữa (Cấp 1) ─── */}
                 {maintenanceRepairByPlan.map(
-                  (req: MaintenanceRepairData, reqIdx: number) => (
-                    <RepairRequestRow
-                      key={req.id}
-                      repairRequest={req}
-                      plan={plan}
-                      isLast={reqIdx === maintenanceRepairByPlan.length - 1}
-                    />
-                  ),
+                  (req: MaintenanceRepairData, reqIdx: number) => {
+                    const isMachine = plan.nhomTaiSan === AssetGroup.MAYMOC;
+                    return (
+                      <RepairRequestRow
+                        key={req.id}
+                        repairRequest={req}
+                        plan={plan}
+                        isLast={reqIdx === maintenanceRepairByPlan.length - 1}
+                        isMachine={isMachine}
+                      />
+                    );
+                  },
                 )}
               </TableBody>
             </Table>

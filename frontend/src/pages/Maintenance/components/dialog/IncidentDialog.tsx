@@ -19,7 +19,11 @@ import type { PlanSigner } from "../../../../mockdata/mockPlans";
 import { MaintenancePlanData } from "../../types";
 import type { IncidenData, IncidenDetailData } from "../../types/index";
 import dayjs from "dayjs";
-import {  CongTy, LOAI_BIEN_BAN_TYPE } from "../../../../utils/const";
+import {
+  CongTy,
+  LOAI_BIEN_BAN_TYPE,
+  AssetGroup,
+} from "../../../../utils/const";
 import { generateCode } from "../../../../utils/helpers";
 import { listSigneInfo } from "../../config";
 import { useFormik } from "formik";
@@ -42,7 +46,13 @@ interface Props {
   selectedPlans: MaintenancePlanData[];
   onSubmit: (rec: IncidenData) => void;
   initialIncident: IncidenData | null;
+  nhomTaiSan?: string;
 }
+
+const ASSET_GROUP_OPTIONS = [
+  { id: AssetGroup.MAYMOC, label: "Máy móc" },
+  { id: AssetGroup.PHUONGTIEN, label: "Phương tiện" },
+];
 
 const IncidentDialog = ({
   open,
@@ -50,6 +60,7 @@ const IncidentDialog = ({
   selectedPlans,
   onSubmit,
   initialIncident,
+  nhomTaiSan,
 }: Props) => {
   const planIds = selectedPlans.map((p) => p.id);
   const [assets, setAssets] = useState<any[]>([]);
@@ -97,6 +108,7 @@ const IncidentDialog = ({
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
       congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
       ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+      nhomTaiSan: nhomTaiSan ?? AssetGroup.MAYMOC,
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
     },
@@ -200,6 +212,8 @@ const IncidentDialog = ({
         ngayTao:
           initialIncident.ngayTao ||
           dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+        nhomTaiSan:
+          initialIncident.nhomTaiSan ?? nhomTaiSan ?? AssetGroup.MAYMOC,
         nguoiKyList: signersList,
         danhSachTaiSan: initialIncident.danhSachTaiSan || [],
       });
@@ -244,6 +258,7 @@ const IncidentDialog = ({
         tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
         congTy: savedDraft.congTy ?? currentBrandConfig.company,
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        nhomTaiSan: savedDraft.nhomTaiSan ?? nhomTaiSan ?? AssetGroup.MAYMOC,
         nguoiKyList: savedDraft.nguoiKyList?.length
           ? savedDraft.nguoiKyList
           : signersListFromParent,
@@ -257,6 +272,10 @@ const IncidentDialog = ({
       selectedPlans && selectedPlans.length > 0
         ? selectedPlans[0].idDonViGiao || ""
         : "";
+    const defaultNhomTaiSan =
+      selectedPlans && selectedPlans.length > 0 && selectedPlans[0].nhomTaiSan
+        ? selectedPlans[0].nhomTaiSan
+        : (nhomTaiSan ?? AssetGroup.MAYMOC);
     formik.setValues({
       id: "",
       idCongTy: CongTy.CT001,
@@ -278,6 +297,7 @@ const IncidentDialog = ({
       tenMauBienBan: mauMacDinh?.ten ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
       congTy: mauMacDinh?.congTy ?? currentBrandConfig.company,
       ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+      nhomTaiSan: defaultNhomTaiSan,
       nguoiKyList: signersListFromParent,
       danhSachTaiSan: [],
     });
@@ -339,6 +359,7 @@ const IncidentDialog = ({
               formik.values.congTy ||
               mauMacDinh?.congTy ||
               currentBrandConfig.company,
+            nhomTaiSan: formik.values.nhomTaiSan,
             nguoiKyList: formik.values.nguoiKyList,
             assets,
             danhSachTaiSan: formik.values.danhSachTaiSan,
@@ -350,9 +371,9 @@ const IncidentDialog = ({
     onClose();
   };
 
-   const { data: fullDeptAssets = [] } = useAllAssetsByDepartmentQuery(
-     formik.values.idDonViBaoCao,
-   );
+  const { data: fullDeptAssets = [] } = useAllAssetsByDepartmentQuery(
+    formik.values.idDonViBaoCao,
+  );
 
   return (
     <Dialog
@@ -430,6 +451,17 @@ const IncidentDialog = ({
                     title="Ngày giờ phát hiện"
                     field="ngayPhatHien"
                     formik={formik}
+                  />
+
+                  <FieldAutoCompleted
+                    title="Loại tài sản"
+                    data={ASSET_GROUP_OPTIONS}
+                    labelkey="label"
+                    field="nhomTaiSan"
+                    formik={formik}
+                    onChange={() => {
+                      handleAssetsChange([]);
+                    }}
                   />
 
                   <FieldInput

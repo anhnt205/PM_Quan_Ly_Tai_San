@@ -30,9 +30,10 @@ interface Props {
   bienPhap: any;
   depth: number;
   isLast: boolean;
-  plan: MaintenancePlanData;
+  plan?: MaintenancePlanData | null;
   inspection: any;
   useConnector?: boolean;
+  isMachine: boolean;
 }
 
 export const BienPhapRow = ({
@@ -42,6 +43,7 @@ export const BienPhapRow = ({
   plan,
   inspection,
   useConnector = true,
+  isMachine,
 }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -64,8 +66,6 @@ export const BienPhapRow = ({
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return !!tab?.formData?.[`acceptanceVehicleDraft_${bienPhap.id}`];
   });
-
-  const isMachine = plan?.nhomTaiSan === AssetGroup.MAYMOC;
 
   const { data: acceptancesMachine = [] } = useMaintenanceAcceptanceByBienPhapQuery(
     isMachine && expanded ? bienPhap.id : ""
@@ -172,6 +172,7 @@ export const BienPhapRow = ({
             bienPhap={bienPhap}
             inspection={inspection}
             useConnector={useConnector}
+            isMachine={isMachine}
           />
         ))}
 
