@@ -72,6 +72,7 @@ import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
 import SyncLoadingModal from "../../components/common/SyncLoadingModal";
 import SelectDbDialog from "../../components/common/SelectDbDialog";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 
 interface AssetManagerTabState {
@@ -564,7 +565,7 @@ export default function AssetManager() {
 
         {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
 
-        <Paper sx={{ bgcolor: "#04b46eff", p: 2, mt: 2, width: "100%" }}>
+        <Paper sx={{ bgcolor: currentBrandConfig.primaryColor, p: 2, mt: 2, width: "100%" }}>
           <Typography fontWeight={600} color="white">
             Quản lý tài sản
           </Typography>
@@ -679,17 +680,17 @@ export default function AssetManager() {
                           ? "transparent"
                           : "rgba(148, 163, 184, 0.25)",
                         background: isActive
-                          ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                          ? `linear-gradient(135deg, ${currentBrandConfig.primaryColor} 0%, ${currentBrandConfig.primaryColor} 100%)`
                           : "#ffffff",
                         color: isActive ? "#ffffff" : "#334155",
                         boxShadow: isActive
-                          ? "0 10px 20px -5px rgba(4, 180, 110, 0.35)"
+                          ? `0 10px 20px -5px rgba(${currentBrandConfig.primaryColor}, 0.35)`
                           : "0 2px 4px rgba(148, 163, 184, 0.05)",
                         "&:hover": {
                           transform: "translateY(-4px)",
-                          borderColor: isActive ? "transparent" : "#04b46e",
+                          borderColor: isActive ? "transparent" : currentBrandConfig.primaryColor,
                           boxShadow: isActive
-                            ? "0 12px 24px -5px rgba(4, 180, 110, 0.45)"
+                            ? `0 12px 24px -5px rgba(${currentBrandConfig.primaryColor}, 0.45)`
                             : "0 6px 16px rgba(4, 180, 110, 0.08)",
                           bgcolor: isActive
                             ? undefined
@@ -709,7 +710,7 @@ export default function AssetManager() {
                           bgcolor: isActive
                             ? "rgba(255, 255, 255, 0.18)"
                             : "rgba(4, 180, 110, 0.08)",
-                          color: isActive ? "#ffffff" : "#04b46e",
+                          color: isActive ? "#ffffff" : currentBrandConfig.primaryColor,
                           transition: "all 0.25s ease",
                           mb: 1.5,
                         }}

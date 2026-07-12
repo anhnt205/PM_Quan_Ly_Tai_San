@@ -58,6 +58,10 @@ public class TaiSanDao {
     }
 
     public List<TaiSanDTO> findAll(String idCongTy, String idDonViQuanLy) {
+        return findAll(idCongTy, idDonViQuanLy, null);
+    }
+
+    public List<TaiSanDTO> findAll(String idCongTy, String idDonViQuanLy, Boolean isHeThong) {
         StringBuilder sql = new StringBuilder(SELECT_TAISAN_DTO + " WHERE ts.IdCongTy = ?");
         List<Object> params = new ArrayList<>();
         params.add(idCongTy);
@@ -70,6 +74,10 @@ public class TaiSanDao {
                .append(" )");
             params.add(idDonViQuanLy);
             params.add(idDonViQuanLy);
+        }
+
+        if (Boolean.TRUE.equals(isHeThong)) {
+            sql.append(" AND ts.DonViTinh IN (SELECT Id FROM DonViTinh WHERE LaHeThong = 1)");
         }
 
         List<TaiSanDTO> list = jdbcTemplate.query(sql.toString(), new BeanPropertyRowMapper<>(TaiSanDTO.class), params.toArray());
@@ -442,6 +450,7 @@ public class TaiSanDao {
                     ts.NguoiCapNhat,
                     ts.IsActive,
                     ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha,
                     lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
@@ -614,6 +623,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha,
                     lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
@@ -784,6 +794,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha,
                     lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
@@ -934,6 +945,7 @@ public class TaiSanDao {
                         ts.IsActive,
                         ts.IsTaiSanCon,
                         ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha,
                         lts.TenLoai,
                         ts.SoThe,
                         ts.nvNS,
@@ -1022,8 +1034,8 @@ public class TaiSanDao {
                     "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " +
                     "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " +
                     "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, IdDonViQuanlyKiThuat, MoTa, IdCongTy, NgayTao, " +
-                    "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh) " +
-                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?)";
+                    "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh, IdTaiSanCha) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?, ?, ?, ?, ?, ?, ?)";
             return jdbcTemplate.update(sql,
                     taiSan.getId(), taiSan.getIdLoaiTaiSan(), taiSan.getTenTaiSan(), taiSan.getNguyenGia(),
                     taiSan.getGiaTriKhauHaoBanDau(), taiSan.getKyKhauHaoBanDau(), taiSan.getGiaTriThanhLy(),
@@ -1036,7 +1048,7 @@ public class TaiSanDao {
                     taiSan.getIdDonViHienThoi(), taiSan.getIdDonViQuanlyKiThuat(), taiSan.getMoTa(), taiSan.getIdCongTy(), taiSan.getNgayTao(),
                     taiSan.getNgayCapNhat(), taiSan.getNguoiTao(), taiSan.getNguoiCapNhat(), taiSan.getIsActive(),
                     taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(),
-                    taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh());
+                    taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh(), taiSan.getIdTaiSanCha());
         }
     }
 
@@ -1050,7 +1062,7 @@ public class TaiSanDao {
                         CongSuat=?, NuocSanXuat=?, NamSanXuat=?, LyDoTang=?, HienTrang=?, SoLuong=?,
                         DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, IdDonViQuanlyKiThuat=?, MoTa=?, IdCongTy=?,
                         NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IsTaiSanCon=?, IdLoaiTaiSanCon=?,
-                        SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?
+                        SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?, IdTaiSanCha=?
                     WHERE Id=?
                 """;
         return jdbcTemplate.update(sql,
@@ -1067,6 +1079,7 @@ public class TaiSanDao {
                 taiSan.getIsActive() != null ? (taiSan.getIsActive() ? 1 : 0) : 1,
                 taiSan.getIsTaiSanCon(), taiSan.getIdLoaiTaiSanCon(), taiSan.getSoThe(), taiSan.getNvNS(),
                 taiSan.getVonVay(), taiSan.getVonKhac(), taiSan.getTgKiemDinh(), taiSan.getChuKyKiemDinh(),
+                taiSan.getIdTaiSanCha(),
                 taiSan.getId());
     }
 
@@ -1082,8 +1095,8 @@ public class TaiSanDao {
                 "GiaTriThanhLy, IdMoHinhTaiSan, PhuongPhapKhauHao, SoKyKhauHao, TaiKhoanTaiSan, TaiKhoanKhauHao, TaiKhoanChiPhi, " +
                 "IdNhomTaiSan, NgayVaoSo, NgaySuDung, IdDuDan, IdNguonVon, KyHieu, SoKyHieu, CongSuat, NuocSanXuat, NamSanXuat, " +
                 "LyDoTang, HienTrang, SoLuong, DonViTinh, GhiChu, IdDonViBanDau, IdDonViHienThoi, IdDonViQuanlyKiThuat, MoTa, IdCongTy, NgayTao, " +
-                "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                "NgayCapNhat, NguoiTao, NguoiCapNhat, IsActive, IsTaiSanCon, IdLoaiTaiSanCon, SoThe, nvNS, vonVay, vonKhac, tgKiemDinh, chuKyKiemDinh, IdTaiSanCha) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
             public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
@@ -1162,6 +1175,7 @@ public class TaiSanDao {
                 
                 // Integer
                 if (ts.getChuKyKiemDinh() != null) ps.setInt(46, ts.getChuKyKiemDinh()); else ps.setNull(46, java.sql.Types.INTEGER);
+                            ps.setString(47, ts.getIdTaiSanCha());
             }
 
             @Override
@@ -1182,7 +1196,7 @@ public class TaiSanDao {
                         CongSuat=?, NuocSanXuat=?, NamSanXuat=?, LyDoTang=?, HienTrang=?, SoLuong=?,
                         DonViTinh=?, GhiChu=?, IdDonViBanDau=?, IdDonViHienThoi=?, IdDonViQuanlyKiThuat=?, MoTa=?, IdCongTy=?,
                         NgayCapNhat=?, NguoiTao=?, NguoiCapNhat=?, IsActive=?, IsTaiSanCon=?, IdLoaiTaiSanCon=?,
-                        SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?
+                        SoThe=?, nvNS=?, vonVay=?, vonKhac=?, tgKiemDinh=?, chuKyKiemDinh=?, IdTaiSanCha=?
                     WHERE Id=?
                 """;
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
@@ -1261,8 +1275,8 @@ public class TaiSanDao {
                 
                 // Integer
                 if (ts.getChuKyKiemDinh() != null) ps.setInt(44, ts.getChuKyKiemDinh()); else ps.setNull(44, java.sql.Types.INTEGER);
-                
-                ps.setString(45, ts.getId());
+                ps.setString(45, ts.getIdTaiSanCha());
+                ps.setString(46, ts.getId());
             }
 
             @Override
@@ -1694,6 +1708,7 @@ public class TaiSanDao {
                     ts.IsActive,
                     ts.IsTaiSanCon,
                     ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha,
                     lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
@@ -1897,7 +1912,8 @@ public class TaiSanDao {
                     ts.NguoiCapNhat,
                     ts.IsActive,
                     ts.IsTaiSanCon,
-                    ts.IdLoaiTaiSanCon, 
+                    ts.IdLoaiTaiSanCon,
+                    ts.IdTaiSanCha, 
                     lts.TenLoai,
                     ts.SoThe,
                     ts.nvNS,
@@ -2311,5 +2327,33 @@ public class TaiSanDao {
         }
         public List<T> getItems() { return items; }
         public Long getTotal() { return total; }
+    }
+
+    public int clearIdTaiSanCha(String idTaiSanCha) {
+        String sql = "UPDATE TaiSan SET IdTaiSanCha = NULL WHERE IdTaiSanCha = ?";
+        return jdbcTemplate.update(sql, idTaiSanCha);
+    }
+
+    public int updateIdTaiSanChaForList(List<String> listIdTaiSanCon, String idTaiSanCha) {
+        if (listIdTaiSanCon == null || listIdTaiSanCon.isEmpty()) {
+            return 0;
+        }
+        String inSql = String.join(",", java.util.Collections.nCopies(listIdTaiSanCon.size(), "?"));
+        String sql = String.format("UPDATE TaiSan SET IdTaiSanCha = ? WHERE Id IN (%s)", inSql);
+        
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        params.add(idTaiSanCha);
+        params.addAll(listIdTaiSanCon);
+        
+        return jdbcTemplate.update(sql, params.toArray());
+    }
+
+    public List<TaiSanDTO> getTaiSanDTOByTaiSanChaIds(List<String> taiSanIds) {
+        if (taiSanIds == null || taiSanIds.isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        String inSql = String.join(",", java.util.Collections.nCopies(taiSanIds.size(), "?"));
+        String sql = String.format(SELECT_TAISAN_DTO + " WHERE ts.IdTaiSanCha IN (%s)", inSql);
+        return jdbcTemplate.query(sql, new org.springframework.jdbc.core.BeanPropertyRowMapper<>(TaiSanDTO.class), taiSanIds.toArray());
     }
 }

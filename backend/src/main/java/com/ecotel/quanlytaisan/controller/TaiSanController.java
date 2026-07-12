@@ -61,9 +61,10 @@ public class TaiSanController {
     @GetMapping
     public ResponseEntity<ApiResponse<Object>> getAll(
             @RequestParam("idcongty") String idcongty,
-            @RequestParam(value = "idDonViQuanLy", required = false) String idDonViQuanLy) {
+            @RequestParam(value = "idDonViQuanLy", required = false) String idDonViQuanLy,
+            @RequestParam(value = "isHeThong", required = false) Boolean isHeThong) {
         try {
-            List<TaiSanDTO> result = taiSanService.getAll(idcongty, idDonViQuanLy);
+            List<TaiSanDTO> result = taiSanService.getAll(idcongty, idDonViQuanLy, isHeThong);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách tài sản thành công", result, null));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));

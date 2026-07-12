@@ -1,5 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
-import { Box, IconButton, Slider, Tooltip, Select, MenuItem } from "@mui/material";
+import {
+  Box,
+  IconButton,
+  Slider,
+  Tooltip,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { Close, Add, Remove } from "@mui/icons-material";
 import { useGetFileQuery } from "../../pages/Staff/Mutation";
 
@@ -28,7 +35,12 @@ interface DraggableSignatureProps {
   digitalSignatureMap: any;
   pageTopOffset: number;
   canvasDisplaySizes: { width: number; height: number }[];
-  onUpdatePosition: (id: string, xRatio: number, yRatio: number, page?: number) => void;
+  onUpdatePosition: (
+    id: string,
+    xRatio: number,
+    yRatio: number,
+    page?: number,
+  ) => void;
   onUpdateScale: (id: string, newScale: number) => void;
   onDelete: (id: string) => void;
   onUpdatePage?: (id: string, newPage: number) => void;
@@ -70,14 +82,17 @@ export default function DraggableSignature({
 
   const sigPage = sig.page || 1;
   const pageIdx = Math.min(sigPage - 1, canvasDisplaySizes.length - 1);
-  const currentCanvasSize = canvasDisplaySizes[pageIdx] || { width: 800, height: 600 };
+  const currentCanvasSize = canvasDisplaySizes[pageIdx] || {
+    width: 800,
+    height: 600,
+  };
   const containerWidth = currentCanvasSize.width;
   const containerHeight = currentCanvasSize.height;
 
   // Chiều rộng hiển thị: ưu tiên widthRatio, fallback về sig.width (px cũ)
   const baseWidthPx = widthRatio
     ? widthRatio * containerWidth
-    : Math.min(sig.width || 120, 80);
+    : sig.width || 120;
   const displayWidthPx = baseWidthPx * scale;
 
   // Vị trí pixel tính từ ratio × kích thước container hiện tại
@@ -101,7 +116,13 @@ export default function DraggableSignature({
   }, []);
 
   // Cập nhật DOM position trực tiếp (bypass React re-render khi kéo)
-  const applyPositionToDOM = (xR: number, yR: number, pOffset: number, cWidth: number, cHeight: number) => {
+  const applyPositionToDOM = (
+    xR: number,
+    yR: number,
+    pOffset: number,
+    cWidth: number,
+    cHeight: number,
+  ) => {
     if (boxRef.current) {
       boxRef.current.style.left = `${xR * cWidth}px`;
       boxRef.current.style.top = `${pOffset + yR * cHeight}px`;
@@ -111,7 +132,13 @@ export default function DraggableSignature({
   // Khi container resize hoặc thay đổi tọa độ từ bên ngoài
   useEffect(() => {
     ratioRef.current = { x: safeX, y: safeY, page: sigPage };
-    applyPositionToDOM(safeX, safeY, pageTopOffset, containerWidth, containerHeight);
+    applyPositionToDOM(
+      safeX,
+      safeY,
+      pageTopOffset,
+      containerWidth,
+      containerHeight,
+    );
   }, [safeX, safeY, pageTopOffset, containerWidth, containerHeight, sigPage]);
 
   // ─── Zoom ─────────────────────────────────────────────────────────────────
@@ -144,8 +171,10 @@ export default function DraggableSignature({
     const updatePosition = (clientX: number, clientY: number) => {
       const dx = clientX - startMouseX;
       const scrollContainerCurrent = findScrollContainer(boxRef.current);
-      const scrollDiff = scrollContainerCurrent ? (scrollContainerCurrent.scrollTop - startScrollTop) : 0;
-      const dy = (clientY - startMouseY) + scrollDiff;
+      const scrollDiff = scrollContainerCurrent
+        ? scrollContainerCurrent.scrollTop - startScrollTop
+        : 0;
+      const dy = clientY - startMouseY + scrollDiff;
 
       const newLeftPx = startLeftPx + dx;
       const newTopPx = startTopPx + dy;
@@ -162,16 +191,17 @@ export default function DraggableSignature({
         const rect = scrollContainerCurrent.getBoundingClientRect();
         const threshold = 60; // distance from edge in px
         const maxSpeed = 15; // max scroll speed in px/frame
-        
+
         let scrollAmount = 0;
         if (currentClientY > rect.bottom - threshold) {
-          const ratio = (currentClientY - (rect.bottom - threshold)) / threshold;
+          const ratio =
+            (currentClientY - (rect.bottom - threshold)) / threshold;
           scrollAmount = Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
         } else if (currentClientY < rect.top + threshold) {
-          const ratio = ((rect.top + threshold) - currentClientY) / threshold;
+          const ratio = (rect.top + threshold - currentClientY) / threshold;
           scrollAmount = -Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
         }
-        
+
         if (scrollAmount !== 0) {
           scrollContainerCurrent.scrollTop += scrollAmount;
           updatePosition(currentClientX, currentClientY);
@@ -195,8 +225,12 @@ export default function DraggableSignature({
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
 
-      const finalLeftPx = boxRef.current ? parseFloat(boxRef.current.style.left) : startLeftPx;
-      const finalTopPx = boxRef.current ? parseFloat(boxRef.current.style.top) : startTopPx;
+      const finalLeftPx = boxRef.current
+        ? parseFloat(boxRef.current.style.left)
+        : startLeftPx;
+      const finalTopPx = boxRef.current
+        ? parseFloat(boxRef.current.style.top)
+        : startTopPx;
 
       // Xác định chữ ký thuộc trang nào dựa trên cao độ y (finalTopPx)
       let droppedPage = 1;
@@ -229,7 +263,8 @@ export default function DraggableSignature({
         accumulatedTop = pageBottom + 24;
       }
 
-      const targetPageSize = canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
+      const targetPageSize =
+        canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
       const targetPageWidth = targetPageSize?.width || 800;
       let relativeX = finalLeftPx / targetPageWidth;
 
@@ -272,8 +307,10 @@ export default function DraggableSignature({
     const updatePosition = (clientX: number, clientY: number) => {
       const dx = clientX - startTouchX;
       const scrollContainerCurrent = findScrollContainer(boxRef.current);
-      const scrollDiff = scrollContainerCurrent ? (scrollContainerCurrent.scrollTop - startScrollTop) : 0;
-      const dy = (clientY - startTouchY) + scrollDiff;
+      const scrollDiff = scrollContainerCurrent
+        ? scrollContainerCurrent.scrollTop - startScrollTop
+        : 0;
+      const dy = clientY - startTouchY + scrollDiff;
 
       const newLeftPx = startLeftPx + dx;
       const newTopPx = startTopPx + dy;
@@ -290,16 +327,17 @@ export default function DraggableSignature({
         const rect = scrollContainerCurrent.getBoundingClientRect();
         const threshold = 60;
         const maxSpeed = 15;
-        
+
         let scrollAmount = 0;
         if (currentClientY > rect.bottom - threshold) {
-          const ratio = (currentClientY - (rect.bottom - threshold)) / threshold;
+          const ratio =
+            (currentClientY - (rect.bottom - threshold)) / threshold;
           scrollAmount = Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
         } else if (currentClientY < rect.top + threshold) {
-          const ratio = ((rect.top + threshold) - currentClientY) / threshold;
+          const ratio = (rect.top + threshold - currentClientY) / threshold;
           scrollAmount = -Math.min(maxSpeed, Math.max(1, ratio * maxSpeed));
         }
-        
+
         if (scrollAmount !== 0) {
           scrollContainerCurrent.scrollTop += scrollAmount;
           updatePosition(currentClientX, currentClientY);
@@ -325,8 +363,12 @@ export default function DraggableSignature({
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
 
-      const finalLeftPx = boxRef.current ? parseFloat(boxRef.current.style.left) : startLeftPx;
-      const finalTopPx = boxRef.current ? parseFloat(boxRef.current.style.top) : startTopPx;
+      const finalLeftPx = boxRef.current
+        ? parseFloat(boxRef.current.style.left)
+        : startLeftPx;
+      const finalTopPx = boxRef.current
+        ? parseFloat(boxRef.current.style.top)
+        : startTopPx;
 
       let droppedPage = 1;
       let relativeY = 0;
@@ -358,7 +400,8 @@ export default function DraggableSignature({
         accumulatedTop = pageBottom + 24;
       }
 
-      const targetPageSize = canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
+      const targetPageSize =
+        canvasDisplaySizes[droppedPage - 1] || canvasDisplaySizes[0];
       const targetPageWidth = targetPageSize?.width || 800;
       let relativeX = finalLeftPx / targetPageWidth;
 
@@ -446,16 +489,22 @@ export default function DraggableSignature({
               right: 0,
               height: 20,
               bgcolor: "transparent",
-            }
+            },
           }}
           onTouchStart={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
         >
           <Tooltip title="Giảm">
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               onClick={() => handleZoom(scale - 0.1)}
-              sx={{ color: "#4b5563", "&:hover": { color: "#04b46e", bgcolor: "rgba(4, 180, 110, 0.06)" } }}
+              sx={{
+                color: "#4b5563",
+                "&:hover": {
+                  color: "#04b46e",
+                  bgcolor: "rgba(4, 180, 110, 0.06)",
+                },
+              }}
             >
               <Remove fontSize="small" />
             </IconButton>
@@ -481,20 +530,33 @@ export default function DraggableSignature({
             />
           </Box>
           <Tooltip title="Tăng">
-            <IconButton 
-              size="small" 
+            <IconButton
+              size="small"
               onClick={() => handleZoom(scale + 0.1)}
-              sx={{ color: "#4b5563", "&:hover": { color: "#04b46e", bgcolor: "rgba(4, 180, 110, 0.06)" } }}
+              sx={{
+                color: "#4b5563",
+                "&:hover": {
+                  color: "#04b46e",
+                  bgcolor: "rgba(4, 180, 110, 0.06)",
+                },
+              }}
             >
               <Add fontSize="small" />
             </IconButton>
           </Tooltip>
 
-          <Box sx={{ width: 1, height: 16, bgcolor: "rgba(0, 0, 0, 0.1)", mx: 0.5 }} />
+          <Box
+            sx={{
+              width: 1,
+              height: 16,
+              bgcolor: "rgba(0, 0, 0, 0.1)",
+              mx: 0.5,
+            }}
+          />
           <Tooltip title="Xóa">
-            <IconButton 
-              size="small" 
-              color="error" 
+            <IconButton
+              size="small"
+              color="error"
               onClick={() => onDelete(id)}
               sx={{ "&:hover": { bgcolor: "rgba(239, 68, 68, 0.06)" } }}
             >

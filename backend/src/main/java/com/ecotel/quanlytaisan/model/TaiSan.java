@@ -3,6 +3,7 @@ package com.ecotel.quanlytaisan.model;
 import lombok.Data;
 import static com.ecotel.quanlytaisan.utils.ParserHelper.*;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.apache.poi.ss.usermodel.Row;
 
 @Data
@@ -47,12 +48,16 @@ public class TaiSan {
     private Boolean isActive;
     private Boolean isTaiSanCon;
     private String idLoaiTaiSanCon;
+    private String idTaiSanCha;
+    private List<String> listIdTaiSanCon;
     private String soThe;
     private Float nvNS;
     private Float vonVay;
     private Float vonKhac;
     private String tgKiemDinh;
     private Integer chuKyKiemDinh;
+    private List<TaiSanFile> fileDinhKemList;
+    private List<ChuKySuaChua> chuKySuaChuaList;
 
     public static TaiSan mapToTaiSan(String[] line) {
         TaiSan ts = new TaiSan();

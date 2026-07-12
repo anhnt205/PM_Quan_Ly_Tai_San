@@ -56,7 +56,7 @@ export default function TransferRecord() {
           }}
         >
           <Tab icon={<LocalShipping sx={{ fontSize: 20 }} />} iconPosition="start" label={`Điều chuyển tài sản (${counts.shareCounts?.totalAssetTransfer || 0})`} />
-          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label={`Điều chuyển vật tư (${counts.shareCounts?.totalToolTransfer || 0})`} />
+          <Tab icon={<Construction sx={{ fontSize: 20 }} />} iconPosition="start" label={`Điều chuyển ccdc (${counts.shareCounts?.totalToolTransfer || 0})`} />
         </Tabs>
       </Box>
 

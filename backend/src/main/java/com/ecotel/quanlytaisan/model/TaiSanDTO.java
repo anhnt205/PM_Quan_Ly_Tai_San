@@ -55,8 +55,8 @@ public class TaiSanDTO {
     private Boolean isActive;
     private String idTaiSanCon;
     private Boolean isTaiSanCon;
-    private List<ChiTietTaiSan> chiTietTaiSanList;
-    private List<TaiSanCon> taiSanConList;
+    private String idTaiSanCha;
+    private List<TaiSanDTO> taiSanConList;
     private List<TaiSanFile> fileDinhKemList;
     private List<ChuKySuaChua> chuKySuaChuaList;
 

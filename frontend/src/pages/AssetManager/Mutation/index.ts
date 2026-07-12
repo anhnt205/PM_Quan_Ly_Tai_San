@@ -37,43 +37,18 @@ export const useAssetManagerMutation = (
   //taisan
   const createMutation = useMutation({
     mutationFn: async (data: AssetType) => {
+      const listIdTaiSanCon = (data.taiSanConList || [])
+        .filter((i: any) => !i.isDeleted)
+        .map((i: any) => i.idTaiSanCon || i.id);
       const res = await api.post("/taisan", {
         ...data,
+        listIdTaiSanCon,
         nguoiTao: user?.taiKhoan?.tenDangNhap || "",
         ngayTao: now,
       });
       return res.data;
     },
     onSuccess: (data, payload) => {
-      createChildAssetBulkMutation.mutate(
-        (payload?.taiSanConList || []).map((i) => ({
-          ...i,
-          id: generateCode(i.idTaiSanCon + "-"),
-          idTaiSanCha: payload.id,
-          nguoiTao: user?.taiKhoan?.tenDangNhap || "",
-          ngayTao: now,
-        })),
-      );
-      if (
-        payload?.fileDinhKemList &&
-        (payload?.fileDinhKemList || []).length > 0
-      ) {
-        createFileMutation.mutate(payload?.fileDinhKemList);
-      }
-      if (
-        payload?.chuKySuaChuaList &&
-        (payload?.chuKySuaChuaList || []).length > 0
-      ) {
-        api
-          .post(
-            "/chukysuachua/sync",
-            payload.chuKySuaChuaList.map((i: any) => ({
-              ...i,
-              idTaiSan: payload.id,
-            })),
-          )
-          .catch((e) => console.log(e));
-      }
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo tài sản thành công");
     },
@@ -88,69 +63,18 @@ export const useAssetManagerMutation = (
 
   const updateMutation = useMutation({
     mutationFn: async (data: AssetType) => {
+      const listIdTaiSanCon = (data.taiSanConList || [])
+        .filter((i: any) => !i.isDeleted)
+        .map((i: any) => i.idTaiSanCon || i.id);
       const res = await api.put(`/taisan/${data.id}`, {
         ...data,
+        listIdTaiSanCon,
         nguoiCapNhat: user?.taiKhoan?.tenDangNhap || "",
         ngayCapNhat: now,
       });
       return res.data;
     },
     onSuccess: (data, payload) => {
-      const listDeleted = (payload?.taiSanConList || []).filter(
-        (i) => i.isDeleted,
-      );
-      const listUpdated = (payload?.taiSanConList || []).filter(
-        (i) => i.isInsert && !i.isDeleted,
-      );
-      const listFileDeleted = (payload?.fileDinhKemList || []).filter(
-        (i) => i.action === Action.DELETE && i.id,
-      );
-      const listFileCreated = (payload?.fileDinhKemList || []).filter(
-        (i) => i.action === Action.CREATE,
-      );
-      if (listUpdated.length > 0) {
-        createChildAssetBulkMutation.mutate(
-          (listUpdated || []).map((i) => ({
-            ...i,
-            id: i.id ? i.id : generateCode(i.idTaiSanCon + "-"),
-            idTaiSanCha: payload.id,
-            nguoiCapNhat: user?.taiKhoan?.tenDangNhap || "",
-            ngayCapNhat: now,
-          })),
-        );
-      }
-      if (listDeleted.length > 0) {
-        (listDeleted || [])
-          .filter((i) => i.id)
-          .forEach((i) => {
-            deleteOneChildAsssetMutation.mutate(i.id);
-          });
-      }
-
-      if (listFileCreated.length > 0) {
-        createFileMutation.mutate(listFileCreated);
-      }
-      if (listFileDeleted.length > 0) {
-        deleteFileManyMutation.mutate(
-          listFileDeleted.map((i) => i.id as number),
-        );
-      }
-
-      if (
-        payload?.chuKySuaChuaList &&
-        (payload?.chuKySuaChuaList || []).length > 0
-      ) {
-        api
-          .post(
-            "/chukysuachua/sync",
-            payload.chuKySuaChuaList.map((i: any) => ({
-              ...i,
-              idTaiSan: payload.id,
-            })),
-          )
-          .catch((e) => console.log(e));
-      }
-
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Sửa tài sản thành công");
     },
@@ -209,21 +133,6 @@ export const useAssetManagerMutation = (
     },
     onSuccess: (data) => {
       // For each asset in the batch, we might need to create child assets
-      data.payload.forEach((asset) => {
-        if (asset.taiSanConList && asset.taiSanConList.length > 0) {
-          const listToCreate = asset.taiSanConList.filter((i) => !i.isDeleted);
-          if (listToCreate.length > 0) {
-            createChildAssetBulkMutation.mutate(
-              listToCreate.map((i) => ({
-                ...i,
-                id: generateCode(i.idTaiSanCon + "-"),
-                nguoiTao: user?.taiKhoan?.tenDangNhap || "",
-                ngayTao: now,
-              })),
-            );
-          }
-        }
-      });
       queryClient.invalidateQueries({ queryKey: ["assetsPage"], exact: false });
       showSuccessAlert("Tạo danh sách tài sản thành công");
     },
@@ -888,6 +797,21 @@ export const useAllAssetsByDepartmentQuery = (idDepartment?: string) => {
       return res.data.data || res.data;
     },
     enabled: !!idDepartment,
+  });
+};
+
+export const useAllAssetsQuery = (isHeThong?: boolean) => {
+  return useQuery({
+    queryKey: ["allAssets", isHeThong],
+    queryFn: async () => {
+      const res = await api.get("/taisan", {
+        params: {
+          idcongty: CongTy.CT001,
+          ...(isHeThong !== undefined && { isHeThong }),
+        },
+      });
+      return res.data.data || res.data;
+    },
   });
 };
 

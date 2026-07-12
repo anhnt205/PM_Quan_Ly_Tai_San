@@ -409,7 +409,6 @@ export default function MaintenancePlanRepair() {
                       size="small"
                       variant="contained"
                       color="error"
-                      disabled={!canCreateIncident}
                       onClick={() => setShowIncidentDialog(true)}
                     >
                       Tạo phiếu báo sự cố

@@ -11,4 +11,5 @@ public class TaiSanFile {
     private Integer loai;          // 1: ảnh, 2: tài liệu, ...
     private String ngayTao;        // lưu dạng String theo định dạng của dự án
     private String ghiChu;
+    private String action;
 }

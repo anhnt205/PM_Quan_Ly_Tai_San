@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.ecotel.quanlytaisan.dao.TaiSanDao;
 import com.ecotel.quanlytaisan.model.TaiSanCon;
+import com.ecotel.quanlytaisan.model.TaiSanDTO;
 
 @Service
 public class LichSuDieuChuyenTaiSanService {
@@ -28,11 +29,11 @@ public class LichSuDieuChuyenTaiSanService {
 
         List<LichSuDieuChuyenTaiSanDTO> fullList = new ArrayList<>(list);
         for (LichSuDieuChuyenTaiSanDTO dto : list) {
-            List<TaiSanCon> childAssets = taiSanDao.getTaiSanConByTaiSan(dto.getIdTaiSan());
+            List<TaiSanDTO> childAssets = taiSanDao.getTaiSanDTOByTaiSanChaIds(List.of(dto.getIdTaiSan()));
             if (childAssets != null && !childAssets.isEmpty()) {
-                for (TaiSanCon child : childAssets) {
+                for (TaiSanDTO child : childAssets) {
                     LichSuDieuChuyenTaiSanDTO childDto = new LichSuDieuChuyenTaiSanDTO();
-                    childDto.setIdTaiSan(child.getIdTaiSanCon());
+                    childDto.setIdTaiSan(child.getId());
                     childDto.setIdBanGiaoTaiSan(dto.getIdBanGiaoTaiSan());
                     childDto.setIdDonViNhan(dto.getIdDonViNhan());
                     childDto.setIdDonViGiao(dto.getIdDonViGiao());

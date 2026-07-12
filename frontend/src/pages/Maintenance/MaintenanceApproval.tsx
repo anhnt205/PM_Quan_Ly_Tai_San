@@ -1634,7 +1634,7 @@ export default function MaintenanceApprovalPage() {
                           page: 1,
                         };
                         const displayWidth = 800;
-                        const baseWidthPx = 80;
+                        const baseWidthPx = 120;
 
                         const signatureData: SignaturesData = {
                           stt: 1,

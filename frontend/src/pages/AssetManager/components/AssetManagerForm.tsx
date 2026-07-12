@@ -34,7 +34,7 @@ import FieldInput from "../../../components/TextField/FieldInput";
 import { useFormik, FieldArray, FormikProvider } from "formik";
 import EditButton from "../../../components/Button/EditButton";
 import { useAllTypeAssetByGroupQuery } from "../../TypeAsset/Mutation";
-import { useAssetByTypeQuery } from "../Mutation";
+import { useAssetByTypeQuery, useAllAssetsQuery } from "../Mutation";
 import { useAllProjectsQuery } from "../../Project/Mutation";
 import dayjs from "dayjs";
 import TextFieldNumber from "../../../components/TextField/TextFieldNumber";
@@ -129,9 +129,11 @@ const AssetRow = ({
 }: AssetRowProps) => {
   const [isExpanded, setIsExpanded] = useState(index === 0);
   const asset = formik.values.assets[index];
+  const currentAssetId = asset.id;
   const { data: assetsByType = [] } = useAssetByTypeQuery(
     asset.idLoaiTaiSanCon,
   );
+  const { data: allAssetsForParent = [] } = useAllAssetsQuery(true);
   const { data: typeAssetsByAssetGroup = [] } = useAllTypeAssetByGroupQuery(
     asset.idNhomTaiSan,
   );
@@ -604,6 +606,19 @@ const AssetRow = ({
                   disabled={readOnly}
                 />
               </Grid>
+              <Grid size={{ xs: 12 }}>
+                <FieldAutoCompleted
+                  title="Tài sản cha"
+                  data={allAssetsForParent.filter(
+                    (a: any) => a.id !== currentAssetId,
+                  )}
+                  labelkey="tenTaiSan"
+                  labelOption="id"
+                  formik={formik}
+                  field={`assets.${index}.idTaiSanCha`}
+                  disabled={readOnly}
+                />
+              </Grid>
             </Grid>
           </Grid>
 
@@ -643,10 +658,11 @@ const AssetRow = ({
                               <TableCell>
                                 <FieldAutoCompleted
                                   title=""
-                                  data={assetsByType}
+                                  data={[...assetsByType, row]}
                                   labelkey="tenTaiSan"
+                                  labelOption="id"
                                   formik={formik}
-                                  field={`assets.${index}.taiSanConList.${subIndex}.idTaiSanCon`}
+                                  field={`assets.${index}.taiSanConList.${subIndex}.id`}
                                   disabled={readOnly}
                                   onChange={(val) => {
                                     if (val) {
@@ -671,7 +687,7 @@ const AssetRow = ({
                                   type="number"
                                   formik={formik}
                                   field={`assets.${index}.taiSanConList.${subIndex}.soLuong`}
-                                  disabled={readOnly}
+                                  disabled={true}
                                 />
                               </TableCell>
                               <TableCell>
@@ -681,14 +697,14 @@ const AssetRow = ({
                                   labelkey="tenHTKT"
                                   formik={formik}
                                   field={`assets.${index}.taiSanConList.${subIndex}.hienTrang`}
-                                  disabled={readOnly}
+                                  disabled={true}
                                 />
                               </TableCell>
                               <TableCell>
                                 <FieldInput
                                   formik={formik}
                                   field={`assets.${index}.taiSanConList.${subIndex}.ghiChu`}
-                                  disabled={readOnly}
+                                  disabled={true}
                                 />
                               </TableCell>
                               <TableCell>

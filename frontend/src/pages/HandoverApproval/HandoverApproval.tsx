@@ -94,7 +94,7 @@ export default function HandoverApproval() {
                 </Badge>
               }
               iconPosition="start"
-              label="Bàn giao vật tư"
+              label="Bàn giao ccdc"
             />
           </Tabs>
           <Box sx={{ flexGrow: 1 }} />

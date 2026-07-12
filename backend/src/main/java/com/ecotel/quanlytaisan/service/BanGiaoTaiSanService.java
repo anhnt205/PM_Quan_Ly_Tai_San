@@ -519,10 +519,10 @@ public class BanGiaoTaiSanService {
 
             // Xử lý tài sản con
             if (!taiSanIds.isEmpty()) {
-                List<TaiSanCon> childAssets = taiSanDao.getTaiSanConByTaiSanIds(taiSanIds);
+                List<TaiSanDTO> childAssets = taiSanDao.getTaiSanDTOByTaiSanChaIds(taiSanIds);
                 if (childAssets != null && !childAssets.isEmpty()) {
-                    for (TaiSanCon child : childAssets) {
-                        String childId = child.getIdTaiSanCon();
+                    for (TaiSanDTO child : childAssets) {
+                        String childId = child.getId();
                         if (childId != null && !childId.isEmpty()) {
                             taiSanDao.updateDonViSoHuu(childId, idDonViNhan);
                         }

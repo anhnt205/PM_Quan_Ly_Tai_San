@@ -241,7 +241,7 @@ export default function ToolApprovalTab() {
           <TableCustom
             tableId="toolHandoverApproval"
             loading={isLoading}
-            title="Phê duyệt bàn giao vật tư"
+            title="Phê duyệt bàn giao ccdc"
             columns={columns}
             rows={handoverPage?.items || []}
             total={handoverPage?.totalItems || 0}

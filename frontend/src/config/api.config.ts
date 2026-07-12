@@ -3,7 +3,7 @@ import { store } from "../redux/store";
 import { logout } from "../redux/userSlice";
 import { ROUTES } from "../utils/routes";
 
-const API_URL = import.meta.env.VITE_KONG_API || "/taisan";
+const API_URL = import.meta.env.VITE_BASE_API || "/taisan";
 
 const api = axios.create({
   baseURL: API_URL,

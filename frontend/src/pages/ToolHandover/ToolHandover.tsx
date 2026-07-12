@@ -764,7 +764,7 @@ export default function ToolHandover() {
                   {[
                     {
                       label: "Biên bản bàn giao",
-                      subLabel: "Bàn giao vật tư",
+                      subLabel: "Bàn giao ccdc",
                       icon: FileText,
                       count: toolHandoverCount,
                     },

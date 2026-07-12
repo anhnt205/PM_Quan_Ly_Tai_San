@@ -102,7 +102,7 @@ export default function TransferApproval() {
               </Badge>
             }
             iconPosition="start"
-            label="Điều chuyển vật tư"
+            label="Điều chuyển ccdc"
           />
         </Tabs>
       </Box>

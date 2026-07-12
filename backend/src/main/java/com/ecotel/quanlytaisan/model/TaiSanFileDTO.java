@@ -11,4 +11,5 @@ public class TaiSanFileDTO {
     private Integer loai;
     private String ngayTao;
     private String ghiChu;
+    private String action;
 }

@@ -131,6 +131,7 @@ public class TaiKhoanController {
     }
 
 
+    @PublicApi
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestParam("tenDangNhap") String tenDangNhap, @RequestParam("matKhau") String matKhau) {
         Map<String, Object> response = new HashMap<>();
