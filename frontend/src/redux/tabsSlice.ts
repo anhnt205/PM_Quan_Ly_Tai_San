@@ -11,12 +11,14 @@ interface TabsState {
   tabs: Tab[];
   activeTab: string;
   isTabLimited: boolean;
+  maxTabLimit: number;
 }
 
 const initialState: TabsState = {
   tabs: [],
   activeTab: "",
   isTabLimited: false,
+  maxTabLimit: 7,
 };
 
 const tabsSlice = createSlice({
@@ -26,7 +28,7 @@ const tabsSlice = createSlice({
 
     addTab: (state, action: PayloadAction<Tab>) => {
       const exists = state.tabs.find((tab) => tab.path === action.payload.path);
-      if (!exists && state.tabs.length >= 7) {
+      if (!exists && state.tabs.length >= state.maxTabLimit) {
         state.isTabLimited = true;
         return;
       }
@@ -92,6 +94,10 @@ const tabsSlice = createSlice({
       state.isTabLimited = false;
     },
 
+    setMaxTabLimit: (state, action: PayloadAction<number>) => {
+      state.maxTabLimit = action.payload;
+    },
+
   },
 });
 
@@ -104,5 +110,6 @@ export const {
   setTabFormOpen,
   updateTabFormData,
   clearTabLimited,
+  setMaxTabLimit,
 } = tabsSlice.actions;
 export default tabsSlice.reducer;

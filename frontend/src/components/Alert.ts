@@ -98,10 +98,10 @@ export const confirmPin = async (): Promise<string | null> => {
   return value ?? null;
 };
 
-export const showTabLimitAlert = () => {
+export const showTabLimitAlert = (maxTabLimit: number) => {
   return Swal.fire({
     title: "Đã đạt giới hạn tab!",
-    text: "Bạn đang mở tối đa 7 tabs. Vui lòng đóng bớt tab trước khi mở tab mới.",
+    text: `Bạn đang mở tối đa ${maxTabLimit} tabs. Vui lòng đóng bớt tab trước khi mở tab mới.`,
     icon: "warning",
     confirmButtonText: "Đã hiểu",
     timer: 3000,

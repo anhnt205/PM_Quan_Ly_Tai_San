@@ -343,16 +343,19 @@ export default function Menuheader() {
     expirationDays: number,
     warningDays: number,
     registrationWarningDays: number,
+    maxTabs: number,
   ) => {
     if (
       config?.thoiHanTaiLieu !== expirationDays ||
       config?.ngayBaoHetHan !== warningDays ||
-      config?.ngayBaoDangKiem !== registrationWarningDays
+      config?.ngayBaoDangKiem !== registrationWarningDays ||
+      config?.soTabToiDa !== maxTabs
     ) {
       updateConfig({
         thoiHanTaiLieu: expirationDays,
         ngayBaoHetHan: warningDays,
         ngayBaoDangKiem: registrationWarningDays,
+        soTabToiDa: maxTabs,
       });
       setOpenSnackbar(true);
       handleCloseExpirationDialog();

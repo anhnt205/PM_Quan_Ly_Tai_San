@@ -1,0 +1,1 @@
+ALTER TABLE Config ADD SoTabToiDa INT DEFAULT 7;

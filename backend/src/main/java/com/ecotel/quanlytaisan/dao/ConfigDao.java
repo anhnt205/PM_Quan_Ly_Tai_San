@@ -24,6 +24,9 @@ public class ConfigDao {
             config.setThoiHanTaiLieu(rs.getInt("ThoiHanTaiLieu"));
             config.setNgayBaoHetHan(rs.getInt("NgayBaoHetHan"));
             config.setNgayBaoDangKiem(rs.getInt("NgayBaoDangKiem"));
+            
+            int soTabToiDa = rs.getInt("SoTabToiDa");
+            config.setSoTabToiDa(rs.wasNull() ? 7 : soTabToiDa);
             return config;
         }
     };
@@ -50,14 +53,14 @@ public class ConfigDao {
             return update(config);
         } else {
             // Nếu chưa tồn tại thì insert
-            String sql = "INSERT INTO Config (IdAccount, ThoiHanTaiLieu,NgayBaoHetHan,NgayBaoDangKiem) VALUES (?, ?,?,?)";
-            return jdbcTemplate.update(sql, config.getIdAccount(), config.getThoiHanTaiLieu(), config.getNgayBaoHetHan(),config.getNgayBaoDangKiem());
+            String sql = "INSERT INTO Config (IdAccount, ThoiHanTaiLieu,NgayBaoHetHan,NgayBaoDangKiem, SoTabToiDa) VALUES (?, ?,?,?,?)";
+            return jdbcTemplate.update(sql, config.getIdAccount(), config.getThoiHanTaiLieu(), config.getNgayBaoHetHan(),config.getNgayBaoDangKiem(), config.getSoTabToiDa() != null ? config.getSoTabToiDa() : 7);
         }
     }
 
     public int update(Config config) {
-        String sql = "UPDATE Config SET ThoiHanTaiLieu=?, NgayBaoHetHan=?, NgayBaoDangKiem=? WHERE IdAccount=?";
-        return jdbcTemplate.update(sql, config.getThoiHanTaiLieu(), config.getNgayBaoHetHan(),config.getNgayBaoDangKiem(), config.getIdAccount());
+        String sql = "UPDATE Config SET ThoiHanTaiLieu=?, NgayBaoHetHan=?, NgayBaoDangKiem=?, SoTabToiDa=? WHERE IdAccount=?";
+        return jdbcTemplate.update(sql, config.getThoiHanTaiLieu(), config.getNgayBaoHetHan(),config.getNgayBaoDangKiem(), config.getSoTabToiDa() != null ? config.getSoTabToiDa() : 7, config.getIdAccount());
     }
 
     public int delete(String idAccount) {

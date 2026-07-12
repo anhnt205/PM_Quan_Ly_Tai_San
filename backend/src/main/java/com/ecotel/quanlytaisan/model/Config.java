@@ -8,4 +8,5 @@ public class Config {
     private Integer thoiHanTaiLieu;
     private Integer ngayBaoHetHan;
     private Integer ngayBaoDangKiem;
+    private Integer soTabToiDa;
 }

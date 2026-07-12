@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAssetTransferPageQuery } from "../pages/AssetTransfer/Mutation";
 import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
@@ -30,6 +30,7 @@ import {
   useMaintenanceRepairPageQuery,
   useMaintenanceVehicleInspectionPageQuery,
 } from "../pages/Maintenance/mutation";
+import { setMaxTabLimit } from "../redux/tabsSlice";
 
 interface MenuDataContextType {
   config: any;
@@ -90,6 +91,7 @@ const MenuDataContext = createContext<MenuDataContextType | undefined>(
 
 export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useSelector((state: RootState) => state.user);
+  const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const { config, setConfig } = useConfig();
 
@@ -101,6 +103,9 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     queryFn: async () => {
       const res = await api.get(`/config/${user?.taiKhoan?.tenDangNhap}`);
       setConfig(res.data);
+      if (res.data?.soTabToiDa) {
+        dispatch(setMaxTabLimit(res.data.soTabToiDa));
+      }
       return res.data;
     },
     enabled: !!user?.taiKhoan?.tenDangNhap,
@@ -112,6 +117,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       thoiHanTaiLieu: number;
       ngayBaoHetHan: number;
       ngayBaoDangKiem: number;
+      soTabToiDa: number;
     }) =>
       await api.post("/config", {
         idAccount: user?.taiKhoan?.tenDangNhap,
@@ -125,6 +131,9 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
         idAccount: user?.taiKhoan?.tenDangNhap || "",
         ...variables,
       });
+      if (variables.soTabToiDa) {
+        dispatch(setMaxTabLimit(variables.soTabToiDa));
+      }
     },
     onError: (error: any) => {
       showErrorAlert(

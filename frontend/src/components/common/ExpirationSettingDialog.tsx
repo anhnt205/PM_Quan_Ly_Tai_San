@@ -35,6 +35,7 @@ interface ExpirationSettingDialogProps {
     expirationDays: number,
     warningDays: number,
     registrationWarningDays: number,
+    maxTabs: number,
   ) => void | Promise<void>;
   loading?: boolean;
 }
@@ -51,6 +52,7 @@ export default function ExpirationSettingDialog({
   const [warningDays, setWarningDays] = useState<string>("0");
   const [registrationWarningDays, setRegistrationWarningDays] =
     useState<string>("0");
+  const [maxTabs, setMaxTabs] = useState<string>("7");
   const [error, setError] = useState<string>("");
 
   const [selectedDbConfigId, setSelectedDbConfigId] = useState<string>("");
@@ -101,14 +103,21 @@ export default function ExpirationSettingDialog({
         setExpirationDays(String(data.thoiHanTaiLieu));
       }
       if (data.ngayBaoHetHan !== undefined && data.ngayBaoHetHan !== null) {
-        setWarningDays(String(data.ngayBaoHetHan));
+        setWarningDays(data.ngayBaoHetHan.toString());
       }
       if (data.ngayBaoDangKiem !== undefined && data.ngayBaoDangKiem !== null) {
-        setRegistrationWarningDays(String(data.ngayBaoDangKiem));
+        setRegistrationWarningDays(data.ngayBaoDangKiem.toString());
       }
-      setError("");
+      if (data.soTabToiDa !== undefined && data.soTabToiDa !== null) {
+        setMaxTabs(data.soTabToiDa.toString());
+      }
+    } else {
+      setExpirationDays("0");
+      setWarningDays("0");
+      setRegistrationWarningDays("0");
+      setMaxTabs("7");
     }
-  }, [open, initialConfig]);
+  }, [initialConfig, open]);
 
   const MIN_VALUE = 1;
   const MAX_VALUE = 999;
@@ -123,24 +132,20 @@ export default function ExpirationSettingDialog({
   };
 
   const handleConfirm = async () => {
-    const exp = parseInt(expirationDays) || 0;
-    const warn = parseInt(warningDays) || 0;
-    const regWarn = parseInt(registrationWarningDays) || 0;
+    const exp = parseInt(expirationDays);
+    const warn = parseInt(warningDays);
+    const regWarn = parseInt(registrationWarningDays);
+    const tabs = parseInt(maxTabs);
 
-    // if (exp === 0 || warn === 0 || regWarn === 0) {
-    //   setError("Vui lòng nhập đầy đủ thông tin");
-    //   return;
-    // }
+    if (isNaN(exp) || isNaN(warn) || isNaN(regWarn) || isNaN(tabs)) {
+      setError("Vui lòng nhập số hợp lệ");
+      return;
+    }
 
-    // if (warn > exp) {
-    //   setError("Số ngày báo trước không được lớn hơn thời hạn tài liệu!");
-    //   return;
-    // }
-
-    // if (regWarn > 365) {
-    //   setError("Số ngày báo đăng kiểm không được vượt quá 365 ngày");
-    //   return;
-    // }
+    if (exp < 0 || warn < 0 || regWarn < 0 || tabs < 1) {
+      setError("Giá trị không được nhỏ hơn 0 (số tab tối đa ít nhất là 1)");
+      return;
+    }
 
     setError("");
     if (onConfirm) {
@@ -154,7 +159,7 @@ export default function ExpirationSettingDialog({
           console.error(e);
         }
       }
-      await onConfirm(exp, warn, regWarn);
+      await onConfirm(exp, warn, regWarn, tabs);
     }
     onClose();
   };
@@ -378,6 +383,63 @@ export default function ExpirationSettingDialog({
               variant="outlined"
               size="medium"
               helperText="Hệ thống sẽ gửi cảnh báo trước khi đến kỳ đăng kiểm"
+              FormHelperTextProps={{
+                sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
+              }}
+            />
+          </Paper>
+
+          {/* Cài đặt giới hạn tab */}
+          <Paper
+            elevation={0}
+            sx={{
+              p: 2,
+              mb: 2,
+              borderRadius: 2,
+              backgroundColor: "white",
+              border: `1px solid ${theme.palette.grey[200]}`,
+              transition: "all 0.2s",
+              "&:hover": {
+                borderColor: theme.palette.success.light,
+                boxShadow: `0 2px 8px ${alpha(theme.palette.success.main, 0.1)}`,
+              },
+            }}
+          >
+            <Typography
+              variant="subtitle2"
+              fontWeight="bold"
+              sx={{ mb: 1.5, display: "flex", alignItems: "center", gap: 1 }}
+            >
+              <Box
+                component="span"
+                sx={{
+                  width: 4,
+                  height: 20,
+                  bgcolor: theme.palette.success.main,
+                  borderRadius: 1,
+                  display: "inline-block",
+                }}
+              />
+              Số lượng tab được phép mở tối đa
+            </Typography>
+            <TextField
+              fullWidth
+              type="number"
+              value={maxTabs}
+              onChange={(e) => {
+                setMaxTabs(e.target.value);
+                setError("");
+              }}
+              InputProps={{
+                inputProps: { min: 1 },
+                endAdornment: (
+                  <InputAdornment position="end">Tab</InputAdornment>
+                ),
+                sx: { backgroundColor: theme.palette.grey[50] },
+              }}
+              variant="outlined"
+              size="medium"
+              helperText="Giới hạn số tab hiển thị trên thanh menu"
               FormHelperTextProps={{
                 sx: { ml: 0, mt: 0.5, color: theme.palette.grey[600] },
               }}
