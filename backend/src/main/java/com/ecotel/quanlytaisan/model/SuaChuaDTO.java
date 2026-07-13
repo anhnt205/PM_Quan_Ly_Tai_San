@@ -49,6 +49,7 @@ public class SuaChuaDTO {
     private String tenGiamDoc;
     private String tenDonViQuanLy;
     private String tenDonViGiamSat;
+    private String tenLoaiSuaChua;
     private String soPhieuGiamDinh;
 
     // Danh sách chi tiết

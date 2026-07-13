@@ -214,13 +214,39 @@ export const useMaintenanceMaterialConsumptionQuery = (
   });
 };
 
-// thồn tin tài sản theo id, năm
-export const useGetTaiSanByIdQuery = (id: string | undefined, nam?: number) => {
+// lịch sử hoạt động thiết bị
+export const useDeviceActivityHistoryQuery = (
+  idTaiSan?: string,
+  dateFrom?: string,
+  dateTo?: string
+) => {
   return useQuery({
-    queryKey: ["taiSanById", id, nam],
+    queryKey: ["deviceActivityHistory", idTaiSan, dateFrom, dateTo],
+    queryFn: async () => {
+      const res = await api.get("/quy-trinh/lich-su-hoat-dong", {
+        params: {
+          idTaiSan,
+          dateFrom,
+          dateTo,
+        },
+      });
+      return res.data.data || res.data || [];
+    },
+    enabled: !!idTaiSan,
+  });
+};
+
+// thồn tin tài sản theo id, dateFrom, dateTo
+export const useGetTaiSanByIdQuery = (
+  id: string | undefined,
+  dateFrom?: string,
+  dateTo?: string
+) => {
+  return useQuery({
+    queryKey: ["taiSanById", id, dateFrom, dateTo],
     queryFn: async () => {
       const res = await api.get(`/taisan/${id}`, {
-        params: { nam },
+        params: { dateFrom, dateTo },
       });
       return res.data.data || res.data;
     },

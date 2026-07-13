@@ -18,6 +18,20 @@ public class QuyTrinhController {
     @Autowired
     private QuyTrinhService quyTrinhService;
 
+    @GetMapping("/lich-su-hoat-dong")
+    public ResponseEntity<ApiResponse<Object>> getLichSuHoatDong(
+            @RequestParam String idTaiSan,
+            @RequestParam(required = false) String dateFrom,
+            @RequestParam(required = false) String dateTo) {
+        try {
+            List<java.util.Map<String, Object>> result = quyTrinhService.getLichSuHoatDong(idTaiSan, dateFrom, dateTo);
+            return ResponseEntity.ok(ApiResponse.success("Lấy lịch sử hoạt động thành công", result, result.size()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+
     @GetMapping("/paged")
     public ResponseEntity<ApiResponse<Object>> getPaged(
             @RequestParam(defaultValue = "1") int page,

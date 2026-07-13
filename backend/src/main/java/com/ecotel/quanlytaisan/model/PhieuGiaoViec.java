@@ -12,6 +12,9 @@ public class PhieuGiaoViec {
     private String ngayBatDau;
     private Integer caDuKien;
     private String ngayDuKien;
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
 
     // Người lập phiếu
     private String idNguoiLap;
@@ -43,3 +46,4 @@ public class PhieuGiaoViec {
         return share != null ? share : false;
     }
 }
+

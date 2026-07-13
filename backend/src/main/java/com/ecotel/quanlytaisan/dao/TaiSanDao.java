@@ -997,15 +997,20 @@ public class TaiSanDao {
     }
 
     public TaiSanDTO findById(String id) {
-        return findById(id, null);
+        return findById(id, null, null);
     }
 
-    public TaiSanDTO findById(String id, Integer nam) {
+    public TaiSanDTO findById(String id, String dateFrom, String dateTo) {
         String gioHoatDongSubquery = "";
         Object[] params;
-        if (nam != null) {
-            gioHoatDongSubquery = " (SELECT SUM(ghd.GioHoatDong) FROM giohoatdong ghd WHERE ghd.IdTaiSan = ts.Id AND ghd.Nam = ?) AS gioHoatDong, ";
-            params = new Object[]{nam, id};
+        if (dateFrom != null && !dateFrom.isEmpty() && dateTo != null && !dateTo.isEmpty()) {
+            gioHoatDongSubquery = " (SELECT SUM(IFNULL(ctlt.Ca1, 0) + IFNULL(ctlt.Ca2, 0) + IFNULL(ctlt.Ca3, 0)) " +
+                                  " FROM lichtrinh lt " +
+                                  " JOIN chitietlichtrinh ctlt ON lt.Id = ctlt.IdLichTrinh " +
+                                  " WHERE lt.IdTaiSan = ts.Id " +
+                                  " AND STR_TO_DATE(CONCAT(lt.Nam, '-', lt.Thang, '-', ctlt.Ngay), '%Y-%c-%e') >= STR_TO_DATE(?, '%Y-%m-%d') " +
+                                  " AND STR_TO_DATE(CONCAT(lt.Nam, '-', lt.Thang, '-', ctlt.Ngay), '%Y-%c-%e') <= STR_TO_DATE(?, '%Y-%m-%d')) AS gioHoatDong, ";
+            params = new Object[]{dateFrom, dateTo, id};
         } else {
             params = new Object[]{id};
         }

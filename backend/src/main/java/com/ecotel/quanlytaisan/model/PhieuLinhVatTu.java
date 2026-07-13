@@ -11,6 +11,9 @@ public class PhieuLinhVatTu {
     private String donViDeNghi;
     private String mucDichSuDung;
     private String ghiChu;
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
 
     private Integer daCoNghiemThu;
 
@@ -44,3 +47,4 @@ public class PhieuLinhVatTu {
         return share != null ? share : false;
     }
 }
+

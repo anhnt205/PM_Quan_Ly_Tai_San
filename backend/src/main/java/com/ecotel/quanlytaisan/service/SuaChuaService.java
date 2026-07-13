@@ -21,6 +21,9 @@ public class SuaChuaService {
     private SuaChuaDao suaChuaDao;
 
     @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private SuaChuaChiTietTaiSanDao suaChuaChiTietTaiSanDao;
 
     @Autowired
@@ -40,7 +43,7 @@ public class SuaChuaService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
-            String dateFrom, String dateTo
+            String dateFrom, String dateTo, String idTaiSan
     ) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -78,7 +81,16 @@ public class SuaChuaService {
                     .filter(i -> trangThai.equals(i.getTrangThai()))
                     .collect(Collectors.toList());
         
-        if (dateFrom != null && !dateFrom.isEmpty()) {
+        
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> validIds = jdbcTemplate.queryForList(
+                "SELECT idSuaChua FROM suachuachitiettaisan WHERE idTaiSan = ?", 
+                String.class, idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> validIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
+if (dateFrom != null && !dateFrom.isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
                     .collect(Collectors.toList());

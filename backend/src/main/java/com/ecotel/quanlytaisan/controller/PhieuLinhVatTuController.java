@@ -1,4 +1,6 @@
 package com.ecotel.quanlytaisan.controller;
+import jakarta.validation.Valid;
+import com.ecotel.quanlytaisan.model.UpdateGhiChuRequest;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.PageResponse;
@@ -6,6 +8,7 @@ import com.ecotel.quanlytaisan.model.PhieuLinhVatTu;
 import com.ecotel.quanlytaisan.model.PhieuLinhVatTuDTO;
 import com.ecotel.quanlytaisan.service.PhieuLinhVatTuService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,11 +39,13 @@ public class PhieuLinhVatTuController {
             @RequestParam(value = "isSign", required = false) Boolean isSign,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
             @RequestParam(value = "dateTo", required = false) String dateTo
+    ,
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan
     ) {
         try {
             PageResponse<PhieuLinhVatTuDTO> response = service.findAllPaged(
                     page, size, sortBy, sortDir, search,
-                    trangThai, idPhieuGiaoViec, userid, isSign, dateFrom, dateTo);
+                    trangThai, idPhieuGiaoViec, userid, isSign, dateFrom, dateTo, idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
@@ -129,6 +134,19 @@ public class PhieuLinhVatTuController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(
                     ApiResponse.failure("Lỗi hệ thống: " + e.getMessage(), null));
+        }
+    }
+    @PatchMapping("/{id}/ghi-chu")
+    public ResponseEntity<ApiResponse<Object>> updateGhiChu(
+            @PathVariable("id") String id,
+            @Valid @RequestBody UpdateGhiChuRequest body) {
+        try {
+            int result = service.updateGhiChu(id, body.getGhiChuBienBan());
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("C?p nh?t ghi ch� th�nh c�ng", null, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Kh�ng t�m th?y b?n ghi", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("L?i h? th?ng: " + e.getMessage(), null));
         }
     }
 }

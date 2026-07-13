@@ -29,6 +29,7 @@ export const useAcceptancePageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -43,6 +44,7 @@ export const useAcceptancePageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/nghiemthu/paged", {
@@ -56,6 +58,7 @@ export const useAcceptancePageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -70,6 +73,11 @@ export const useAcceptanceMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["materialRequisitionByJob"] });
+    queryClient.invalidateQueries({ queryKey: ["nghiemThuByBienBan"] });
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       return (
@@ -81,8 +89,7 @@ export const useAcceptanceMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuByBienBan"] });
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuPage"] });
+     handleUpdate();
       showSuccessAlert("Tạo biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -103,8 +110,7 @@ export const useAcceptanceMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuByBienBan"] });
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuPage"] });
+      handleUpdate();
       showSuccessAlert("Cập nhật biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -117,8 +123,7 @@ export const useAcceptanceMutation = () => {
       return (await api.delete(`/nghiemthu/${id}`)).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuByBienBan"] });
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuPage"] });
+     handleUpdate();
       showSuccessAlert("Xóa biên bản nghiệm thu thành công");
     },
     onError: (error: any) => {
@@ -138,8 +143,7 @@ export const useAcceptanceMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuByBienBan"] });
-      queryClient.invalidateQueries({ queryKey: ["nghiemThuPage"] });
+      handleUpdate();
       showSuccessAlert("Cập nhật trạng thái thành công");
     },
     onError: (error: any) => {

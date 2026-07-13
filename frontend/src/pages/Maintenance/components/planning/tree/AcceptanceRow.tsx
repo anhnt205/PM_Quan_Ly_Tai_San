@@ -14,7 +14,7 @@ import { ActionCell } from "./ActionCell";
 import { showStatus } from "../../../config";
 import type { MaintenancePlanData } from "../../../types";
 import {
-  useMaintenanceMaterialAssessmentByInspectionQuery,
+  useMaintenanceMaterialAssessmentByAcceptanceQuery,
   useAcceptanceMutation,
 } from "../../../mutation";
 import { MaterialRow } from "./MaterialRow";
@@ -63,7 +63,7 @@ export const AcceptanceRow = ({
   });
 
   const { data: materials = [] } =
-    useMaintenanceMaterialAssessmentByInspectionQuery(
+    useMaintenanceMaterialAssessmentByAcceptanceQuery(
       expanded ? acceptance.id : "",
     );
 

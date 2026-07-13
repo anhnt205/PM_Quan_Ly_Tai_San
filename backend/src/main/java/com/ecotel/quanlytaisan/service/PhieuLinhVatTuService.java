@@ -28,6 +28,9 @@ public class PhieuLinhVatTuService {
     private PhieuLinhVatTuDao phieuLinhVatTuDao;
 
     @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private PhieuLinhVatTuChiTietTaiSanDao chiTietTaiSanDao;
 
     @Autowired
@@ -46,7 +49,7 @@ public class PhieuLinhVatTuService {
 
     public PageResponse<PhieuLinhVatTuDTO> findAllPaged(
             int page, int size, String sortBy, String sortDir, String search, Integer trangThai, 
-            String idPhieuGiaoViec, String userId, Boolean isSign, String dateFrom, String dateTo) {
+            String idPhieuGiaoViec, String userId, Boolean isSign, String dateFrom, String dateTo,String idTaiSan) {
         
         List<PhieuLinhVatTuDTO> sourceList = phieuLinhVatTuDao.findAll();
 
@@ -85,7 +88,16 @@ public class PhieuLinhVatTuService {
                 .collect(Collectors.toList());
         }
 
-        if (dateFrom != null && !dateFrom.isEmpty()) {
+        
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> validIds = jdbcTemplate.queryForList(
+                "SELECT IdBienBan FROM PhieuLinhVatTu_ChiTietTaiSan WHERE idTaiSan = ?", 
+                String.class, idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> validIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
+if (dateFrom != null && !dateFrom.isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
                     .collect(Collectors.toList());
@@ -453,5 +465,8 @@ public class PhieuLinhVatTuService {
         target.setTrangThai(source.getTrangThai());
         target.setNgayTao(source.getNgayTao());
         target.setNguoiTao(source.getNguoiTao());
+    }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return phieuLinhVatTuDao.updateGhiChu(id, ghiChuBienBan);
     }
 }

@@ -57,9 +57,12 @@ import {
   useAcceptancePageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
-  useMaintenanceMaterialConsumptionQuery,
+  useDeviceActivityHistoryQuery,
   useGetTaiSanByIdQuery,
+  useMaterialRequisitionPageQuery,
 } from "./mutation";
+import { useMaintenanceTechnicalReportPageQuery } from "./mutation/TechnicalReport";
+import { useMaintenanceJobAssignmentPageQuery } from "./mutation/JobAssignment";
 import {
   PlanAdapter,
   RepairAdapter,
@@ -68,6 +71,9 @@ import {
   AcceptanceTestAdapter,
   IncidentAdapter,
   IncidentInspectionAdapter,
+  TechnicalReportAdapter,
+  JobAssignmentAdapter,
+  MaterialRequisitionAdapter,
 } from "./Adapter";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import FieldAutoCompleted from "../../components/TextField/FieldAutoCompleted";
@@ -75,6 +81,7 @@ import { findById } from "../../utils/helpers";
 import PageAction from "../../components/common/PageAction";
 import { showStatus } from "./config";
 import { useAllAssetsByDepartmentQuery } from "../AssetManager/Mutation";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 // ── Summary Card ──────────────────────────────────────────────
 const SummaryCard = ({
@@ -251,6 +258,7 @@ const QuyTrinhStep = ({
   icon,
   color,
   items,
+  totalItems,
   onXemTatCa,
 }: {
   step: number;
@@ -258,6 +266,7 @@ const QuyTrinhStep = ({
   icon: React.ReactNode;
   color: string;
   items: { ma: string; trang: number }[];
+  totalItems: number;
   onXemTatCa: () => void;
 }) => (
   <Paper
@@ -411,7 +420,7 @@ const QuyTrinhStep = ({
           },
         }}
       >
-        Xem tất cả ({items.length})
+        Xem tất cả ({totalItems})
       </Button>
     </Box>
   </Paper>
@@ -630,22 +639,23 @@ export default function MaintenanceStatPage() {
 
   const [pageModels, setPageModels] = useState({
     plan: 0,
-    repair: 0,
+    technicalReport: 0,
     inspection: 0,
-    material: 0,
+    repair: 0,
+    jobAssignment: 0,
+    materialRequisition: 0,
     acceptance: 0,
-    incident: 0,
-    incidentInspection: 0,
-    measure: 0,
+    materialAssessment: 0,
   });
 
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: assets = [] } = useAllAssetsByDepartmentQuery(donVi);
 
-  // const { data: processPaged = { items: [], totalItems: 0 } } =
-  //   useMaintenanceProcessPagedQuery(processPage, 10, selectedId, dateFrom, dateTo, nhomTaiSan);
-
-  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(selectedId);
+  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(
+    selectedId,
+    dateFrom,
+    dateTo
+  );
 
   // Pagination for phieu table
   const [page, setPage] = useState(1);
@@ -660,216 +670,127 @@ export default function MaintenanceStatPage() {
     setModal({ open: true, title, type });
 
   // ── Queries ──
-  // kế hoạch
-  const {
-    data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-  } = useMaintenancePlanningPageQuery(
-    pageModels.plan,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-    selectedId || undefined,
-    true,
-  );
-  // sửa chữa
-  const {
-    data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-  } = useMaintenanceRepairPageQuery(
-    pageModels.repair,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
+  // 1. Kế hoạch
+  const { data: planPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenancePlanningPageQuery(
+    pageModels.plan, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined, true
   );
 
-  // giám định máy móc
-  const {
-    data: inspectionPaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceInspectionPageQuery(
-    pageModels.inspection,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
+  // 2. Báo cáo kỹ thuật
+  const { data: technicalReportPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenanceTechnicalReportPageQuery(
+    pageModels.technicalReport, 10, "", undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined, true
   );
 
-  // vật tư
-  const {
-    data: materialPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-  } = useMaintenanceMaterialAssessmentPageQuery(
-    pageModels.material,
-    10,
-    "",
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-  );
-  // nghiệm thu máy móc
-  const {
-    data: acceptancePaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useAcceptancePageQuery(
-    pageModels.acceptance,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
-  );
-  // sự cố
-  const {
-    data: incidentPaged = { items: [], totalItems: 0, trangThaiCounts: {} },
-  } = useMaintenanceIncidentPageQuery(
-    pageModels.incident,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
+  // 3. Giám định
+  const { data: inspectionPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenanceInspectionPageQuery(
+    pageModels.inspection, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
   );
 
-  // bb sự cố
-  const {
-    data: incidentInspectionPaged = {
-      items: [],
-      totalItems: 0,
-      trangThaiCounts: {},
-    },
-  } = useMaintenanceIncidentInspectionPageQuery(
-    pageModels.incidentInspection,
-    10,
-    "",
-    undefined,
-    undefined,
-    user?.taiKhoan?.tenDangNhap,
-    undefined,
-    dateFrom || undefined,
-    dateTo || undefined,
+  // 4. Lệnh sửa chữa
+  const { data: repairPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenanceRepairPageQuery(
+    pageModels.repair, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
   );
 
-  const planItems = planPaged.items.map(PlanAdapter).map((item: any) => ({
-    ma: item.planId || item.id,
-    trang: item.trangThai,
-  }));
-  const repairItems = repairPaged.items.map(RepairAdapter).map((item: any) => ({
-    ma: item.idSuaChua || item.id,
-    trang: item.trangThai,
-  }));
-  const inspectionItems = inspectionPaged.items
-    .map(InspectionAdapter)
-    .map((item: any) => ({
-      ma: item.idGiamDinhMayMoc || item.id,
-      trang: item.trangThai,
-    }));
-  const materialItems = materialPaged.items
-    .map(MaterialAssessmentAdapter)
-    .map((item: any) => ({
-      ma: item.idDanhGia || item.id,
-      trang: item.trangThai,
-    }));
-  const acceptanceItems = acceptancePaged.items
-    .map(AcceptanceTestAdapter)
-    .map((item: any) => ({
-      ma: item.idNghiemThu || item.id,
-      trang: item.trangThai,
-    }));
-  const incidentItems = incidentPaged.items
-    .map(IncidentAdapter)
-    .map((item: any) => ({
-      ma: item.idSuCo || item.soPhieu || item.id,
-      trang: item.trangThai,
-    }));
-  const incidentInspectionItems = incidentInspectionPaged.items
-    .map(IncidentInspectionAdapter)
-    .map((item: any) => ({
-      ma: item.incidentInspectionId || item.id,
-      trang: item.trangThai,
-    }));
+  // 5. Phiếu giao việc
+  const { data: jobAssignmentPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenanceJobAssignmentPageQuery(
+    pageModels.jobAssignment, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
+  );
+
+  // 6. Phiếu lĩnh vật tư
+  const { data: materialRequisitionPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaterialRequisitionPageQuery(
+    pageModels.materialRequisition, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
+  );
+
+  // 7. Nghiệm thu
+  const { data: acceptancePaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useAcceptancePageQuery(
+    pageModels.acceptance, 10, "", undefined, undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
+  );
+
+  // 8. Đánh giá vật tư
+  const { data: materialAssessmentPaged = { items: [], totalItems: 0, trangThaiCounts: {} } } = useMaintenanceMaterialAssessmentPageQuery(
+    pageModels.materialAssessment, 10, "", undefined, user?.taiKhoan?.tenDangNhap, undefined, dateFrom || undefined, dateTo || undefined, selectedId || undefined
+  );
+
+  const planItems = planPaged.items.map(PlanAdapter).map((item: any) => ({ ma: item.planId || item.id, trang: item.trangThai }));
+  const technicalReportItems = technicalReportPaged.items.map(TechnicalReportAdapter).map((item: any) => ({ ma: item.idBaoCaoKyThuat || item.id, trang: item.trangThai }));
+  const inspectionItems = inspectionPaged.items.map(InspectionAdapter).map((item: any) => ({ ma: item.idGiamDinhMayMoc || item.id, trang: item.trangThai }));
+  const repairItems = repairPaged.items.map(RepairAdapter).map((item: any) => ({ ma: item.idSuaChua || item.id, trang: item.trangThai }));
+  const jobAssignmentItems = jobAssignmentPaged.items.map(JobAssignmentAdapter).map((item: any) => ({ ma: item.idPhieuGiaoViec || item.id, trang: item.trangThai }));
+  const materialRequisitionItems = materialRequisitionPaged.items.map(MaterialRequisitionAdapter).map((item: any) => ({ ma: item.idBienBan || item.id, trang: item.trangThai }));
+  const acceptanceItems = acceptancePaged.items.map(AcceptanceTestAdapter).map((item: any) => ({ ma: item.idNghiemThu || item.id, trang: item.trangThai }));
+  const materialAssessmentItems = materialAssessmentPaged.items.map(MaterialAssessmentAdapter).map((item: any) => ({ ma: item.idDanhGia || item.id, trang: item.trangThai }));
 
   const quyTrinhSteps = [
     {
       step: 1,
-      title: "KẾ HOẠCH",
-      icon: <BuildOutlined sx={{ fontSize: 16 }} />,
+      title: "KẾ HOẠCH BẢO DƯỠNG",
+      icon: <AssignmentTurnedInOutlined sx={{ fontSize: 16 }} />,
       color: "#3b82f6",
       items: planItems,
+      totalItems: planPaged.totalItems,
       type: "plan",
     },
     {
       step: 2,
-      title: "SỰ CỐ",
-      icon: <WarningOutlined sx={{ fontSize: 16 }} />,
-      color: "#ef4444",
-      items: incidentItems,
-      type: "incident",
+      title: "BÁO CÁO KỸ THUẬT",
+      icon: <DescriptionOutlined sx={{ fontSize: 16 }} />,
+      color: "#8b5cf6",
+      items: technicalReportItems,
+      totalItems: technicalReportPaged.totalItems,
+      type: "technicalReport",
     },
     {
       step: 3,
-      title: "BB SỰ CỐ",
-      icon: <SearchOutlined sx={{ fontSize: 16 }} />,
-      color: "#8b5cf6",
-      items: incidentInspectionItems,
-      type: "incidentInspection",
+      title: "BIÊN BẢN GIÁM ĐỊNH",
+      icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
+      color: "#22c55e",
+      items: inspectionItems,
+      totalItems: inspectionPaged.totalItems,
+      type: "inspection",
     },
     {
       step: 4,
       title: "LỆNH SỬA CHỮA",
-      icon: <DescriptionOutlined sx={{ fontSize: 16 }} />,
+      icon: <BuildOutlined sx={{ fontSize: 16 }} />,
       color: "#f59e0b",
       items: repairItems,
+      totalItems: repairPaged.totalItems,
       type: "repair",
     },
     {
       step: 5,
-      title: "GIÁM ĐỊNH",
-      icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
-      color: "#22c55e",
-      items: inspectionItems,
-      type: "inspection",
+      title: "PHIẾU GIAO VIỆC",
+      icon: <AssignmentTurnedInOutlined sx={{ fontSize: 16 }} />,
+      color: "#ec4899",
+      items: jobAssignmentItems,
+      totalItems: jobAssignmentPaged.totalItems,
+      type: "jobAssignment",
+    },
+    {
+      step: 6,
+      title: "PHIẾU LĨNH VẬT TƯ",
+      icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
+      color: "#14b8a6",
+      items: materialRequisitionItems,
+      totalItems: materialRequisitionPaged.totalItems,
+      type: "materialRequisition",
     },
     {
       step: 7,
-      title: "NGHIỆM THU",
-      icon: <AssignmentTurnedInOutlined sx={{ fontSize: 16 }} />,
+      title: "BIÊN BẢN NGHIỆM THU",
+      icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
       color: "#10b981",
       items: acceptanceItems,
+      totalItems: acceptancePaged.totalItems,
       type: "acceptance",
     },
     {
       step: 8,
-      title: "ĐÁNH GIÁ VT",
+      title: "BIÊN BẢN ĐÁNH GIÁ VT",
       icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       color: "#f97316",
-      items: materialItems,
-      type: "material",
+      items: materialAssessmentItems,
+      totalItems: materialAssessmentPaged.totalItems,
+      type: "materialAssessment",
     },
   ];
 
@@ -1013,7 +934,7 @@ export default function MaintenanceStatPage() {
                 }}
               >
                 <SummaryCard
-                  icon={<BuildOutlined sx={{ fontSize: 20 }} />}
+                  icon={<AssignmentTurnedInOutlined sx={{ fontSize: 20 }} />}
                   title="Kế Hoạch"
                   color="#3b82f6"
                   main={planPaged.totalItems}
@@ -1022,25 +943,25 @@ export default function MaintenanceStatPage() {
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
-                  icon={<WarningOutlined sx={{ fontSize: 20 }} />}
-                  title="Sự Cố"
-                  color="#ef4444"
-                  main={incidentPaged.totalItems}
-                  mainLabel="Tổng số sự cố"
-                  sub={incidentPaged.trangThaiCounts["1"] || 0}
-                  subLabel="Chờ duyệt"
-                />
-                <SummaryCard
-                  icon={<SearchOutlined sx={{ fontSize: 20 }} />}
-                  title="BB Sự Cố"
-                  color="#8b5cf6"
-                  main={incidentInspectionPaged.totalItems}
-                  mainLabel="Tổng BB sự cố"
-                  sub={incidentInspectionPaged.trangThaiCounts["1"] || 0}
-                  subLabel="Chờ duyệt"
-                />
-                <SummaryCard
                   icon={<DescriptionOutlined sx={{ fontSize: 20 }} />}
+                  title="Báo cáo KT"
+                  color="#8b5cf6"
+                  main={technicalReportPaged.totalItems}
+                  mainLabel="Tổng số báo cáo"
+                  sub={technicalReportPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<FactCheckOutlined sx={{ fontSize: 20 }} />}
+                  title="Giám Định"
+                  color="#22c55e"
+                  main={inspectionPaged.totalItems}
+                  mainLabel="Tổng bản giám định"
+                  sub={inspectionPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<BuildOutlined sx={{ fontSize: 20 }} />}
                   title="Lệnh SC"
                   color="#f59e0b"
                   main={repairPaged.totalItems}
@@ -1049,18 +970,27 @@ export default function MaintenanceStatPage() {
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
-                  icon={<FactCheckOutlined sx={{ fontSize: 20 }} />}
-                  title="Giám Định"
-                  color="#10b981"
-                  main={inspectionPaged.totalItems}
-                  mainLabel="Tổng bản giám định"
-                  sub={inspectionPaged.trangThaiCounts["1"] || 0}
+                  icon={<AssignmentTurnedInOutlined sx={{ fontSize: 20 }} />}
+                  title="Phiếu GV"
+                  color="#ec4899"
+                  main={jobAssignmentPaged.totalItems}
+                  mainLabel="Tổng phiếu giao việc"
+                  sub={jobAssignmentPaged.trangThaiCounts["1"] || 0}
                   subLabel="Chờ duyệt"
                 />
                 <SummaryCard
-                  icon={<AssignmentTurnedInOutlined sx={{ fontSize: 20 }} />}
+                  icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
+                  title="Phiếu VT"
+                  color="#14b8a6"
+                  main={materialRequisitionPaged.totalItems}
+                  mainLabel="Tổng phiếu vật tư"
+                  sub={materialRequisitionPaged.trangThaiCounts["1"] || 0}
+                  subLabel="Chờ duyệt"
+                />
+                <SummaryCard
+                  icon={<FactCheckOutlined sx={{ fontSize: 20 }} />}
                   title="Nghiệm Thu"
-                  color="#06b6d4"
+                  color="#10b981"
                   main={acceptancePaged.totalItems}
                   mainLabel="Tổng bản nghiệm thu"
                   sub={acceptancePaged.trangThaiCounts["1"] || 0}
@@ -1070,9 +1000,9 @@ export default function MaintenanceStatPage() {
                   icon={<InventoryOutlined sx={{ fontSize: 20 }} />}
                   title="Đánh giá VT"
                   color="#f97316"
-                  main={materialPaged.totalItems}
+                  main={materialAssessmentPaged.totalItems}
                   mainLabel="Tổng bản đánh giá"
-                  sub={materialPaged.trangThaiCounts["1"] || 0}
+                  sub={materialAssessmentPaged.trangThaiCounts["1"] || 0}
                   subLabel="Chờ duyệt"
                 />
               </Box>
@@ -1143,7 +1073,7 @@ export default function MaintenanceStatPage() {
                 >
                   <Box
                     sx={{
-                      background: "#04b46e",
+                      background: currentBrandConfig.primaryColor,
                       px: 3,
                       py: 2,
                       display: "flex",
@@ -1464,7 +1394,7 @@ export default function MaintenanceStatPage() {
                   sx={{ color: "primary.main", fontSize: 20 }}
                 />
                 <Typography fontWeight={700} color="grey.800">
-                  VẬT TƯ TIÊU HAO:{" "}
+                  QUÁ TRÌNH HOẠT ĐỘNG THIẾT BỊ:{" "}
                   <span style={{ color: "#04b46eff" }}>
                     {findById(assets, selectedId)?.tenTaiSan?.toUpperCase() ||
                       "TẤT CẢ THIẾT BỊ"}
@@ -1478,12 +1408,10 @@ export default function MaintenanceStatPage() {
                     <TableRow>
                       {[
                         "STT",
-                        "Mã vật tư",
-                        "Tên vật tư",
-                        "Đơn vị tính",
-                        "Số lượng tiêu hao",
-                        "Đơn giá",
-                        "Thành tiền",
+                        "Thời gian bắt đầu SC",
+                        "Thời gian kết thúc sửa chữa",
+                        "Loại sửa chữa",
+                        "Ghi chú",
                       ].map((h) => (
                         <TableCell
                           key={h}
@@ -1503,7 +1431,7 @@ export default function MaintenanceStatPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    <MaterialConsumptionRows
+                    <DeviceActivityHistoryRows
                       idTaiSan={selectedId}
                       dateFrom={dateFrom}
                       dateTo={dateTo}
@@ -1528,37 +1456,41 @@ export default function MaintenanceStatPage() {
         items={
           modal.type === "plan"
             ? planItems
-            : modal.type === "repair"
-              ? repairItems
+            : modal.type === "technicalReport"
+              ? technicalReportItems
               : modal.type === "inspection"
                 ? inspectionItems
-                : modal.type === "material"
-                  ? materialItems
-                  : modal.type === "acceptance"
-                    ? acceptanceItems
-                    : modal.type === "incident"
-                      ? incidentItems
-                      : modal.type === "incidentInspection"
-                        ? incidentInspectionItems
-                        : []
+                : modal.type === "repair"
+                  ? repairItems
+                  : modal.type === "jobAssignment"
+                    ? jobAssignmentItems
+                    : modal.type === "materialRequisition"
+                      ? materialRequisitionItems
+                      : modal.type === "acceptance"
+                        ? acceptanceItems
+                        : modal.type === "materialAssessment"
+                          ? materialAssessmentItems
+                          : []
         }
         page={pageModels[modal.type as keyof typeof pageModels] || 0}
         totalPages={Math.ceil(
           (modal.type === "plan"
             ? planPaged.totalItems
-            : modal.type === "repair"
-              ? repairPaged.totalItems
+            : modal.type === "technicalReport"
+              ? technicalReportPaged.totalItems
               : modal.type === "inspection"
                 ? inspectionPaged.totalItems
-                : modal.type === "material"
-                  ? materialPaged.totalItems
-                  : modal.type === "acceptance"
-                    ? acceptancePaged.totalItems
-                    : modal.type === "incident"
-                      ? incidentPaged.totalItems
-                      : modal.type === "incidentInspection"
-                        ? incidentInspectionPaged.totalItems
-                        : 0) / 10,
+                : modal.type === "repair"
+                  ? repairPaged.totalItems
+                  : modal.type === "jobAssignment"
+                    ? jobAssignmentPaged.totalItems
+                    : modal.type === "materialRequisition"
+                      ? materialRequisitionPaged.totalItems
+                      : modal.type === "acceptance"
+                        ? acceptancePaged.totalItems
+                        : modal.type === "materialAssessment"
+                          ? materialAssessmentPaged.totalItems
+                          : 0) / 10,
         )}
         onPageChange={(p) =>
           setPageModels((prev) => ({
@@ -1571,7 +1503,7 @@ export default function MaintenanceStatPage() {
   );
 }
 
-const MaterialConsumptionRows = ({
+const DeviceActivityHistoryRows = ({
   idTaiSan,
   dateFrom,
   dateTo,
@@ -1580,8 +1512,8 @@ const MaterialConsumptionRows = ({
   dateFrom: string;
   dateTo: string;
 }) => {
-  const { data: materials = [], isLoading } =
-    useMaintenanceMaterialConsumptionQuery(idTaiSan, dateFrom, dateTo);
+  const { data: histories = [], isLoading } =
+    useDeviceActivityHistoryQuery(idTaiSan, dateFrom, dateTo);
 
   if (isLoading) {
     return (
@@ -1595,7 +1527,7 @@ const MaterialConsumptionRows = ({
     );
   }
 
-  if (materials.length === 0) {
+  if (histories.length === 0) {
     return (
       <TableRow>
         <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
@@ -1623,8 +1555,8 @@ const MaterialConsumptionRows = ({
             </Box>
             <Typography variant="body2" color="text.secondary" fontWeight={600}>
               {idTaiSan
-                ? `Thiết bị không có vật tư tiêu hao trong năm ${dateFrom} - ${dateTo}`
-                : "Vui lòng chọn thiết bị ở bộ lọc phía trên để xem vật tư tiêu hao"}
+                ? `Thiết bị không có hoạt động trong khoảng thời gian này`
+                : "Vui lòng chọn thiết bị ở bộ lọc phía trên để xem lịch sử hoạt động"}
             </Typography>
           </Box>
         </TableCell>
@@ -1634,29 +1566,17 @@ const MaterialConsumptionRows = ({
 
   return (
     <>
-      {materials.map((m: any, idx: number) => (
+      {histories.map((h: any, idx: number) => (
         <TableRow
-          key={m.ma}
+          key={idx}
           hover
           sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
         >
           <TableCell>{idx + 1}</TableCell>
-          <TableCell
-            sx={{ fontFamily: "monospace", fontWeight: 700, color: "grey.800" }}
-          >
-            {m.ma}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>{m.ten}</TableCell>
-          <TableCell>{m.donViTinh}</TableCell>
-          <TableCell sx={{ fontWeight: 700, color: "primary.main" }}>
-            {m.soLuong}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>
-            {m.giaTri != null ? m.giaTri.toLocaleString() : "—"}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>
-            {m.giaTri != null ? (m.giaTri * m.soLuong).toLocaleString() : "—"}
-          </TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>{h.ngayBatDau || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>{h.ngayKetThuc || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>{h.loaiSuaChua || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 400, color: "text.secondary" }}>{h.ghiChu || "—"}</TableCell>
         </TableRow>
       ))}
     </>

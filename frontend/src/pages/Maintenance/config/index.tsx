@@ -850,7 +850,7 @@ export const generateSuaChuaPdf = async (
     ["Thiết bị/BKS", thietBiBKS],
     ["Ngày SCBD gần nhất", ngaySCBD],
     ["Giờ/km hoạt động", repair?.gioHoatDong || ""],
-    ["Nội dung SC/BD", repair?.loaiSuaChua || ""],
+    ["Nội dung SC/BD", repair?.tenLoaiSuaChua || ""],
     ["Tình trạng kỹ thuật", repair?.tinhTrang || ""],
   ];
 
@@ -3431,14 +3431,16 @@ export const generateTechnicalReportPdf = async (
   );
   doc.setFontSize(11);
   doc.setFont("times_new_roman_italic", "italic");
-  doc.text(`Thiết bị: ${data?.tenTaiSan || "..."}`, pageWidth / 2, 52, {
+  const equipmentText = `Thiết bị: ${data?.tenTaiSan || "..."}`;
+  const splitEquipmentText = doc.splitTextToSize(equipmentText, pageWidth - 40);
+  doc.text(splitEquipmentText, pageWidth / 2, 52, {
     align: "center",
   });
 
   // Content
   doc.setFont("times_new_roman", "normal");
   doc.setFontSize(12);
-  let y = 65;
+  let y = 52 + splitEquipmentText.length * 6 + 7;
   const marginX = 30;
 
   doc.text(

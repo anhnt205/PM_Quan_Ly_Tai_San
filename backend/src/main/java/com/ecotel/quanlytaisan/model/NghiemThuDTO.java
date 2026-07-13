@@ -8,6 +8,9 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class NghiemThuDTO extends NghiemThu {
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
 
     private List<NghiemThuChiTietTaiSan> danhSachTaiSan;
     private List<NghiemThuChiTietVatTu> danhSachVatTu;
@@ -22,3 +25,4 @@ public class NghiemThuDTO extends NghiemThu {
     private String soPhieuBienBan; // Map from PhieuLinhVatTu or BienBan
     private Integer daCoPhieuDanhGia;
 }
+

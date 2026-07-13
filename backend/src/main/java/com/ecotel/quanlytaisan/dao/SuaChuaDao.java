@@ -44,6 +44,7 @@ public class SuaChuaDao {
                 sc.NgayBaoDuongGanNhat,
                 sc.GioHoatDong,
                 sc.LoaiSuaChua,
+                lsc.Ten as tenLoaiSuaChua,
                 sc.TinhTrang,
                 sc.NhanCongThucHien,
                 sc.ThoiGian,
@@ -74,6 +75,7 @@ public class SuaChuaDao {
                 LEFT JOIN NhanVien nvGD ON sc.IdGiamDoc = nvGD.Id
                 LEFT JOIN phongban pb1 ON sc.DonViQuanLy = pb1.Id
                 LEFT JOIN phongban pb2 ON sc.DonViGiamSat = pb2.Id
+                LEFT JOIN LoaiSCBD lsc ON sc.LoaiSuaChua = lsc.Id
             """;
     }
 

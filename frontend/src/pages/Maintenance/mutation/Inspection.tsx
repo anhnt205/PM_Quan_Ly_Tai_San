@@ -19,6 +19,7 @@ export const useMaintenanceInspectionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -33,6 +34,7 @@ export const useMaintenanceInspectionPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/giamdinh/paged", {
@@ -46,6 +48,7 @@ export const useMaintenanceInspectionPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -92,6 +95,11 @@ export const useMaintenanceInspectionMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["technicalReportByPlan"] });
+    queryClient.invalidateQueries({ queryKey: ["inspectionByBaoCao"] });
+  };
+
 
 
   const createMutation = useMutation({
@@ -106,21 +114,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id || response.data?.id) {
-
-        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({
-          queryKey: ["incidentInspectionBySuCo"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["inspectionByBienBan"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["incidentDetailByIncident"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["maintenancePlanningDetailsByMonth"],
-        });
+        handleUpdate();
         showSuccessAlert("Tạo biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
@@ -148,14 +142,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: async (response, variables) => {
       if (response.success || response.id || response.data?.id) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({
-          queryKey: ["incidentInspectionBySuCo"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["inspectionByBienBan"],
-        });
+        handleUpdate()
         showSuccessAlert("Cập nhật biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
@@ -178,20 +165,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["repairByPlan"] });
-        queryClient.invalidateQueries({
-          queryKey: ["incidentInspectionBySuCo"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["inspectionByBienBan"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["incidentDetailByIncident"],
-        });
-        queryClient.invalidateQueries({
-          queryKey: ["maintenancePlanningDetailsByMonth"],
-        });
+        handleUpdate();
         showSuccessAlert("Xóa biên bản giám định phương tiện thành công");
       } else {
         showErrorAlert(
@@ -217,7 +191,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
+        handleUpdate();
         showSuccessAlert("Cập nhật trạng thái thành công");
       } else {
         showErrorAlert(res.message || "Cập nhật trạng thái thất bại");
@@ -236,7 +210,7 @@ export const useMaintenanceInspectionMutation = () => {
     },
     onSuccess: (res: any) => {
       if (res.success || res.id || res > 0) {
-        queryClient.invalidateQueries({ queryKey: ["inspectionPage"] });
+        handleUpdate();
         showSuccessAlert("Hủy biên bản thành công");
       } else {
         showErrorAlert(res.message || "Hủy biên bản thất bại");

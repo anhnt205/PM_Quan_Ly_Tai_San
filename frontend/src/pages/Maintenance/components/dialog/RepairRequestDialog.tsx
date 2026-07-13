@@ -99,6 +99,7 @@ const RepairRequestDialog = ({
       ngayBaoDuongGanNhat: dayjs(new Date()).format("YYYY-MM-DD"),
       gioHoatDong: "",
       loaiSuaChua: "",
+      tenLoaiSuaChua: "",
       tinhTrang: "",
       nhanCongThucHien: "",
       thoiGian: dayjs(new Date()).format("YYYY-MM-DD"),
@@ -207,6 +208,7 @@ const RepairRequestDialog = ({
         ngayBaoDuongGanNhat: initialData.ngayBaoDuongGanNhat ?? "",
         gioHoatDong: initialData.gioHoatDong ?? "",
         loaiSuaChua: initialData.loaiSuaChua ?? "",
+        tenLoaiSuaChua: initialData.tenLoaiSuaChua ?? "",
         tinhTrang: initialData.tinhTrang ?? "",
         nhanCongThucHien: initialData.nhanCongThucHien ?? "",
         thoiGian: initialData.thoiGian ?? "",
@@ -249,6 +251,7 @@ const RepairRequestDialog = ({
         ngayBaoDuongGanNhat: savedDraft.ngayBaoDuongGanNhat ?? "",
         gioHoatDong: savedDraft.gioHoatDong ?? "",
         loaiSuaChua: savedDraft.loaiSuaChua ?? "",
+        tenLoaiSuaChua: savedDraft.tenLoaiSuaChua ?? "",
         tinhTrang: savedDraft.tinhTrang ?? "",
         nhanCongThucHien: savedDraft.nhanCongThucHien ?? "",
         thoiGian: savedDraft.thoiGian ?? "",
@@ -296,6 +299,7 @@ const RepairRequestDialog = ({
       ngayBaoDuongGanNhat: dayjs(new Date()).format("YYYY-MM-DD"),
       gioHoatDong: "",
       loaiSuaChua: "",
+      tenLoaiSuaChua: "",
       tinhTrang: "",
       nhanCongThucHien: "",
       thoiGian: dayjs(new Date()).format("YYYY-MM-DD"),
@@ -458,6 +462,7 @@ const RepairRequestDialog = ({
                     formik={formik}
                     onChange={async (value: any) => {
                       formik.setFieldValue("loaiSuaChua", value.id);
+                      formik.setFieldValue("tenLoaiSuaChua", value.ten);
                       if (value.id) {
                         try {
                           const res = await api.get(

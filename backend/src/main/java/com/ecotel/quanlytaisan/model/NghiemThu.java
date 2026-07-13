@@ -9,6 +9,9 @@ public class NghiemThu {
     private String donViQuanLy;
     private String noiDungSuaChua;
     private String ketQua;
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
 
 
     // Người lập phiếu
@@ -41,3 +44,4 @@ public class NghiemThu {
         return share != null ? share : false;
     }
 }
+

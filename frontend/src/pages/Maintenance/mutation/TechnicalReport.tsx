@@ -29,6 +29,7 @@ export const useMaintenanceTechnicalReportPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -42,6 +43,7 @@ export const useMaintenanceTechnicalReportPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/baocaokythuat/paged", {
@@ -55,6 +57,7 @@ export const useMaintenanceTechnicalReportPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -69,6 +72,7 @@ export const useTechnicalReportMutation = () => {
   const { user } = useSelector((state: any) => state.user);
 
   const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["maintenancePlanningDetailsByMonth"] });
     queryClient.invalidateQueries({ queryKey: ["technicalReportByPlan"] });
   };
 

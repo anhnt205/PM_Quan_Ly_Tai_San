@@ -174,4 +174,8 @@ public class DanhGiaVatTuDao {
         deleteDetailsByParentId(id);
         return jdbcTemplate.update("DELETE FROM danhgia_vattu WHERE Id = ?", id);
     }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return jdbcTemplate.update("UPDATE danhgia_vattu SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?", ghiChuBienBan, now, id);
+    }
 }

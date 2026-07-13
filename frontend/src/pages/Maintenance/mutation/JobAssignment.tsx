@@ -30,6 +30,7 @@ export const useMaintenanceJobAssignmentPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -44,6 +45,7 @@ export const useMaintenanceJobAssignmentPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/phieugiaoviec/paged", {
@@ -57,6 +59,7 @@ export const useMaintenanceJobAssignmentPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -71,6 +74,12 @@ export const useJobAssignmentMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["repairByInspection"] });
+    queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
+
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: JobAssignmentData) => {
       return (
@@ -82,7 +91,7 @@ export const useJobAssignmentMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
+      handleUpdate();
       showSuccessAlert("Tạo phiếu giao việc thành công");
     },
     onError: (error: any) => {
@@ -103,8 +112,7 @@ export const useJobAssignmentMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
-      showSuccessAlert("Cập nhật phiếu giao việc thành công");
+      handleUpdate();
     },
     onError: (error: any) => {
       showErrorAlert(
@@ -118,7 +126,7 @@ export const useJobAssignmentMutation = () => {
       return (await api.delete(`/phieugiaoviec/${data.id}`)).data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
+      handleUpdate();
       showSuccessAlert("Xóa phiếu giao việc thành công");
     },
     onError: (error: any) => {
@@ -140,7 +148,7 @@ export const useJobAssignmentMutation = () => {
       return res.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
+      handleUpdate();
       console.log("Cập nhật người ký thành công");
     },
     onError: (error: any) => {

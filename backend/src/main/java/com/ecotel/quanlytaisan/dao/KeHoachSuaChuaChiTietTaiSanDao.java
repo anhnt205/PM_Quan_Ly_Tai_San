@@ -35,14 +35,30 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
         // Lấy cột capSuaChuaThangX theo tháng động
         String colThang = "CapSuaChuaThang" + thang;
 
-        String subQuery1 = """
-            EXISTS (
-                SELECT 1 FROM baocaokythuat_chitiet bcttt
-                INNER JOIN baocaokythuat bct on bcttt.IdBaoCaoKyThuat = bct.Id
-                WHERE bcttt.idKeHoachChiTiet = kscctt.id
-                AND bct.thang = ?
-                AND bct.trangThai != 2 
-            )""";
+        String statusSubQuery = """
+            (SELECT COALESCE(MAX(
+                CASE 
+                    WHEN dg.Id IS NOT NULL THEN 7
+                    WHEN nt.Id IS NOT NULL THEN 6
+                    WHEN plvt.Id IS NOT NULL THEN 5
+                    WHEN pgv.Id IS NOT NULL THEN 4
+                    WHEN sc.Id IS NOT NULL THEN 3
+                    WHEN gd.Id IS NOT NULL THEN 2
+                    ELSE 1
+                END
+            ), 0)
+            FROM baocaokythuat_chitiet bcttt
+            INNER JOIN baocaokythuat bct ON bcttt.IdBaoCaoKyThuat = bct.Id
+            LEFT JOIN giamdinh gd ON bct.Id = gd.IdBaoCaoKyThuat
+            LEFT JOIN suachua sc ON gd.Id = sc.IdGiamDinh
+            LEFT JOIN phieugiaoviec pgv ON sc.Id = pgv.IdSuaChua
+            LEFT JOIN phieulinhvattu plvt ON pgv.Id = plvt.IdPhieuGiaoViec
+            LEFT JOIN nghiemthu nt ON plvt.Id = nt.IdBienBan
+            LEFT JOIN danhgia_vattu dg ON nt.Id = dg.IdNghiemThu
+            WHERE bcttt.IdKeHoachChiTiet = kscctt.Id
+            AND bct.Thang = ?
+            AND bct.TrangThai != 2)
+            """;
         
         String sql = """
             SELECT 
@@ -50,16 +66,13 @@ public class KeHoachSuaChuaChiTietTaiSanDao {
                 %s as capSuaChua,
                 ts.TenTaiSan AS tenTaiSan,
                 ts.IdNhomTaiSan AS idNhomTaiSan,
-                CASE 
-                    WHEN %s THEN 1
-                    ELSE 0 
-                END as daCoBienBan
+                %s as daCoBienBan
             FROM kehoachsuachua_chitiet_taisan kscctt
                 LEFT JOIN TaiSan ts ON kscctt.IdTaiSan = ts.Id
             WHERE kscctt.idKeHoachSuaChua = ?
             AND %s IS NOT NULL
             AND %s != ''
-            """.formatted(colThang, subQuery1, colThang, colThang);
+            """.formatted(colThang, statusSubQuery, colThang, colThang);
         
         return jdbcTemplate.query(sql, 
             new BeanPropertyRowMapper<>(KeHoachSuaChuaChiTietTaiSan.class), 

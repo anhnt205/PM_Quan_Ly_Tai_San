@@ -8,6 +8,9 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PhieuLinhVatTuDTO extends PhieuLinhVatTu {
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
 
     private List<PhieuLinhVatTuChiTietTaiSan> danhSachTaiSan;
     private List<PhieuLinhVatTuChiTietVatTu> danhSachVatTu;
@@ -20,3 +23,4 @@ public class PhieuLinhVatTuDTO extends PhieuLinhVatTu {
     private String tenNguoiLap;
     private String tenGiamDoc;
 }
+

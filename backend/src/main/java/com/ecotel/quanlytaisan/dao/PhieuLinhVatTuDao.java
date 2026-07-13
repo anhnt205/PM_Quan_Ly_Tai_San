@@ -152,4 +152,8 @@ public class PhieuLinhVatTuDao {
     public void delete(String id) {
         jdbcTemplate.update("DELETE FROM PhieuLinhVatTu WHERE Id = ?", id);
     }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return jdbcTemplate.update("UPDATE PhieuLinhVatTu SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?", ghiChuBienBan, now, id);
+    }
 }

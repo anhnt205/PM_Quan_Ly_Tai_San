@@ -271,4 +271,37 @@ public class QuyTrinhDao {
                 new BeanPropertyRowMapper<>(com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO.class), 
                 params.toArray());
     }
+
+    public List<Map<String, Object>> getLichSuHoatDong(String idTaiSan, String dateFrom, String dateTo) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT ")
+           .append("sc.ThoiGian AS ngayBatDau, ")
+           .append("dg.NgayDanhGia AS ngayKetThuc, ")
+           .append("lsc.Ten AS loaiSuaChua, ")
+           .append("dg.GhiChuBienBan AS ghiChu ")
+           .append("FROM suachua sc ")
+           .append("JOIN LoaiSCBD lsc ON lsc.Id = sc.LoaiSuaChua ")
+           .append("JOIN suachuachitiettaisan sct ON sc.Id = sct.IdSuaChua ")
+           .append("LEFT JOIN PhieuGiaoViec pgv ON sc.Id = pgv.IdSuaChua ")
+           .append("LEFT JOIN PhieuLinhVatTu plvt ON pgv.Id = plvt.IdPhieuGiaoViec ")
+           .append("LEFT JOIN nghiemthu nt ON plvt.Id = nt.IdBienBan ")
+           .append("LEFT JOIN danhgia_vattu dg ON nt.Id = dg.IdNghiemThu ")
+           .append("WHERE sct.IdTaiSan = ? ");
+
+        List<Object> params = new ArrayList<>();
+        params.add(idTaiSan);
+
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND sc.ThoiGian >= ?");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND sc.ThoiGian <= ?");
+            params.add(dateTo + " 23:59:59");
+        }
+
+        sql.append(" ORDER BY sc.ThoiGian DESC");
+        return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+    }
 }

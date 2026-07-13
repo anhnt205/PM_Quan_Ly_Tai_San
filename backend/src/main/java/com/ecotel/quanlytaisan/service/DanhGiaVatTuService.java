@@ -19,6 +19,9 @@ public class DanhGiaVatTuService {
     private DanhGiaVatTuDao dao;
 
     @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
     public List<DanhGiaVatTu> findAll() {
@@ -148,11 +151,20 @@ public class DanhGiaVatTuService {
     }
 
     public PageResponse<DanhGiaVatTu> findAllPaged(int page, int size, String sortBy, String sortDir,
-            String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
+            String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo, String idTaiSan) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
         List<DanhGiaVatTu> sourceList = dao.findAll();
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> validIds = jdbcTemplate.queryForList(
+                "SELECT id FROM danhgia_vattu WHERE idNghiemThu IN (SELECT idNghiemThu FROM nghiemthu_chitiettaisan WHERE idTaiSan = ?)", 
+                String.class, idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> validIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
 
         // Lọc theo lượt ký (Turn to sign)
         if (userid != null && !userid.trim().isEmpty()) {
@@ -191,7 +203,16 @@ public class DanhGiaVatTuService {
         }
 
         // Lọc theo ngày
-        if (dateFrom != null && !dateFrom.isEmpty()) {
+        
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> validIds = jdbcTemplate.queryForList(
+                "SELECT id FROM danhgia_vattu WHERE idNghiemThu IN (SELECT idNghiemThu FROM nghiemthu_chitiettaisan WHERE idTaiSan = ?)", 
+                String.class, idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> validIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
+if (dateFrom != null && !dateFrom.isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
                     .collect(Collectors.toList());
@@ -375,5 +396,8 @@ public class DanhGiaVatTuService {
                         Comparator.nullsLast(String::compareTo)); break;
         }
         return asc ? comp : comp.reversed();
+    }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return dao.updateGhiChu(id, ghiChuBienBan);
     }
 }

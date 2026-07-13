@@ -194,9 +194,12 @@ public class TaiSanController {
         }
     }
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Object>> getById(@PathVariable("id") String id, @RequestParam(value = "nam", required = false) Integer nam) {
+    public ResponseEntity<ApiResponse<Object>> getById(
+            @PathVariable("id") String id, 
+            @RequestParam(value = "dateFrom", required = false) String dateFrom,
+            @RequestParam(value = "dateTo", required = false) String dateTo) {
         try {
-            TaiSanDTO result = taiSanService.getById(id, nam);
+            TaiSanDTO result = taiSanService.getById(id, dateFrom, dateTo);
             if (result != null) {
                 return ResponseEntity.ok(ApiResponse.success("Lấy thông tin tài sản thành công", result, null));
             }

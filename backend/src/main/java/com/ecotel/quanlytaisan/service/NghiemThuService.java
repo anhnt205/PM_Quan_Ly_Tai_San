@@ -28,6 +28,9 @@ public class NghiemThuService {
     private NghiemThuDao nghiemThuDao;
 
     @Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    @Autowired
     private NghiemThuChiTietTaiSanDao chiTietTaiSanDao;
 
     @Autowired
@@ -46,7 +49,7 @@ public class NghiemThuService {
 
     public PageResponse<NghiemThuDTO> findAllPaged(
             int page, int size, String sortBy, String sortDir, String search, Integer trangThai, 
-            String idBienBan, String userId, Boolean isSign, String dateFrom, String dateTo) {
+            String idBienBan, String userId, Boolean isSign, String dateFrom, String dateTo,String idTaiSan) {
         
         List<NghiemThuDTO> sourceList = nghiemThuDao.findAll();
 
@@ -85,7 +88,16 @@ public class NghiemThuService {
                 .collect(Collectors.toList());
         }
 
-        if (dateFrom != null && !dateFrom.isEmpty()) {
+        
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> validIds = jdbcTemplate.queryForList(
+                "SELECT idNghiemThu FROM nghiemthu_chitiettaisan WHERE idTaiSan = ?", 
+                String.class, idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> validIds.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
+if (dateFrom != null && !dateFrom.isEmpty()) {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateFrom) >= 0)
                     .collect(Collectors.toList());
@@ -449,5 +461,8 @@ public class NghiemThuService {
         target.setTrangThai(source.getTrangThai());
         target.setNgayTao(source.getNgayTao());
         target.setNguoiTao(source.getNguoiTao());
+    }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        return nghiemThuDao.updateGhiChu(id, ghiChuBienBan);
     }
 }

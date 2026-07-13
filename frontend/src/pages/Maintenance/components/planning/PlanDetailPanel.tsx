@@ -541,23 +541,30 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
               </TableHead>
 
               <TableBody>
-                {technicalReports.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={5} align="center">
-                      Không có dữ liệu
-                    </TableCell>
-                  </TableRow>
-                )}
+                {(() => {
+                  const filteredReports = technicalReports.filter((req: any) =>
+                    selectedMonths.includes(Number(req.thang))
+                  );
 
-                {/* ─── Báo cáo kỹ thuật ─── */}
-                {technicalReports.map((req: any, reqIdx: number) => (
-                  <TechnicalReportRow
-                    key={req.id}
-                    report={req}
-                    plan={plan}
-                    isLast={reqIdx === technicalReports.length - 1}
-                  />
-                ))}
+                  if (filteredReports.length === 0) {
+                    return (
+                      <TableRow>
+                        <TableCell colSpan={5} align="center">
+                          Không có dữ liệu
+                        </TableCell>
+                      </TableRow>
+                    );
+                  }
+
+                  return filteredReports.map((req: any, reqIdx: number, arr: any[]) => (
+                    <TechnicalReportRow
+                      key={req.id}
+                      report={req}
+                      plan={plan}
+                      isLast={reqIdx === arr.length - 1}
+                    />
+                  ));
+                })()}
               </TableBody>
             </Table>
           </TableContainer>

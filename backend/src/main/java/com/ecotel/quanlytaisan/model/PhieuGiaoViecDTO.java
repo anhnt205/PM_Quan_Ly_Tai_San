@@ -5,6 +5,9 @@ import java.util.List;
 
 @Data
 public class PhieuGiaoViecDTO extends PhieuGiaoViec {
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
     private String tenNguoiLap;
     private String tenGiamDoc;
     private String tenDonViQuanLy;
@@ -17,3 +20,4 @@ public class PhieuGiaoViecDTO extends PhieuGiaoViec {
     private List<KyTaiLieu> chuKyList;
     private List<NguoiKy> nguoiKyList;
 }
+

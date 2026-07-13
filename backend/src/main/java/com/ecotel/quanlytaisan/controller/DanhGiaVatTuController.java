@@ -1,4 +1,5 @@
 package com.ecotel.quanlytaisan.controller;
+import com.ecotel.quanlytaisan.model.UpdateGhiChuRequest;
 
 import com.ecotel.quanlytaisan.model.ApiResponse;
 import com.ecotel.quanlytaisan.model.DanhGiaVatTu;
@@ -42,11 +43,13 @@ public class DanhGiaVatTuController {
             @RequestParam(value = "isSign", required = false) Boolean isSign,
             @RequestParam(value = "dateFrom", required = false) String dateFrom,
             @RequestParam(value = "dateTo", required = false) String dateTo
+    ,
+            @RequestParam(value = "idTaiSan", required = false) String idTaiSan
     ) {
         try {
             PageResponse<DanhGiaVatTu> response = service.findAllPaged(
                     page, size, sortBy, sortDir, search,
-                    trangThai, userid, isSign, dateFrom, dateTo);
+                    trangThai, userid, isSign, dateFrom, dateTo, idTaiSan);
             return ResponseEntity.ok(ApiResponse.success("Láº¥y danh sÃ¡ch thÃ nh cÃ´ng", response, (int) response.getTotalItems()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -144,6 +147,19 @@ public class DanhGiaVatTuController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.failure("Lá»—i há»‡ thá»‘ng: " + e.getMessage(), null));
+        }
+    }
+    @PatchMapping("/{id}/ghi-chu")
+    public ResponseEntity<ApiResponse<Object>> updateGhiChu(
+            @PathVariable("id") String id,
+            @Valid @RequestBody UpdateGhiChuRequest body) {
+        try {
+            int result = service.updateGhiChu(id, body.getGhiChuBienBan());
+            if (result > 0) return ResponseEntity.ok(ApiResponse.success("C?p nh?t ghi chú thành công", null, result));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("Không tìm th?y b?n ghi", result));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("L?i h? th?ng: " + e.getMessage(), null));
         }
     }
 }

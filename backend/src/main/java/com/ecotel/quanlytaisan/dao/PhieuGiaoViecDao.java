@@ -164,4 +164,8 @@ public class PhieuGiaoViecDao {
     public void batchDelete(List<String> ids) {
         jdbcTemplate.batchUpdate("DELETE FROM phieugiaoviec WHERE Id = ?", ids, 50, (ps, id) -> ps.setString(1, id));
     }
+    public int updateGhiChu(String id, String ghiChuBienBan) {
+        String now = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        return jdbcTemplate.update("UPDATE phieugiaoviec SET GhiChuBienBan = ?, NgayCapNhat = ? WHERE Id = ?", ghiChuBienBan, now, id);
+    }
 }

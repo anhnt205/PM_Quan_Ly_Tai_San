@@ -33,6 +33,7 @@ export const useMaterialRequisitionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -47,6 +48,7 @@ export const useMaterialRequisitionPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/phieulinhvattu/paged", {
@@ -60,6 +62,7 @@ export const useMaterialRequisitionPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -74,6 +77,12 @@ export const useMaterialRequisitionMutation = () => {
   const now = dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss");
   const { user } = useSelector((state: any) => state.user);
 
+  const handleUpdate = () => {
+    queryClient.invalidateQueries({ queryKey: ["jobAssignmentByRepair"] });
+    queryClient.invalidateQueries({ queryKey: ["materialRequisitionByJob"] });
+
+  };
+
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
       return (
@@ -85,8 +94,7 @@ export const useMaterialRequisitionMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionByJob"] });
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionPage"] });
+      handleUpdate()
       showSuccessAlert("Tạo phiếu lĩnh vật tư thành công");
     },
     onError: (error: any) => {
@@ -107,8 +115,7 @@ export const useMaterialRequisitionMutation = () => {
       ).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionByJob"] });
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionPage"] });
+      handleUpdate();
       showSuccessAlert("Cập nhật phiếu lĩnh vật tư thành công");
     },
     onError: (error: any) => {
@@ -121,8 +128,7 @@ export const useMaterialRequisitionMutation = () => {
       return (await api.delete(`/phieulinhvattu/${id}`)).data;
     },
     onSuccess: async () => {
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionByJob"] });
-      queryClient.invalidateQueries({ queryKey: ["materialRequisitionPage"] });
+     handleUpdate();
       showSuccessAlert("Xóa phiếu lĩnh vật tư thành công");
     },
     onError: (error: any) => {

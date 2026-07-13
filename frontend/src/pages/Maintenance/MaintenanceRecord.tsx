@@ -175,6 +175,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 1,
   );
 
@@ -193,6 +194,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 2,
   );
 
@@ -210,6 +212,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 3,
   );
 
@@ -231,6 +234,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 4,
   );
 
@@ -252,6 +256,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 5,
   );
 
@@ -273,6 +278,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 6,
   );
 
@@ -292,6 +298,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 7,
   );
 

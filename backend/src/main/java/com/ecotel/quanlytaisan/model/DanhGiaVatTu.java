@@ -13,6 +13,9 @@ public class DanhGiaVatTu {
     private String diaDiem;
     private String idDonViDanhGia;
     private String tenDonViDanhGia;
+    private String ghiChuBienBan;
+    private String congTy;
+    private String tenMauBienBan;
     
     // Người lập phiếu
     private String idNguoiLap;
@@ -50,3 +53,4 @@ public class DanhGiaVatTu {
         return share != null ? share : false;
     }
 }
+
