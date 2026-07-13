@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -95,31 +96,44 @@ public class SecurityConfig {
         return new DelegatingJwtDecoder(localJwtDecoder(), portalJwtDecoder());
     }
 
-    // ─── Security Filter Chain ────────────────────────────────────────────────
+    // ─── Security Filter Chains ────────────────────────────────────────────────
 
+    /**
+     * Chain 1 — Public endpoints (login, exchange-code, swagger, ws...).
+     * KHÔNG gắn oauth2ResourceServer() để tránh BearerTokenAuthenticationFilter
+     * cố decode token dù request lỡ có kèm Authorization header cũ/rác.
+     * @Order(1) đảm bảo chain này được xét trước.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    public SecurityFilterChain publicFilterChain(HttpSecurity http) throws Exception {
         http
-                // CORS — sử dụng CorsConfigurationSource bean từ config/SecurityConfig.java
+                .securityMatcher(PUBLIC_ENDPOINTS)
                 .cors(Customizer.withDefaults())
-
-                // Tắt CSRF (REST API stateless)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Stateless session
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
 
-                // OAuth2 Resource Server dùng DelegatingJwtDecoder (primary bean)
+        return http.build();
+    }
+
+    /**
+     * Chain 2 — Protected endpoints (mọi request còn lại).
+     * Có đầy đủ oauth2ResourceServer + custom filter pipeline như cũ.
+     * @Order(2) đảm bảo chain này chỉ áp dụng cho request không khớp Chain 1.
+     */
+    @Bean
+    @Order(2)
+    public SecurityFilterChain protectedFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(Customizer.withDefaults())
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(jwtDecoder())))
-
-                // Phân quyền endpoint
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // preflight CORS
-                        .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
                         .anyRequest().authenticated()
                 )
-
-                // Filter pipeline: BearerTokenFilter → AppTokenFilter → PermissionFilter
                 .addFilterAfter(appTokenFilter, BearerTokenAuthenticationFilter.class)
                 .addFilterAfter(permissionFilter, AppTokenFilter.class);
 
