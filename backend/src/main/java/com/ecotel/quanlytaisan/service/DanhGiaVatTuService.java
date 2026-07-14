@@ -20,6 +20,12 @@ public class DanhGiaVatTuService {
     @Autowired
     private KyTaiLieuDao kyTaiLieuDao;
 
+    @Autowired
+    private com.ecotel.quanlytaisan.dao.NghiemThuTaiSanDao nghiemThuTaiSanDao;
+
+    @Autowired
+    private com.ecotel.quanlytaisan.dao.NghiemThuPhuongTienDao nghiemThuPhuongTienDao;
+
     public List<DanhGiaVatTu> findAll(String idCongTy) {
         List<DanhGiaVatTu> list = dao.findAll(idCongTy);
         for (DanhGiaVatTu item : list) {
@@ -151,7 +157,7 @@ public class DanhGiaVatTuService {
     }
 
     public PageResponse<DanhGiaVatTu> findAllPaged(String idCongTy, int page, int size, String sortBy, String sortDir,
-            String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
+            String search, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo, String idTaiSan) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
 
@@ -204,6 +210,31 @@ public class DanhGiaVatTuService {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEndInclusive) <= 0)
                     .collect(Collectors.toList());
+        }
+
+        // Lọc theo idTaiSan qua Nghiệm thu
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<DanhGiaVatTu> filtered = new ArrayList<>();
+            for (DanhGiaVatTu item : sourceList) {
+                if (item.getIdNghiemThu() != null && !item.getIdNghiemThu().isEmpty()) {
+                    String idNghiemThu = item.getIdNghiemThu();
+                    boolean match = false;
+                    
+                    // Thử check bên Nghiệm thu Máy móc
+                    List<NghiemThuTaiSan> nts = nghiemThuTaiSanDao.findByIdBienBan(idNghiemThu);
+                    if (nts != null && !nts.isEmpty()) {
+                        match = nts.stream().anyMatch(d -> idTaiSan.equalsIgnoreCase(d.getIdTaiSan()));
+                    } else {
+                        // Thử check bên Nghiệm thu Phương tiện
+                        NghiemThuPhuongTien ntp = nghiemThuPhuongTienDao.findById(idNghiemThu);
+                        if (ntp != null && idTaiSan.equalsIgnoreCase(ntp.getIdTaiSan())) {
+                            match = true;
+                        }
+                    }
+                    if (match) filtered.add(item);
+                }
+            }
+            sourceList = filtered;
         }
 
         // Tìm kiếm

@@ -20,6 +20,7 @@ export const useMaintenanceBienPhapPhuongTienPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -33,6 +34,7 @@ export const useMaintenanceBienPhapPhuongTienPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/bienphap-phuongtien/paged", {
@@ -46,6 +48,7 @@ export const useMaintenanceBienPhapPhuongTienPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;

@@ -211,7 +211,7 @@ public class NghiemThuService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
-            String dateFrom, String dateTo
+            String dateFrom, String dateTo, String idTaiSan
     ) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -259,6 +259,18 @@ public class NghiemThuService {
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
                     .collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<NghiemThuDTO> filtered = new ArrayList<>();
+            for (NghiemThuDTO item : sourceList) {
+                List<NghiemThuTaiSan> details = nghiemThuTaiSanDao.findByIdBienBan(item.getId());
+                boolean match = details.stream().anyMatch(d -> idTaiSan.equalsIgnoreCase(d.getIdTaiSan()));
+                if (match) {
+                    filtered.add(item);
+                }
+            }
+            sourceList = filtered;
         }
 
         if (search != null && !search.trim().isEmpty()) {

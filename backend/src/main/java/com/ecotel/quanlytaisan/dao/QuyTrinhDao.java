@@ -271,4 +271,82 @@ public class QuyTrinhDao {
                 new BeanPropertyRowMapper<>(com.ecotel.quanlytaisan.model.VatTuTieuHaoDTO.class), 
                 params.toArray());
     }
+
+    public List<Map<String, Object>> getLichSuHoatDong(String idTaiSan, String dateFrom, String dateTo, String nhomTaiSan) {
+        boolean isMayMoc = "MAY_MOC".equalsIgnoreCase(nhomTaiSan) || "MAYMOC".equalsIgnoreCase(nhomTaiSan);
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT * FROM ( ");
+
+        // --- PHẦN 1: TỪ SỬA CHỮA ---
+        sql.append("SELECT ")
+           .append("sc.NgayTao AS ngayBatDau, ")
+           .append("dg.NgayTao AS ngayKetThuc, ")
+           .append("COALESCE(lsc.Ten, dg.CapSuaChua) AS loaiSuaChua, ")
+           .append("dg.GhiChuBienBan AS ghiChu ")
+           .append("FROM suachua sc ")
+           .append("JOIN suachua_chitiet sct ON sc.Id = sct.IdSuaChua ");
+
+        if (isMayMoc) {
+            sql.append("LEFT JOIN giamdinh_maymoc gd ON gd.IdBienBan = sc.Id AND LOWER(gd.LoaiBienBan) = 'sua_chua' ")
+               .append("LEFT JOIN bienphap_maymoc bp ON bp.IdGiamDinhMayMoc = gd.Id ")
+               .append("LEFT JOIN nghiemthu_maymoc nt ON (nt.IdGiamDinhMayMoc = gd.Id OR nt.IdBienPhapMayMoc = bp.Id) ")
+               .append("LEFT JOIN danhgia_vattu dg ON dg.IdNghiemThu = nt.Id ");
+        } else {
+            sql.append("LEFT JOIN giamdinh_phuongtien gd ON gd.IdBienBan = sc.Id AND LOWER(gd.LoaiBienBan) = 'sua_chua' ")
+               .append("LEFT JOIN bienphap_phuongtien bp ON bp.IdGiamDinhPhuongTien = gd.Id ")
+               .append("LEFT JOIN nghiemthu_phuongtien ntp ON (ntp.IdGiamDinhPhuongTien = gd.Id OR ntp.IdBienPhapPhuongTien = bp.Id) ")
+               .append("LEFT JOIN danhgia_vattu dg ON dg.IdNghiemThu = ntp.Id ");
+        }
+
+        sql.append("LEFT JOIN LoaiSCBD lsc ON dg.CapSuaChua = lsc.Id ")
+           .append("WHERE sct.IdTaiSan = ? ");
+
+        sql.append(" UNION ALL ");
+
+        // --- PHẦN 2: TỪ SỰ CỐ ---
+        sql.append("SELECT ")
+           .append("scb.NgayTao AS ngayBatDau, ")
+           .append("dg.NgayTao AS ngayKetThuc, ")
+           .append("COALESCE(lsc.Ten, dg.CapSuaChua) AS loaiSuaChua, ")
+           .append("dg.GhiChuBienBan AS ghiChu ")
+           .append("FROM suco_thietbi scb ")
+           .append("JOIN suco_thietbi_chitiet scbct ON scb.Id = scbct.IdSuCo ")
+           .append("LEFT JOIN kiemtra_suco ktsc ON scb.Id = ktsc.IdSuCo ");
+
+        if (isMayMoc) {
+            sql.append("LEFT JOIN giamdinh_maymoc gd ON gd.IdBienBan = ktsc.Id AND LOWER(gd.LoaiBienBan) = 'su_co' ")
+               .append("LEFT JOIN bienphap_maymoc bp ON bp.IdGiamDinhMayMoc = gd.Id ")
+               .append("LEFT JOIN nghiemthu_maymoc nt ON (nt.IdGiamDinhMayMoc = gd.Id OR nt.IdBienPhapMayMoc = bp.Id) ")
+               .append("LEFT JOIN danhgia_vattu dg ON dg.IdNghiemThu = nt.Id ");
+        } else {
+            sql.append("LEFT JOIN giamdinh_phuongtien gd ON gd.IdBienBan = ktsc.Id AND LOWER(gd.LoaiBienBan) = 'su_co' ")
+               .append("LEFT JOIN bienphap_phuongtien bp ON bp.IdGiamDinhPhuongTien = gd.Id ")
+               .append("LEFT JOIN nghiemthu_phuongtien ntp ON (ntp.IdGiamDinhPhuongTien = gd.Id OR ntp.IdBienPhapPhuongTien = bp.Id) ")
+               .append("LEFT JOIN danhgia_vattu dg ON dg.IdNghiemThu = ntp.Id ");
+        }
+
+        sql.append("LEFT JOIN LoaiSCBD lsc ON dg.CapSuaChua = lsc.Id ")
+           .append("WHERE scbct.IdTaiSan = ? ");
+           
+        sql.append(") AS combined WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        params.add(idTaiSan);
+        params.add(idTaiSan);
+
+        if (dateFrom != null && !dateFrom.isEmpty()) {
+            sql.append(" AND ngayBatDau >= ?");
+            params.add(dateFrom);
+        }
+
+        if (dateTo != null && !dateTo.isEmpty()) {
+            sql.append(" AND ngayBatDau <= ?");
+            params.add(dateTo + " 23:59:59");
+        }
+
+        sql.append(" ORDER BY ngayBatDau DESC");
+
+        return jdbcTemplate.queryForList(sql.toString(), params.toArray());
+    }
 }

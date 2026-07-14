@@ -26,7 +26,7 @@ public class KiemTraSuCoService {
     @Autowired
     private TaiSanService taiSanService;
 
-    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo) {
+    public PageResponse<KiemTraSuCoDTO> findAllPaged(int page, int pageSize, String searchValue, String idCongTy, Integer trangThai, String userid, Boolean isSign, String dateFrom, String dateTo, String idTaiSan) {
         List<KiemTraSuCoDTO> all = mainDao.findAll(idCongTy);
         
         // Turn-based filter
@@ -70,6 +70,13 @@ public class KiemTraSuCoService {
             String dateToEnd = dateTo + " 23:59:59";
             all = all.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> listIdKiemTraSuCo = detailDao.findIdKiemTraSuCoByIdTaiSan(idTaiSan);
+            all = all.stream()
+                    .filter(i -> listIdKiemTraSuCo.contains(i.getId()))
                     .collect(Collectors.toList());
         }
 

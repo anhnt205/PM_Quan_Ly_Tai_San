@@ -60,6 +60,11 @@ public class GiamDinhMayMocChiTietDao {
         return list;
     }
 
+    public List<String> findIdGiamDinhMayMocByIdTaiSan(String idTaiSan) {
+        String sql = "SELECT DISTINCT IdGiamDinhMayMoc FROM giamdinh_maymoc_chitiet WHERE IdTaiSan = ?";
+        return jdbcTemplate.queryForList(sql, String.class, idTaiSan);
+    }
+
     public String generateNextId() {
         return "GDCT_" + UUID.randomUUID().toString();
     }

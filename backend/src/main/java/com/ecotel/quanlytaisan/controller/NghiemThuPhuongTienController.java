@@ -34,12 +34,13 @@ public class NghiemThuPhuongTienController {
             @RequestParam(value = "userid",   required = false)    String  userid,
             @RequestParam(value = "isSign",   required = false)    Boolean isSign,
             @RequestParam(value = "dateFrom", required = false)    String  dateFrom,
-            @RequestParam(value = "dateTo",   required = false)    String  dateTo
+            @RequestParam(value = "dateTo",   required = false)    String  dateTo,
+            @RequestParam(value = "idTaiSan", required = false)    String  idTaiSan
     ) {
         try {
             PageResponse<NghiemThuPhuongTienDTO> response = service.findAllPaged(
                     idCongTy, page, size, sortBy, sortDir, search,
-                    trangThai, userid, isSign, dateFrom, dateTo);
+                    trangThai, userid, isSign, dateFrom, dateTo, idTaiSan);
             return ResponseEntity.ok(ApiResponse.success(
                     "Lấy danh sách thành công", response, (int) response.getTotalItems()));
         } catch (Exception e) {

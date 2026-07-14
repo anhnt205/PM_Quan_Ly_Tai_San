@@ -31,6 +31,7 @@ import {
   useUpdateLichTrinhBatchMutation,
 } from "../Mutation";
 import { AssetLichTrinhChiTietType, AssetLichTrinhType } from "../types";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 // ============================================================
 // Types
@@ -61,18 +62,18 @@ const getDaysInMonth = (month: number, year: number) =>
 // ============================================================
 export const colors = {
   bgApp: "#f8fafc",
-  borderDark: "#03935a",
+  borderDark: currentBrandConfig.primaryColor,
   borderLight: "#e2e8f0",
   cellBorder: "#cbd5e1",
-  headerBg: "#04b46e",
+  headerBg: currentBrandConfig.primaryColor,
   headerText: "#ffffff",
-  accent: "#04b46e",
-  accentHover: "#03935a",
+  accent: currentBrandConfig.primaryColor100,
+  accentHover: currentBrandConfig.primaryColor,
   textMain: "#1e293b",
   textMuted: "#64748b",
   rowHover: "#f1f5f9",
-  sumBg: "rgba(4, 180, 110, 0.08)",
-  sumText: "#036940",
+  sumBg: currentBrandConfig.primaryColor100,
+  sumText: currentBrandConfig.primaryColor,
 };
 
 export const cellBorderCss = `1px solid ${colors.cellBorder}`;
@@ -557,14 +558,12 @@ export default function LichTrinhVanDungModal({
             onClick={handleSave}
             disabled={isSaving}
             sx={{
-              bgcolor: colors.accent,
               textTransform: "none",
               fontWeight: 700,
               fontSize: "13px",
               px: 4,
               py: 1,
               borderRadius: "8px",
-              "&:hover": { bgcolor: colors.accentHover },
             }}
           >
             {isSaving ? "Đang lưu..." : "Lưu dữ liệu"}

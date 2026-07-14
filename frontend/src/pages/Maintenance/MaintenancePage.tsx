@@ -57,12 +57,12 @@ import {
   useMaintenanceAcceptanceTestPageQuery,
   useMaintenanceIncidentPageQuery,
   useMaintenanceIncidentInspectionPageQuery,
-  useMaintenanceMaterialConsumptionQuery,
   useGetTaiSanByIdQuery,
   useMaintenanceVehicleInspectionPageQuery,
   useMaintenanceAcceptanceTestVehiclePageQuery,
   useMaintenanceBienPhapMayMocPageQuery,
   useMaintenanceBienPhapPhuongTienPageQuery,
+  useDeviceActivityHistoryQuery,
 } from "./mutation";
 import {
   PlanAdapter,
@@ -81,6 +81,7 @@ import PageAction from "../../components/common/PageAction";
 import { AssetGroup } from "../../utils/const";
 import { showStatus } from "./config";
 import { useAllAssetsByDepartmentQuery } from "../AssetManager/Mutation";
+import { currentBrandConfig } from "../../config/brandConfig";
 
 // ── Summary Card ──────────────────────────────────────────────
 const SummaryCard = ({
@@ -257,6 +258,7 @@ const QuyTrinhStep = ({
   icon,
   color,
   items,
+  totalItems,
   onXemTatCa,
 }: {
   step: number;
@@ -264,6 +266,7 @@ const QuyTrinhStep = ({
   icon: React.ReactNode;
   color: string;
   items: { ma: string; trang: number }[];
+  totalItems: number;
   onXemTatCa: () => void;
 }) => (
   <Paper
@@ -417,7 +420,7 @@ const QuyTrinhStep = ({
           },
         }}
       >
-        Xem tất cả ({items.length})
+        Xem tất cả ({totalItems})
       </Button>
     </Box>
   </Paper>
@@ -652,16 +655,12 @@ export default function MaintenanceStatPage() {
   // const { data: processPaged = { items: [], totalItems: 0 } } =
   //   useMaintenanceProcessPagedQuery(processPage, 10, selectedId, dateFrom, dateTo, nhomTaiSan);
 
-  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(selectedId);
+  const { data: taiSanDetail = {} } = useGetTaiSanByIdQuery(
+    selectedId,
+    dateFrom,
+    dateTo,
+  );
 
-  // Pagination for phieu table
-  const [page, setPage] = useState(1);
-  const pageSize = 3;
-
-  const handleDonViChange = (val: string) => {
-    setDonVi(val);
-    setPage(1);
-  };
 
   const openModal = (title: string, type: string) =>
     setModal({ open: true, title, type });
@@ -697,6 +696,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
   );
 
   // giám định máy móc
@@ -716,6 +716,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.MAYMOC,
   );
 
@@ -736,6 +737,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.PHUONGTIEN,
   );
   const inspectionPaged =
@@ -759,6 +761,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.MAYMOC,
   );
 
@@ -778,6 +781,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.PHUONGTIEN,
   );
   const measurePaged =
@@ -797,6 +801,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
   );
   // nghiệm thu máy móc
   const {
@@ -815,6 +820,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.MAYMOC,
   );
   // nghiệm thu phương tiện
@@ -834,6 +840,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
     nhomTaiSan === AssetGroup.PHUONGTIEN,
   );
   const acceptancePaged =
@@ -854,6 +861,8 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    undefined,
+    selectedId || undefined,
   );
 
   // bb sự cố
@@ -873,6 +882,7 @@ export default function MaintenanceStatPage() {
     undefined,
     dateFrom || undefined,
     dateTo || undefined,
+    selectedId || undefined,
   );
 
   const planItems = planPaged.items.map(PlanAdapter).map((item: any) => ({
@@ -925,6 +935,7 @@ export default function MaintenanceStatPage() {
       icon: <BuildOutlined sx={{ fontSize: 16 }} />,
       color: "#3b82f6",
       items: planItems,
+      totalItems: planPaged.totalItems,
       type: "plan",
     },
     {
@@ -933,6 +944,7 @@ export default function MaintenanceStatPage() {
       icon: <WarningOutlined sx={{ fontSize: 16 }} />,
       color: "#ef4444",
       items: incidentItems,
+      totalItems: incidentPaged.totalItems,
       type: "incident",
     },
     {
@@ -941,6 +953,7 @@ export default function MaintenanceStatPage() {
       icon: <SearchOutlined sx={{ fontSize: 16 }} />,
       color: "#8b5cf6",
       items: incidentInspectionItems,
+      totalItems: incidentInspectionPaged.totalItems,
       type: "incidentInspection",
     },
     {
@@ -949,6 +962,7 @@ export default function MaintenanceStatPage() {
       icon: <DescriptionOutlined sx={{ fontSize: 16 }} />,
       color: "#f59e0b",
       items: repairItems,
+      totalItems: repairPaged.totalItems,
       type: "repair",
     },
     {
@@ -957,6 +971,7 @@ export default function MaintenanceStatPage() {
       icon: <FactCheckOutlined sx={{ fontSize: 16 }} />,
       color: "#22c55e",
       items: inspectionItems,
+      totalItems: inspectionPaged.totalItems,
       type: "inspection",
     },
     {
@@ -965,6 +980,7 @@ export default function MaintenanceStatPage() {
       icon: <TrendingUpOutlined sx={{ fontSize: 16 }} />,
       color: "#aa22c5",
       items: measureItems,
+      totalItems: measurePaged.totalItems,
       type: "measure",
     },
     {
@@ -973,6 +989,7 @@ export default function MaintenanceStatPage() {
       icon: <AssignmentTurnedInOutlined sx={{ fontSize: 16 }} />,
       color: "#10b981",
       items: acceptanceItems,
+      totalItems: acceptancePaged.totalItems,
       type: "acceptance",
     },
     {
@@ -981,6 +998,7 @@ export default function MaintenanceStatPage() {
       icon: <InventoryOutlined sx={{ fontSize: 16 }} />,
       color: "#f97316",
       items: materialItems,
+      totalItems: materialPaged.totalItems,
       type: "material",
     },
   ];
@@ -1059,7 +1077,7 @@ export default function MaintenanceStatPage() {
                 title="Đơn vị"
                 data={departments}
                 labelkey="tenPhongBan"
-                setValue={handleDonViChange}
+                setValue={setDonVi}
                 value={donVi}
               />
             </Grid>
@@ -1283,7 +1301,7 @@ export default function MaintenanceStatPage() {
                 >
                   <Box
                     sx={{
-                      background: "#04b46e",
+                      background: currentBrandConfig.primaryColor,
                       px: 3,
                       py: 2,
                       display: "flex",
@@ -1604,7 +1622,7 @@ export default function MaintenanceStatPage() {
                   sx={{ color: "primary.main", fontSize: 20 }}
                 />
                 <Typography fontWeight={700} color="grey.800">
-                  VẬT TƯ TIÊU HAO:{" "}
+                  QUÁ TRÌNH HOẠT ĐỘNG THIẾT BỊ:{" "}
                   <span style={{ color: "#04b46eff" }}>
                     {findById(assets, selectedId)?.tenTaiSan?.toUpperCase() ||
                       "TẤT CẢ THIẾT BỊ"}
@@ -1618,12 +1636,10 @@ export default function MaintenanceStatPage() {
                     <TableRow>
                       {[
                         "STT",
-                        "Mã vật tư",
-                        "Tên vật tư",
-                        "Đơn vị tính",
-                        "Số lượng tiêu hao",
-                        "Đơn giá",
-                        "Thành tiền",
+                        "Thời gian bắt đầu SC",
+                        "Thời gian kết thúc sửa chữa",
+                        "Loại sửa chữa",
+                        "Ghi chú",
                       ].map((h) => (
                         <TableCell
                           key={h}
@@ -1643,7 +1659,7 @@ export default function MaintenanceStatPage() {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    <MaterialConsumptionRows
+                    <DeviceActivityHistoryRows
                       idTaiSan={selectedId}
                       dateFrom={dateFrom}
                       dateTo={dateTo}
@@ -1712,7 +1728,7 @@ export default function MaintenanceStatPage() {
   );
 }
 
-const MaterialConsumptionRows = ({
+const DeviceActivityHistoryRows = ({
   idTaiSan,
   dateFrom,
   dateTo,
@@ -1723,13 +1739,12 @@ const MaterialConsumptionRows = ({
   dateTo: string;
   nhomTaiSan: string;
 }) => {
-  const { data: materials = [], isLoading } =
-    useMaintenanceMaterialConsumptionQuery(
-      idTaiSan,
-      dateFrom,
-      dateTo,
-      nhomTaiSan,
-    );
+  const { data: histories = [], isLoading } = useDeviceActivityHistoryQuery(
+    idTaiSan,
+    dateFrom,
+    dateTo,
+    nhomTaiSan,
+  );
 
   if (isLoading) {
     return (
@@ -1743,7 +1758,7 @@ const MaterialConsumptionRows = ({
     );
   }
 
-  if (materials.length === 0) {
+  if (histories.length === 0) {
     return (
       <TableRow>
         <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
@@ -1771,8 +1786,8 @@ const MaterialConsumptionRows = ({
             </Box>
             <Typography variant="body2" color="text.secondary" fontWeight={600}>
               {idTaiSan
-                ? `Thiết bị không có vật tư tiêu hao trong năm ${dateFrom} - ${dateTo}`
-                : "Vui lòng chọn thiết bị ở bộ lọc phía trên để xem vật tư tiêu hao"}
+                ? `Thiết bị không có hoạt động trong khoảng thời gian này`
+                : "Vui lòng chọn thiết bị ở bộ lọc phía trên để xem lịch sử hoạt động"}
             </Typography>
           </Box>
         </TableCell>
@@ -1782,28 +1797,18 @@ const MaterialConsumptionRows = ({
 
   return (
     <>
-      {materials.map((m: any, idx: number) => (
+      {histories.map((h: any, idx: number) => (
         <TableRow
-          key={m.ma}
+          key={idx}
           hover
           sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
         >
           <TableCell>{idx + 1}</TableCell>
-          <TableCell
-            sx={{ fontFamily: "monospace", fontWeight: 700, color: "grey.800" }}
-          >
-            {m.ma}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>{m.ten}</TableCell>
-          <TableCell>{m.donViTinh}</TableCell>
-          <TableCell sx={{ fontWeight: 700, color: "primary.main" }}>
-            {m.soLuong}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>
-            {m.giaTri != null ? m.giaTri.toLocaleString() : "—"}
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600 }}>
-            {m.giaTri != null ? (m.giaTri * m.soLuong).toLocaleString() : "—"}
+          <TableCell sx={{ fontWeight: 600 }}>{h.ngayBatDau || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>{h.ngayKetThuc || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 600 }}>{h.loaiSuaChua || "—"}</TableCell>
+          <TableCell sx={{ fontWeight: 400, color: "text.secondary" }}>
+            {h.ghiChu || "—"}
           </TableCell>
         </TableRow>
       ))}

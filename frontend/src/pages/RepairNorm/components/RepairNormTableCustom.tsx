@@ -26,6 +26,7 @@ import {
   Edit as EditIcon,
 } from "@mui/icons-material";
 import { showConfirmAlert } from "../../../components/Alert";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 export interface ColumnConfig {
   key: string;
@@ -346,7 +347,7 @@ export default function RepairNormTableCustom({
         gap={2}
         sx={{ background: "#f5f5f5" }}
       >
-        <TableView sx={{ color: "#1FA463" }} />
+        <TableView sx={{ color: currentBrandConfig.primaryColor }} />
         <Typography fontWeight="bold">
           {title} ({total})
         </Typography>
@@ -396,7 +397,7 @@ export default function RepairNormTableCustom({
           }}
         >
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#1FA463" }}>
+            <TableRow sx={{ backgroundColor: currentBrandConfig.primaryColor }}>
               <TableCell
                 align="center"
                 sx={{

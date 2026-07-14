@@ -156,7 +156,7 @@ public class BienPhapPhuongTienService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
-            String dateFrom, String dateTo) {
+            String dateFrom, String dateTo, String idTaiSan) {
 
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -189,6 +189,12 @@ public class BienPhapPhuongTienService {
         if (dateTo != null && !dateTo.isEmpty()) {
             String end = dateTo + " 23:59:59";
             source = source.stream().filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(end) <= 0).collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            source = source.stream()
+                    .filter(i -> idTaiSan.equalsIgnoreCase(i.getIdTaiSan()))
+                    .collect(Collectors.toList());
         }
         if (search != null && !search.isBlank()) {
             String q = search.toLowerCase();

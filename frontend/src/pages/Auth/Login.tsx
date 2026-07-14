@@ -218,11 +218,7 @@ export default function Login() {
             sx={{
               p: 1.8,
               borderRadius: "12px",
-              background: "rgb(0, 158, 96, 1)",
               fontWeight: "bold",
-              "&:hover": {
-                background: "rgb(2, 110, 66, 1)",
-              },
             }}
             onClick={() => formik.submitForm()}
           >

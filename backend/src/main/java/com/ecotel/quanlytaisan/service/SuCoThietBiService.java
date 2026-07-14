@@ -47,7 +47,7 @@ public class SuCoThietBiService {
             String idDonViBaoCao, Integer trangThai, Integer mucDo,
             String userid, Boolean isSign,
             String dateFrom, String dateTo,
-            String nhomTaiSan
+            String nhomTaiSan, String idTaiSan
     ) throws SQLException {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -96,6 +96,12 @@ public class SuCoThietBiService {
             sourceList = sourceList.stream()
                     .filter(i -> nhomTaiSan.equalsIgnoreCase(i.getNhomTaiSan()))
                     .collect(Collectors.toList());
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> listIdSuCo = chiTietDao.findIdSuCoByIdTaiSan(idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> listIdSuCo.contains(i.getId()))
+                    .collect(Collectors.toList());
+        }
 
         if (dateFrom != null && !dateFrom.isEmpty()) {
             try {

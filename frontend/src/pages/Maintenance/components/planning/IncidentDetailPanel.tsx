@@ -202,10 +202,10 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
             },
           },
           "& .MuiTab-root.Mui-selected": {
-            color: "#1FA463 !important",
+            color: currentBrandConfig.primaryColor + " !important",
           },
           "& .MuiTabs-indicator": {
-            backgroundColor: "#1FA463 !important",
+            backgroundColor: currentBrandConfig.primaryColor + " !important",
           },
         }}
       >
@@ -223,10 +223,6 @@ const IncidentDetailPanel = ({ incident, plan, onClose }: Props) => {
                 disabled={selectedDeviceIds.length === 0}
                 onClick={() => setIncidentInspectionParentId(incident.id)}
                 size="small"
-                sx={{
-                  bgcolor: currentBrandConfig.primaryColor,
-                  "&:hover": { bgcolor: "#17824e" },
-                }}
               >
                 Tạo BB Kiểm tra sự cố ({selectedDeviceIds.length})
               </Button>

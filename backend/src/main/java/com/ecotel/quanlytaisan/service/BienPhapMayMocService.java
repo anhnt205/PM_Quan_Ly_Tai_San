@@ -18,6 +18,7 @@ public class BienPhapMayMocService {
     @Autowired private BienPhapMayMocDao bienPhapDao;
     @Autowired private KyTaiLieuDao      kyTaiLieuDao;
     @Autowired private S3Service         s3Service;
+    @Autowired private com.ecotel.quanlytaisan.dao.GiamDinhMayMocChiTietDao giamDinhMayMocChiTietDao;
 
     // ─── Queries ─────────────────────────────────────────────────────────────
 
@@ -178,7 +179,7 @@ public class BienPhapMayMocService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
-            String dateFrom, String dateTo) {
+            String dateFrom, String dateTo, String idTaiSan) {
 
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -217,6 +218,20 @@ public class BienPhapMayMocService {
             source = source.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(end) <= 0)
                     .collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<BienPhapMayMocDTO> filtered = new ArrayList<>();
+            for (BienPhapMayMocDTO item : source) {
+                if (item.getIdGiamDinhMayMoc() != null && !item.getIdGiamDinhMayMoc().isEmpty()) {
+                    List<GiamDinhMayMocChiTiet> details = giamDinhMayMocChiTietDao.findByIdGiamDinh(item.getIdGiamDinhMayMoc());
+                    boolean match = details.stream().anyMatch(d -> idTaiSan.equalsIgnoreCase(d.getIdTaiSan()));
+                    if (match) {
+                        filtered.add(item);
+                    }
+                }
+            }
+            source = filtered;
         }
 
         if (search != null && !search.isBlank()) {

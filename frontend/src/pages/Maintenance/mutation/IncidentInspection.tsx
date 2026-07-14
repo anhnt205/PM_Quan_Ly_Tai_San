@@ -19,6 +19,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -33,6 +34,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/kiemtra-suco/page", {
@@ -46,6 +48,7 @@ export const useMaintenanceIncidentInspectionPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
@@ -146,7 +149,9 @@ export const useMaintenanceIncidentInspectionMutation = () => {
     onSuccess: (res: any) => {
       if (res.success || res > 0) {
         queryClient.invalidateQueries({ queryKey: ["incidentInspectionPage"] });
-        queryClient.invalidateQueries({ queryKey: ["incidentDetailByIncident"] });
+        queryClient.invalidateQueries({
+          queryKey: ["incidentDetailByIncident"],
+        });
         queryClient.invalidateQueries({
           queryKey: ["incidentInspectionBySuCo"],
         });

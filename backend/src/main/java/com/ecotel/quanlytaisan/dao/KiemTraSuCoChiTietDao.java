@@ -34,6 +34,12 @@ public class KiemTraSuCoChiTietDao {
         return list;
     }
 
+    public List<String> findIdKiemTraSuCoByIdTaiSan(String idTaiSan) {
+        return jdbcTemplate.queryForList(
+                "SELECT DISTINCT IdKiemTraSuCo FROM kiemtra_suco_chitiet WHERE IdTaiSan = ?",
+                String.class, idTaiSan);
+    }
+
     public void insertBatch(List<KiemTraSuCoChiTiet> list) {
         String sql = """
             INSERT INTO kiemtra_suco_chitiet (

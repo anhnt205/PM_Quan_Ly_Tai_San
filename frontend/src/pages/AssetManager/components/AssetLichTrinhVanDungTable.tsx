@@ -19,6 +19,7 @@ import {
   sumCellSx,
   cellBorderCss,
 } from "./AssetLichTrinhVanDungModal";
+import { currentBrandConfig } from "../../../config/brandConfig";
 
 const ROWS_PER_ASSET = 4;
 
@@ -48,7 +49,9 @@ interface ShiftCellProps {
 }
 
 const ShiftCell = React.memo(({ value, onCommit }: ShiftCellProps) => {
-  const [localVal, setLocalVal] = React.useState<string>(value > 0 ? String(value) : "");
+  const [localVal, setLocalVal] = React.useState<string>(
+    value > 0 ? String(value) : "",
+  );
 
   // Đồng bộ khi prop value thay đổi từ bên ngoài (load data mới)
   React.useEffect(() => {
@@ -126,8 +129,17 @@ interface AssetRowProps {
   asset: AssetScheduleData;
   assetIdx: number;
   days: number[];
-  setShiftValue: (assetIdx: number, day: number, ca: number, val: number) => void;
-  setAssetField: (assetIdx: number, field: keyof AssetScheduleData, val: any) => void;
+  setShiftValue: (
+    assetIdx: number,
+    day: number,
+    ca: number,
+    val: number,
+  ) => void;
+  setAssetField: (
+    assetIdx: number,
+    field: keyof AssetScheduleData,
+    val: any,
+  ) => void;
 }
 
 const AssetRow = React.memo(
@@ -183,7 +195,8 @@ const AssetRow = React.memo(
     }, [detailMap]);
 
     const makeCommit = useCallback(
-      (day: number, ca: number) => (val: number) => setShiftValue(assetIdx, day, ca, val),
+      (day: number, ca: number) => (val: number) =>
+        setShiftValue(assetIdx, day, ca, val),
       [assetIdx, setShiftValue],
     );
 
@@ -372,8 +385,17 @@ interface LichTrinhTableProps {
   assetsData: AssetScheduleData[];
   days: number[];
   daysInMonth: number;
-  setShiftValue: (assetIdx: number, day: number, ca: number, val: number) => void;
-  setAssetField: (assetIdx: number, field: keyof AssetScheduleData, val: any) => void;
+  setShiftValue: (
+    assetIdx: number,
+    day: number,
+    ca: number,
+    val: number,
+  ) => void;
+  setAssetField: (
+    assetIdx: number,
+    field: keyof AssetScheduleData,
+    val: any,
+  ) => void;
 }
 
 export default function LichTrinhTable({
@@ -459,7 +481,7 @@ export default function LichTrinhTable({
                   sx={{
                     ...headerCellSx,
                     width: 90,
-                    backgroundColor: "#036940",
+                    backgroundColor: currentBrandConfig.primaryColor,
                     color: "#ffffff",
                   }}
                 >

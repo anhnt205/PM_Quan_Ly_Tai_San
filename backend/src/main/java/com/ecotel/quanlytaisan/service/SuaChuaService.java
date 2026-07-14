@@ -36,7 +36,7 @@ public class SuaChuaService {
             String idCongTy, int page, int size,
             String sortBy, String sortDir, String search,
             Integer trangThai, String userid, Boolean isSign,
-            String dateFrom, String dateTo
+            String dateFrom, String dateTo, String idTaiSan
     ) {
         if (page < 0) page = 0;
         if (size <= 0) size = 20;
@@ -83,6 +83,13 @@ public class SuaChuaService {
             String dateToEnd = dateTo + " 23:59:59";
             sourceList = sourceList.stream()
                     .filter(i -> i.getNgayTao() != null && i.getNgayTao().compareTo(dateToEnd) <= 0)
+                    .collect(Collectors.toList());
+        }
+
+        if (idTaiSan != null && !idTaiSan.trim().isEmpty()) {
+            List<String> listIdSuaChua = suaChuaChiTietDao.findIdSuaChuaByIdTaiSan(idTaiSan);
+            sourceList = sourceList.stream()
+                    .filter(i -> listIdSuaChua.contains(i.getId()))
                     .collect(Collectors.toList());
         }
         

@@ -207,6 +207,7 @@ export default function MaintenanceRecordPage() {
     dateFrom,
     dateTo,
     undefined,
+    undefined,
     activeTab === 1,
   );
 
@@ -227,6 +228,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 2,
   );
 
@@ -243,6 +245,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 3,
   );
 
@@ -259,6 +262,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 4 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -279,6 +283,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 4 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
   const inspectionPaged =
@@ -300,6 +305,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 5 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -319,6 +325,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 5 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
 
@@ -344,6 +351,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 6 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -364,6 +372,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 6 && bienPhapType !== AssetGroup.MAYMOC,
   );
 
@@ -388,6 +397,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 7,
   );
 

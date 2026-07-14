@@ -166,6 +166,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 3,
   );
 
@@ -182,6 +183,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 4 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -202,6 +204,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 4 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
   const inspectionPaged =
@@ -223,6 +226,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 5 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -242,6 +246,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 5 && bienPhapType === AssetGroup.PHUONGTIEN,
   );
 
@@ -267,6 +272,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 6 && bienPhapType === AssetGroup.MAYMOC,
   );
 
@@ -287,6 +293,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 6 && bienPhapType !== AssetGroup.MAYMOC,
   );
 
@@ -311,6 +318,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 7,
   );
 
@@ -327,6 +335,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     undefined,
     activeTab === 1,
   );
@@ -348,6 +357,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
+    undefined,
     activeTab === 2,
   );
 

@@ -245,11 +245,11 @@ public class TaiSanService {
     }
 
     public TaiSanDTO getById(String id) {
-        return getById(id, null);
+        return getById(id, null, null);
     }
 
-    public TaiSanDTO getById(String id, Integer nam) {
-        TaiSanDTO dto = taiSanDao.findById(id, nam);
+    public TaiSanDTO getById(String id, String dateFrom, String dateTo) {
+        TaiSanDTO dto = taiSanDao.findById(id, dateFrom, dateTo);
         if (dto != null) {
             java.util.List<TaiSanDTO> children = taiSanDao.getTaiSanDTOByTaiSanChaIds(java.util.Collections.singletonList(id));
             dto.setTaiSanConList(children);

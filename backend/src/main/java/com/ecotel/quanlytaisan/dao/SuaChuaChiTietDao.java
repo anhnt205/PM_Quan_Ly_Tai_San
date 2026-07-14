@@ -62,6 +62,11 @@ public class SuaChuaChiTietDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuaChuaChiTiet.class), idSuaChua);
     }
 
+    public List<String> findIdSuaChuaByIdTaiSan(String idTaiSan) {
+        String sql = "SELECT DISTINCT IdSuaChua FROM suachua_chitiet WHERE IdTaiSan = ?";
+        return jdbcTemplate.queryForList(sql, String.class, idTaiSan);
+    }
+
     public String generateNextId() {
         return "SCCT_" + UUID.randomUUID().toString();
     }

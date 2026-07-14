@@ -39,6 +39,7 @@ import {
 import { showStatus } from "../../config";
 import { AssetGroup } from "../../../../utils/const";
 import { RepairRequestRow } from "./tree/RepairRequestRow";
+import { currentBrandConfig } from "../../../../config/brandConfig";
 
 const months = Array.from({ length: 12 }, (_, i) => i + 1);
 
@@ -170,7 +171,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           mx: -2,
           mt: -2,
           mb: 2,
-          bgcolor: "#1FA463",
+          bgcolor: currentBrandConfig.primaryColor,
           color: "#fff",
           borderTopLeftRadius: 8,
           borderTopRightRadius: 8,
@@ -193,8 +194,8 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
           mb: 2,
           p: 1.5,
           borderRadius: 2,
-          bgcolor: "#f1f8e9",
-          border: "1px solid #d0e7b5",
+          bgcolor: currentBrandConfig.primaryColor + "1a",
+          border: "1px solid " + currentBrandConfig.primaryColor,
           flexWrap: "wrap",
           alignItems: "center",
         }}
@@ -231,15 +232,15 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
             fontSize: "0.95rem",
             color: "text.secondary",
             "&:hover": {
-              color: "#1FA463",
+              color: currentBrandConfig.primaryColor,
               opacity: 0.85,
             },
           },
           "& .MuiTab-root.Mui-selected": {
-            color: "#1FA463 !important",
+            color: currentBrandConfig.primaryColor + " !important",
           },
           "& .MuiTabs-indicator": {
-            backgroundColor: "#1FA463 !important",
+            backgroundColor: currentBrandConfig.primaryColor + " !important",
           },
         }}
       >
@@ -295,7 +296,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                           onMouseDown={(e) => e.stopPropagation()}
                           sx={{
                             bgcolor: "#e8f5e9",
-                            color: "#1FA463",
+                            color: currentBrandConfig.primaryColor,
                             fontWeight: 600,
                             border: "1px solid #c8e6c9",
                             "& .MuiChip-deleteIcon": {
@@ -308,13 +309,13 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                   )}
                   sx={{
                     "& .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#1FA463",
+                      borderColor: currentBrandConfig.primaryColor,
                     },
                     "&:hover .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#17824e",
+                      borderColor: currentBrandConfig.primaryColor,
                     },
                     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                      borderColor: "#17824e",
+                      borderColor: currentBrandConfig.primaryColor,
                     },
                   }}
                 >
@@ -338,9 +339,9 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                         checked={selectedMonths.includes(m)}
                         size="small"
                         sx={{
-                          color: "#1FA463",
+                          color: currentBrandConfig.primaryColor,
                           "&.Mui-checked": {
-                            color: "#1FA463",
+                            color: currentBrandConfig.primaryColor,
                           },
                         }}
                       />
@@ -357,10 +358,6 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 }
                 onClick={() => setRepairDialogOpen(true)}
                 size="small"
-                sx={{
-                  bgcolor: "#1FA463",
-                  "&:hover": { bgcolor: "#17824e" },
-                }}
               >
                 Tạo Giấy đề nghị SC ({selectedDeviceIds.length})
               </Button>
@@ -373,7 +370,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: currentBrandConfig.primaryColor + " !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },
@@ -573,7 +570,7 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
                 <TableRow
                   sx={{
                     "& th": {
-                      bgcolor: "#1FA463 !important",
+                      bgcolor: currentBrandConfig.primaryColor + " !important",
                       color: "#fff !important",
                       fontWeight: 700,
                     },

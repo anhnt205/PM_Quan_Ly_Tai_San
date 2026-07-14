@@ -19,6 +19,7 @@ export const useMaintenanceIncidentPageQuery = (
   dateFrom?: string,
   dateTo?: string,
   nhomTaiSan?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -34,6 +35,7 @@ export const useMaintenanceIncidentPageQuery = (
       dateFrom,
       dateTo,
       nhomTaiSan,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/suco-thietbi/paged", {
@@ -48,6 +50,7 @@ export const useMaintenanceIncidentPageQuery = (
           dateFrom: dateFrom,
           dateTo: dateTo,
           nhomTaiSan: nhomTaiSan,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;

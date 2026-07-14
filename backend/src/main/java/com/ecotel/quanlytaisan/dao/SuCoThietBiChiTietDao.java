@@ -261,6 +261,12 @@ public class SuCoThietBiChiTietDao {
         return jdbcTemplate.query(sql, new BeanPropertyRowMapper<>(SuCoThietBiChiTiet.class), idSuCo);
     }
 
+    public List<String> findIdSuCoByIdTaiSan(String idTaiSan) {
+        return jdbcTemplate.queryForList(
+                "SELECT DISTINCT IdSuCo FROM suco_thietbi_chitiet WHERE IdTaiSan = ?",
+                String.class, idTaiSan);
+    }
+
     // ==================== ID ====================
 
     public String generateNextId() {

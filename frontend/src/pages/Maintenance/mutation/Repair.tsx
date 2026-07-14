@@ -19,6 +19,7 @@ export const useMaintenanceRepairPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -32,6 +33,7 @@ export const useMaintenanceRepairPageQuery = (
       userid,
       isSign,
       dateFrom,
+      idTaiSan,
       dateTo,
     ],
     queryFn: async () => {
@@ -45,6 +47,7 @@ export const useMaintenanceRepairPageQuery = (
           userid: userid,
           isSign: isSign,
           dateFrom: dateFrom,
+          idTaiSan: idTaiSan,
           dateTo: dateTo,
         },
       });

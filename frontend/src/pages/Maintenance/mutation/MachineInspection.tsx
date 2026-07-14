@@ -20,6 +20,7 @@ export const useMaintenanceInspectionPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -33,6 +34,7 @@ export const useMaintenanceInspectionPageQuery = (
       userid,
       isSign,
       dateFrom,
+      idTaiSan,
       dateTo,
     ],
     queryFn: async () => {
@@ -47,6 +49,7 @@ export const useMaintenanceInspectionPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;

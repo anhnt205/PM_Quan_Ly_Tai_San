@@ -18,6 +18,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -32,6 +33,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/nghiemthu-maymoc/paged", {
@@ -45,6 +47,7 @@ export const useMaintenanceAcceptanceTestPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;

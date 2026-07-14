@@ -18,6 +18,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
   isSign?: boolean,
   dateFrom?: string,
   dateTo?: string,
+  idTaiSan?: string,
   enabled = true,
 ) => {
   return useQuery({
@@ -31,6 +32,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
       isSign,
       dateFrom,
       dateTo,
+      idTaiSan,
     ],
     queryFn: async () => {
       const res = await api.get("/danhgia-vattu/paged", {
@@ -44,6 +46,7 @@ export const useMaintenanceMaterialAssessmentPageQuery = (
           isSign: isSign,
           dateFrom: dateFrom,
           dateTo: dateTo,
+          idTaiSan: idTaiSan,
         },
       });
       return res.data.data || res.data;
