@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class QuyTrinhSuaChuaDTO {
-    private String idSuaChuaChiTiet;
+    private String id;
     
     // Tai San info
     private String thietBi;

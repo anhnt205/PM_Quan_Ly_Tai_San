@@ -18,7 +18,7 @@ import { useChuKySuaChuaQuery, useMaintenanceHistoryQuery } from "./mutation";
 import { useDebounce } from "../../hooks/useDebounce";
 import { maintenanceLevelColors } from "../../mockdata/mockPlans";
 import { GridColDef } from "@mui/x-data-grid";
-
+import { currentBrandConfig } from "../../config/brandConfig";
 
 const historyStatusConfig: Record<
   string,
@@ -27,8 +27,6 @@ const historyStatusConfig: Record<
   "1": { label: "Đã BT", color: "success" },
   "0": { label: "Đang bảo trì", color: "warning" },
 };
-
-
 
 // ── Component chính ──────────────────────────────────────
 export default function MaintenanceCycles() {
@@ -48,12 +46,10 @@ export default function MaintenanceCycles() {
     searchDebounce,
   );
 
-  const cycles = (pagedData?.data?.items || []).map(
-    (item: any, idx: number) => ({
-      ...item,
-      stt: paginationModel.page * paginationModel.pageSize + idx + 1,
-    }),
-  );
+  const cycles = (pagedData?.items || []).map((item: any, idx: number) => ({
+    ...item,
+    stt: paginationModel.page * paginationModel.pageSize + idx + 1,
+  }));
 
   const cycleColumns: GridColDef[] = [
     { field: "stt", headerName: "STT", width: 60 },
@@ -85,18 +81,23 @@ export default function MaintenanceCycles() {
   ];
 
   // ── Tab 1: Lịch sử bảo dưỡng (API) ────────────────────────
-  const { data: historyPagedData, isLoading: isHistoryLoading } =
-    useMaintenanceHistoryQuery(
-      paginationModel.page,
-      paginationModel.pageSize,
-      searchDebounce,
-      statusFilter,
-    );
+  const {
+    data: historyPagedData = { items: [] },
+    isLoading: isHistoryLoading,
+  } = useMaintenanceHistoryQuery(
+    paginationModel.page,
+    paginationModel.pageSize,
+    searchDebounce,
+    statusFilter,
+  );
 
   const historyRows = (historyPagedData?.items || []).map(
     (item: any, idx: number) => ({
       ...item,
-      id: item.thietBiId, // Dùng thietBiId làm key
+      id:
+        item.id ||
+        item.idTaiSan ||
+        paginationModel.page * paginationModel.pageSize + idx + 1,
       stt: paginationModel.page * paginationModel.pageSize + idx + 1,
     }),
   );
@@ -249,14 +250,16 @@ export default function MaintenanceCycles() {
                       ? "transparent"
                       : "rgba(148, 163, 184, 0.25)",
                     background: isActive
-                      ? "linear-gradient(135deg, #04b46e 0%, #028a54 100%)"
+                      ? `linear-gradient(135deg, ${currentBrandConfig.primaryColor} 0%, ${currentBrandConfig.primaryColor} 100%)`
                       : "#ffffff",
                     color: isActive ? "#ffffff" : "#334155",
                     boxShadow: isActive
                       ? "0 4px 12px rgba(4, 180, 110, 0.15)"
                       : "0 2px 4px rgba(0, 0, 0, 0.05)",
                     "&:hover": {
-                      borderColor: isActive ? "transparent" : "#04b46e",
+                      borderColor: isActive
+                        ? "transparent"
+                        : currentBrandConfig.primaryColor,
                       bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
                     },
                   }}

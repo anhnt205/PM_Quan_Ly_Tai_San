@@ -2,14 +2,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../../../config/api.config";
 import { showErrorAlert, showSuccessAlert } from "../../../components/Alert";
 
-export const useChuKySuaChuaQuery = (page: number, pageSize: number, searchValue: string) => {
+export const useChuKySuaChuaQuery = (
+  page: number,
+  pageSize: number,
+  searchValue: string,
+) => {
   return useQuery({
     queryKey: ["chuKySuaChuaPaged", page, pageSize, searchValue],
     queryFn: async () => {
       const res = await api.get("/chukysuachua", {
         params: { page, pageSize, searchValue },
       });
-      return res.data;
+      return res.data.data || res.data;
     },
   });
 };
@@ -49,7 +53,7 @@ export const useChuKySuaChuaSyncMutation = () => {
     },
     onError: (error: any) => {
       showErrorAlert(
-        error.response?.data?.message || error.message || "Đồng bộ thất bại"
+        error.response?.data?.message || error.message || "Đồng bộ thất bại",
       );
     },
   });
