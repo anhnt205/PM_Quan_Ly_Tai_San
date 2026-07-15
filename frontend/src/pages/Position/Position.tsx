@@ -255,7 +255,7 @@ export default function Position() {
     },
     {
       field: "dieuDongCCDCVatTu",
-      headerName: "Điều động CCDC - vật tư",
+      headerName: "Điều động CCDC",
       width: 150,
       align: "center",
       headerAlign: "center",
@@ -273,7 +273,7 @@ export default function Position() {
     },
     {
       field: "banGiaoCCDCVatTu",
-      headerName: "Bàn giao CCDC - vật tư",
+      headerName: "Bàn giao CCDC",
       width: 150,
       align: "center",
       headerAlign: "center",

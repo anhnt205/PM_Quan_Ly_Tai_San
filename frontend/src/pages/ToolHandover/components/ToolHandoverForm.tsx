@@ -552,7 +552,7 @@ export default function ToolHandoverForm({
                   {!formik.values.isNew && (
                     <Grid size={12}>
                       <FieldInput
-                        title="Số phiếu bàn giao ccdc - vật tư"
+                        title="Số phiếu bàn giao ccdc"
                         formik={formik}
                         field="id"
                         disabled={true}
@@ -561,7 +561,7 @@ export default function ToolHandoverForm({
                   )}
                   <Grid size={12}>
                     <FieldInput
-                      title="Tên biên bản bàn giao ccdc - vật tư"
+                      title="Tên biên bản bàn giao ccdc"
                       formik={formik}
                       field="banGiaoCCDCVatTu"
                       disabled={readOnly}
@@ -878,7 +878,7 @@ export default function ToolHandoverForm({
                     variant="body2"
                     sx={{ color: "#666", fontSize: "13px" }}
                   >
-                    Chi tiết ccdc - vật tư bàn giao
+                    Chi tiết ccdc bàn giao
                   </Typography>
                 </Box>
                 <Typography
@@ -911,7 +911,7 @@ export default function ToolHandoverForm({
                             borderBottom: "1px solid #eee",
                           }}
                         >
-                          Tên ccdc - vật tư
+                          Tên ccdc
                         </CustomTableCell>
                         <CustomTableCell
                           width="15%"
@@ -1150,7 +1150,7 @@ export default function ToolHandoverForm({
                         }
                         sx={{ textTransform: "none", color: "#1976d2" }}
                       >
-                        Thêm ccdc - vật tư
+                        Thêm ccdc
                       </Button>
                     </Box>
                   )}

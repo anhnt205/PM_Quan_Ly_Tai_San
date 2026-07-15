@@ -162,11 +162,11 @@ export const usePositionMutation = (
           "Quản lý Tài sản": item.quanLyTaiSan ? "TRUE" : "FALSE",
           "Quản lý CCDC - Vật tư": item.quanLyCCDCVatTu ? "TRUE" : "FALSE",
           "Có quyền Điều động tài sản": item.dieuDongTaiSan ? "TRUE" : "FALSE",
-          "Có quyền Điều động CCDC - Vật tư": item.dieuDongCCDCVatTu
+          "Có quyền Điều động CCDC": item.dieuDongCCDCVatTu
             ? "TRUE"
             : "FALSE",
           "Có quyền Bàn giao tài sản": item.banGiaoTaiSan ? "TRUE" : "FALSE",
-          "Có quyền Bàn giao CCDC - VT": item.banGiaoCCDCVatTu
+          "Có quyền Bàn giao CCDC": item.banGiaoCCDCVatTu
             ? "TRUE"
             : "FALSE",
           "Quản lý Báo cáo": item.baoCao ? "TRUE" : "FALSE",

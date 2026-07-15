@@ -563,7 +563,7 @@ export default function ToolHandover() {
           </IconButton> */}
           <IconButton
             size="small"
-            title="Tạo biên bản bàn giao ccdc - vật tư"
+            title="Tạo biên bản bàn giao ccdc"
             onClick={(e) => {
               e.stopPropagation();
               window.scrollTo({ top: 140, behavior: "smooth" });
@@ -683,7 +683,7 @@ export default function ToolHandover() {
       ) : (
         <>
           <PageAction
-            title={"Biên bản bàn giao ccdc - vật tư"}
+            title={"Biên bản bàn giao ccdc"}
             onNewClick={() => {
               if (isMinimized) {
                 setShowForm(true);
@@ -916,7 +916,7 @@ export default function ToolHandover() {
                   loading={isLoading}
                   title={
                     activeTab === 0
-                      ? "Biên bản bàn giao ccdc - vật tư"
+                      ? "Biên bản bàn giao ccdc"
                       : "Biên bản điều động"
                   }
                   columns={activeTab === 0 ? columns : columnsTransfer}

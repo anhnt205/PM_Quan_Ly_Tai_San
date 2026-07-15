@@ -312,7 +312,7 @@ export default function ToolTransferApprovalTab({
                 <Construction sx={{ fontSize: 20 }} />
               </Badge>
             }
-            label="Cấp phát CCDC - vật tư"
+            label="Cấp phát CCDC"
           />
           <Tab
             icon={
@@ -320,7 +320,7 @@ export default function ToolTransferApprovalTab({
                 <Construction sx={{ fontSize: 20 }} />
               </Badge>
             }
-            label="Điều chuyển CCDC - vật tư"
+            label="Điều chuyển CCDC"
           />
           <Tab
             icon={
@@ -328,7 +328,7 @@ export default function ToolTransferApprovalTab({
                 <Construction sx={{ fontSize: 20 }} />
               </Badge>
             }
-            label="Thu hồi CCDC - vật tư"
+            label="Thu hồi CCDC"
           />
         </Tabs>
       </Box>

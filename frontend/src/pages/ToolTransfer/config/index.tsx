@@ -16,11 +16,11 @@ import jsPDF from "jspdf";
 export const getTypeInfo = (type: string | number | null) => {
   switch (Number(type)) {
     case 1:
-      return { title: "Cấp phát CCDC - Vật tư", label: "cấp phát CCDC - Vật tư" };
+      return { title: "Cấp phát CCDC", label: "cấp phát CCDC" };
     case 2:
-      return { title: "Điều chuyển CCDC - Vật tư", label: "điều chuyển CCDC - Vật tư" };
+      return { title: "Điều chuyển CCDC", label: "điều chuyển CCDC" };
     case 3:
-      return { title: "Thu hồi CCDC - Vật tư", label: "thu hồi CCDC - Vật tư" };
+      return { title: "Thu hồi CCDC", label: "thu hồi CCDC" };
     default:
       return { title: "Quản lý CCDC - Vật tư", label: "CCDC - Vật tư" };
   }

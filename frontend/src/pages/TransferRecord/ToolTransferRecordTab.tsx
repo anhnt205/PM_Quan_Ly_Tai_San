@@ -250,9 +250,9 @@ export default function ToolTransferRecordTab() {
             },
           }}
         >
-          <Tab label="Cấp phát CCDC - vật tư" />
-          <Tab label="Điều chuyển CCDC - vật tư" />
-          <Tab label="Thu hồi CCDC - vật tư" />
+          <Tab label="Cấp phát CCDC" />
+          <Tab label="Điều chuyển CCDC" />
+          <Tab label="Thu hồi CCDC" />
         </Tabs>
       </Box>
 

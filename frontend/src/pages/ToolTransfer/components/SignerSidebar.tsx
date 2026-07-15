@@ -118,7 +118,7 @@ const getHandoverNodes = (
     subItems.forEach((sub) => {
       nodes.push({
         header: `Số phiếu bàn giao: ${sub.idBanGiaoCCDCVatTu}`,
-        subInfo: `Mã chi tiết CCDC - Vật tư:\n${sub.idChiTietCCDCVatTu}\nSố lượng bàn giao: ${sub.soLuong}`,
+        subInfo: `Mã chi tiết CCDC:\n${sub.idChiTietCCDCVatTu}\nSố lượng bàn giao: ${sub.soLuong}`,
         depth: 2,
         status: "info",
       });

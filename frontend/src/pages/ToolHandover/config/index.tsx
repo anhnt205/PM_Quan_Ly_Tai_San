@@ -679,7 +679,7 @@ export const generateBienBanPdf = async (
     head: [
       [
         "STT",
-        "Tên ccdc - vật tư",
+        "Tên ccdc",
         "Mã hiệu, quy cách",
         "Nước sản xuất",
         "Đơn vị tính",
