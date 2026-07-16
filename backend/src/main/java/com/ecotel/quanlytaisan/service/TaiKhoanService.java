@@ -92,7 +92,7 @@ public class TaiKhoanService {
         return result;
     }
 
-    private void syncPermissions(String userId, ChucVu cv) {
+    public void syncPermissions(String userId, ChucVu cv) {
         Map<String, Boolean> pMap = new HashMap<>();
         pMap.put("NHANVIEN", cv.getQuanLyNhanVien() != null && cv.getQuanLyNhanVien());
         pMap.put("PHONGBAN", cv.getQuanLyPhongBan() != null && cv.getQuanLyPhongBan());

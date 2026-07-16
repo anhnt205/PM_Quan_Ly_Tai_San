@@ -314,11 +314,49 @@ public class ChucVuDao {
     }
 
     public int delete(String id) {
+        // Tìm các TaiKhoan thuộc ChucVu này
+        String findTkSql = "SELECT Id FROM TaiKhoan WHERE TenDangNhap IN (SELECT Id FROM NhanVien WHERE ChucVu = ?)";
+        List<String> tkIds = jdbcTemplate.query(findTkSql, (rs, rowNum) -> rs.getString("Id"), id);
+        
+        // Xóa UserPermission của các TaiKhoan này
+        if (!tkIds.isEmpty()) {
+            String sqlPerm = "DELETE FROM UserPermission WHERE UserId=?";
+            for (String tkId : tkIds) {
+                jdbcTemplate.update(sqlPerm, tkId);
+            }
+        }
+
         String sql = "DELETE FROM ChucVu WHERE Id=?";
         return jdbcTemplate.update(sql, id);
     }
 
     public int batchDelete(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return 0;
+        }
+
+        // Tìm tất cả TaiKhoan thuộc các ChucVu này
+        String findTkSql = "SELECT Id FROM TaiKhoan WHERE TenDangNhap IN (SELECT Id FROM NhanVien WHERE ChucVu = ?)";
+        List<String> allTkIds = new java.util.ArrayList<>();
+        for (String id : ids) {
+            allTkIds.addAll(jdbcTemplate.query(findTkSql, (rs, rowNum) -> rs.getString("Id"), id));
+        }
+
+        // Xóa UserPermission
+        if (!allTkIds.isEmpty()) {
+            String sqlPerm = "DELETE FROM UserPermission WHERE UserId=?";
+            jdbcTemplate.batchUpdate(sqlPerm, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                    ps.setString(1, allTkIds.get(i));
+                }
+                @Override
+                public int getBatchSize() {
+                    return allTkIds.size();
+                }
+            });
+        }
+
         String sql = "DELETE FROM ChucVu WHERE Id=?";
         int[] result = jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override

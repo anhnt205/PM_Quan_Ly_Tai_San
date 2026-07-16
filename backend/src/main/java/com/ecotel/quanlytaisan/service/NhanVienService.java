@@ -32,6 +32,15 @@ public class NhanVienService {
     @Autowired
     private S3Service s3Service;
 
+    @Autowired
+    private com.ecotel.quanlytaisan.dao.TaiKhoanDao taiKhoanDao;
+
+    @Autowired
+    private com.ecotel.quanlytaisan.dao.ChucVuDao chucVuDao;
+
+    @Autowired
+    private TaiKhoanService taiKhoanService;
+
     public List<NhanVienDTO> getAll(String idCongTy) {
         return nhanVienDao.findAll(idCongTy);
     }
@@ -84,6 +93,14 @@ public class NhanVienService {
         if (result > 0) {
             if (oldChuKyNhay != null) s3Service.deleteFile(oldChuKyNhay);
             if (oldChuKyThuong != null) s3Service.deleteFile(oldChuKyThuong);
+
+            com.ecotel.quanlytaisan.model.TaiKhoan tk = taiKhoanDao.findByTenDangNhap(nv.getId());
+            if (tk != null && nv.getChucVu() != null) {
+                com.ecotel.quanlytaisan.model.ChucVu cv = chucVuDao.findById(nv.getChucVu());
+                if (cv != null) {
+                    taiKhoanService.syncPermissions(tk.getId(), cv);
+                }
+            }
         }
         return result;
     }
@@ -104,6 +121,17 @@ public class NhanVienService {
         int result = nhanVienDao.batchUpdate(list);
         if (result > 0 && !keysToDelete.isEmpty()) {
             s3Service.deleteFiles(keysToDelete);
+        }
+        if (result > 0) {
+            for (NhanVien nv : list) {
+                com.ecotel.quanlytaisan.model.TaiKhoan tk = taiKhoanDao.findByTenDangNhap(nv.getId());
+                if (tk != null && nv.getChucVu() != null) {
+                    com.ecotel.quanlytaisan.model.ChucVu cv = chucVuDao.findById(nv.getChucVu());
+                    if (cv != null) {
+                        taiKhoanService.syncPermissions(tk.getId(), cv);
+                    }
+                }
+            }
         }
         return result;
     }

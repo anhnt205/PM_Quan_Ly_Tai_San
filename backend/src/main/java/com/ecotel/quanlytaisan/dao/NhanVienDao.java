@@ -583,10 +583,20 @@ public class NhanVienDao {
 
     public int delete(String id) {
         String sql = "DELETE FROM NhanVien WHERE Id=?";
-        int result = 0;
-        result += jdbcTemplate.update(sql, id);
-        sql = "delete from TaiKhoan where TenDangNhap =?";
-        return result + jdbcTemplate.update(sql, id);
+        int result = jdbcTemplate.update(sql, id);
+        
+        // Find TaiKhoan id to delete UserPermission
+        String findTkSql = "SELECT Id FROM TaiKhoan WHERE TenDangNhap=?";
+        List<String> tkIds = jdbcTemplate.query(findTkSql, (rs, rowNum) -> rs.getString("Id"), id);
+        if (!tkIds.isEmpty()) {
+            String sqlPerm = "DELETE FROM UserPermission WHERE UserId=?";
+            for (String tkId : tkIds) {
+                jdbcTemplate.update(sqlPerm, tkId);
+            }
+        }
+        
+        String sqlTk = "DELETE FROM TaiKhoan WHERE TenDangNhap =?";
+        return result + jdbcTemplate.update(sqlTk, id);
     }
 
     public int batchDelete(List<String> ids) {
@@ -606,6 +616,26 @@ public class NhanVienDao {
                 return ids.size();
             }
         });
+
+        String findTkSql = "SELECT Id FROM TaiKhoan WHERE TenDangNhap=?";
+        List<String> allTkIds = new java.util.ArrayList<>();
+        for (String id : ids) {
+            allTkIds.addAll(jdbcTemplate.query(findTkSql, (rs, rowNum) -> rs.getString("Id"), id));
+        }
+        
+        if (!allTkIds.isEmpty()) {
+            String sqlPerm = "DELETE FROM UserPermission WHERE UserId=?";
+            jdbcTemplate.batchUpdate(sqlPerm, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+                @Override
+                public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
+                    ps.setString(1, allTkIds.get(i));
+                }
+                @Override
+                public int getBatchSize() {
+                    return allTkIds.size();
+                }
+            });
+        }
 
         String sqlTaiKhoan = "DELETE FROM TaiKhoan WHERE TenDangNhap=?";
         int[] resultTaiKhoan = jdbcTemplate.batchUpdate(sqlTaiKhoan, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {

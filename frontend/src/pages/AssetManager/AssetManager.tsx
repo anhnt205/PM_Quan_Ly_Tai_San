@@ -185,8 +185,6 @@ export default function AssetManager() {
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
   const { data: assetGroups = [] } = useAllAssetGroupQuery();
 
-  const { data: typeAssetsByAssetGroup = [] } =
-    useAllTypeAssetByGroupQuery(selectedGroup);
   const { data: allTypeAssets = [] } = useAllTypeAssetQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
   const { data: allModelAsset = [] } = useAllModelAssetQuery();
@@ -196,7 +194,6 @@ export default function AssetManager() {
   const [importErrors, setImportErrors] = useState<string[]>([]);
   const [openErrorModal, setOpenErrorModal] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [openViewModal, setOpenViewModal] = useState(false);
 
   useEffect(() => {
     if (location.state?.autoCreate) {

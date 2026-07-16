@@ -168,9 +168,16 @@ public class TaiKhoanDao {
     }
 
     public int delete(String id) {
-
+        String sql1 = "DELETE FROM UserPermission WHERE UserId=?";
+        jdbcTemplate.update(sql1, id);
         String sql = "DELETE FROM TaiKhoan WHERE Id=?";
         return jdbcTemplate.update(sql, id);
+    }
+
+    public TaiKhoan findByTenDangNhap(String tenDangNhap) {
+        String sql = "SELECT * FROM TaiKhoan WHERE TenDangNhap = ?";
+        List<TaiKhoan> list = jdbcTemplate.query(sql, rowMapper, tenDangNhap);
+        return list.isEmpty() ? null : list.get(0);
     }
 
     public Map<String, Object> login(String tenDangNhap, String matKhau) {
