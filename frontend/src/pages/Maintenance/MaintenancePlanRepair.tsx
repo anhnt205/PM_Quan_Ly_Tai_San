@@ -103,6 +103,7 @@ export default function MaintenancePlanRepair() {
     dateFrom,
     dateTo,
     nhomTaiSanFilter,
+    activeTab === 0,
   );
   const { createMutation, updateMutation, deleteMutation } =
     useMaintenancePlanningMutation();
@@ -145,6 +146,7 @@ export default function MaintenancePlanRepair() {
     dateFrom,
     dateTo,
     nhomTaiSanFilter,
+    undefined,
     activeTab === 1,
   );
 
@@ -257,7 +259,7 @@ export default function MaintenancePlanRepair() {
 
   const [showIncidentDialog, setShowIncidentDialog] = useState(false);
 
-  const serverCounts = groupedData?.data?.trangThaiCounts || {};
+  const serverCounts = (activeTab === 0 ? groupedData?.data?.trangThaiCounts : incidentPageData?.trangThaiCounts) || {};
   const totalCount = Object.values(serverCounts).reduce(
     (a: any, b: any) => a + b,
     0,

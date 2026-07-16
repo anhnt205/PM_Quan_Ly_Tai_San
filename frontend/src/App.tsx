@@ -98,7 +98,8 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["assetTranferPage"] });
-        queryClient.invalidateQueries({ queryKey: ["assetTranferAll"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -106,7 +107,8 @@ function App() {
       ) {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
-        queryClient.invalidateQueries({ queryKey: ["toolTranferAll"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -117,7 +119,8 @@ function App() {
         queryClient.invalidateQueries({
           queryKey: ["assetTranferPage"],
         });
-        queryClient.invalidateQueries({ queryKey: ["assetHandoverAll"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -126,7 +129,8 @@ function App() {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["toolHandoverPage"] });
         queryClient.invalidateQueries({ queryKey: ["toolTransferPage"] });
-        queryClient.invalidateQueries({ queryKey: ["toolHandoverAll"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -135,6 +139,7 @@ function App() {
         console.log("Handling socket message in App.tsx:", data);
         queryClient.invalidateQueries({ queryKey: ["repairPage"] });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -145,6 +150,7 @@ function App() {
           queryKey: ["maintenancePlanningPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -155,6 +161,7 @@ function App() {
           queryKey: ["materialAssessmentPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -165,6 +172,7 @@ function App() {
           queryKey: ["incidentPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -175,6 +183,7 @@ function App() {
           queryKey: ["incidentInspectionPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -188,6 +197,7 @@ function App() {
           queryKey: ["nghiemThuPhuongTienPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -201,6 +211,7 @@ function App() {
           queryKey: ["vehicleInspectionPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       } else if (
         (data.recieve.includes(user?.taiKhoan?.tenDangNhap || "") ||
           user?.taiKhoan?.tenDangNhap === "admin") &&
@@ -214,6 +225,7 @@ function App() {
           queryKey: ["bienPhapPhuongTienPage"],
         });
         queryClient.invalidateQueries({ queryKey: ["maintenanceShareCounts"] });
+        queryClient.invalidateQueries({ queryKey: ["maintenanceSignCounts"] });
       }
     });
 

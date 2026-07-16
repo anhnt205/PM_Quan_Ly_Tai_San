@@ -70,23 +70,11 @@ public class SuCoThietBiService {
             }
         }
 
-        // Đếm theo trạng thái
-        Map<String, Long> trangThaiCounts = new HashMap<>();
-        for (SuCoThietBiDTO item : sourceList) {
-            if (item.getTrangThai() != null) {
-                String key = item.getTrangThai().toString();
-                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
-            }
-        }
 
         // Filters
         if (idDonViBaoCao != null && !idDonViBaoCao.trim().isEmpty())
             sourceList = sourceList.stream()
                     .filter(i -> idDonViBaoCao.equalsIgnoreCase(i.getIdDonViBaoCao()))
-                    .collect(Collectors.toList());
-        if (trangThai != null)
-            sourceList = sourceList.stream()
-                    .filter(i -> trangThai.equals(i.getTrangThai()))
                     .collect(Collectors.toList());
         if (mucDo != null)
             sourceList = sourceList.stream()
@@ -138,6 +126,20 @@ public class SuCoThietBiService {
                             || (i.getMoTa() != null && i.getMoTa().toLowerCase().contains(q)))
                     .collect(Collectors.toList());
         }
+
+         // Đếm theo trạng thái
+        Map<String, Long> trangThaiCounts = new HashMap<>();
+        for (SuCoThietBiDTO item : sourceList) {
+            if (item.getTrangThai() != null) {
+                String key = item.getTrangThai().toString();
+                trangThaiCounts.put(key, trangThaiCounts.getOrDefault(key, 0L) + 1);
+            }
+        }
+
+        if (trangThai != null)
+            sourceList = sourceList.stream()
+                    .filter(i -> trangThai.equals(i.getTrangThai()))
+                    .collect(Collectors.toList());
 
         sourceList.sort(getComparator(sortBy, sortDir));
 

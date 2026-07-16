@@ -3,33 +3,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "../redux/store";
 import { useAssetTransferPageQuery } from "../pages/AssetTransfer/Mutation";
 import { useToolTransferPageQuery } from "../pages/ToolTransfer/Mutation";
-import { useToolHandoverPageQuery } from "../pages/ToolHandover/Mutation";
-import { useAssetHandoverPageQuery } from "../pages/AssetHandover/Mutation";
 import { useAllPositionsQuery } from "../pages/Position/Mutation";
 import { useConfig } from "../hooks/useContext";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from "../config/api.config";
-import {
-  getAssetHandoverCount,
-  getAssetTransferCount,
-  getToolHandoverCount,
-  getToolTransferCount,
-  findById,
-} from "../utils/helpers";
+
 import { showErrorAlert } from "../components/Alert";
-import {
-  useMaintenanceAcceptanceTestPageQuery,
-  useMaintenanceAcceptanceTestVehiclePageQuery,
-  useMaintenanceBienPhapMayMocPageQuery,
-  useMaintenanceBienPhapPhuongTienPageQuery,
-  useMaintenanceIncidentInspectionPageQuery,
-  useMaintenanceIncidentPageQuery,
-  useMaintenanceInspectionPageQuery,
-  useMaintenanceMaterialAssessmentPageQuery,
-  useMaintenancePlanningPageQuery,
-  useMaintenanceRepairPageQuery,
-  useMaintenanceVehicleInspectionPageQuery,
-} from "../pages/Maintenance/mutation";
+
 import { setMaxTabLimit } from "../redux/tabsSlice";
 
 interface MenuDataContextType {
@@ -42,28 +22,23 @@ interface MenuDataContextType {
       c1: number;
       c2: number;
       c3: number;
+      banHanhTotal: number;
+      banHanh1: number;
+      banHanh2: number;
+      banHanh3: number;
     };
     toolTransfer: {
       total: number;
       c1: number;
       c2: number;
       c3: number;
+      banHanhTotal: number;
+      banHanh1: number;
+      banHanh2: number;
+      banHanh3: number;
     };
-    assetHandover: number;
-    toolHandover: number;
     transferAssetPageItems: number;
     transferToolPageItems: number;
-    totalPlan: number;
-    totalIncident: number;
-    totalRepair: number;
-    totalIncidentInspection: number;
-    totalMaterialAssessment: number;
-    totalMachineInspection: number;
-    totalVehicleAcceptance: number;
-    totalInspectionMachine: number;
-    totalInspectionVehicle: number;
-    totalMeasureMachine: number;
-    totalMeasureVehicle: number;
     shareCounts: {
       totalPlan: number;
       totalIncident: number;
@@ -76,11 +51,43 @@ interface MenuDataContextType {
       totalVehicleAcceptance: number;
       totalMeasureMachine: number;
       totalMeasureVehicle: number;
+      totalAssetTransfer1: number;
+      totalAssetTransfer2: number;
+      totalAssetTransfer3: number;
+      totalToolTransfer1: number;
+      totalToolTransfer2: number;
+      totalToolTransfer3: number;
       totalAssetTransfer: number;
       totalToolTransfer: number;
       totalAssetHandover: number;
       totalToolHandover: number;
-      total: number;
+      totalTransfer: number;
+      totalHandover: number;
+      totalMaintance: number;
+    };
+    signCounts: {
+      totalPlan: number;
+      totalIncident: number;
+      totalRepair: number;
+      totalIncidentInspection: number;
+      totalMaterialAssessment: number;
+      totalInspectionMachine: number;
+      totalInspectionVehicle: number;
+      totalMachineInspection: number;
+      totalVehicleAcceptance: number;
+      totalMeasureMachine: number;
+      totalMeasureVehicle: number;
+      totalAssetTransfer1: number;
+      totalAssetTransfer2: number;
+      totalAssetTransfer3: number;
+      totalToolTransfer1: number;
+      totalToolTransfer2: number;
+      totalToolTransfer3: number;
+      totalAssetTransfer: number;
+      totalToolTransfer: number;
+      totalAssetHandover: number;
+      totalToolHandover: number;
+      totalMaintance: number;
     };
   };
 }
@@ -90,12 +97,10 @@ const MenuDataContext = createContext<MenuDataContextType | undefined>(
 );
 
 export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
-  const { user } = useSelector((state: RootState) => state.user);
+  const { user } = useSelector((state: any) => state.user);
   const dispatch = useDispatch();
   const queryClient = useQueryClient();
   const { config, setConfig } = useConfig();
-
-  const { data: chucVu = [] } = useAllPositionsQuery();
 
   // 1. Lấy dữ liệu cấu hình
   useQuery({
@@ -142,150 +147,6 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     },
   });
 
-  // Data fetching for counts
-  const { data: assetTransfer = { items: [] } } = useAssetTransferPageQuery(
-    0,
-    999999,
-  );
-  const { data: toolTransfer = { items: [] } } = useToolTransferPageQuery(
-    0,
-    999999,
-  );
-  const { data: toolHandover = { items: [] } } = useToolHandoverPageQuery(
-    0,
-    999999,
-  );
-  const { data: assetHandover = { items: [] } } = useAssetHandoverPageQuery(
-    0,
-    999999,
-  );
-
-  // kế hoạch
-  const { data: plan = { items: [], totalItems: 0 } } =
-    useMaintenancePlanningPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // sự cố
-  const { data: incident = { items: [], totalItems: 0 } } =
-    useMaintenanceIncidentPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // sửa chữa
-  const { data: repair = { items: [], totalItems: 0 } } =
-    useMaintenanceRepairPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // kiểm tra sự cố
-  const { data: incidentInspection = { items: [], totalItems: 0 } } =
-    useMaintenanceIncidentInspectionPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // nghiệm thu máy móc
-  const { data: machineInspection = { items: [], totalItems: 0 } } =
-    useMaintenanceAcceptanceTestPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // nghiệm thu phương tiện
-  const { data: vehicleAcceptance = { items: [], totalItems: 0 } } =
-    useMaintenanceAcceptanceTestVehiclePageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // đánh giá vật tư
-  const { data: materialAssessment = { items: [], totalItems: 0 } } =
-    useMaintenanceMaterialAssessmentPageQuery(
-      0,
-      999999,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // giám định máy móc
-  const { data: inspectionMachine = { items: [], totalItems: 0 } } =
-    useMaintenanceInspectionPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-  const { data: inspectionVehicle = { items: [], totalItems: 0 } } =
-    useMaintenanceVehicleInspectionPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // biên pháp máy móc
-  const { data: bienPhapMayMoc = { items: [], totalItems: 0 } } =
-    useMaintenanceBienPhapMayMocPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
-
-  // biên pháp phương tiện
-  const { data: bienPhapPhuongTien = { items: [], totalItems: 0 } } =
-    useMaintenanceBienPhapPhuongTienPageQuery(
-      0,
-      10,
-      undefined,
-      undefined,
-      user?.taiKhoan?.tenDangNhap,
-      true,
-    );
   // điều chuyển tài sản
   const { data: transferAssetPage = { items: [], totalItems: 0 } } =
     useAssetTransferPageQuery(
@@ -312,58 +173,7 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
       user?.taiKhoan?.phongBanId,
     );
 
-  const isBanHanh =
-    findById(chucVu, user?.taiKhoan?.chucVuId)?.banHanhQuyetDinh || false;
   const tenDangNhap = user?.taiKhoan?.tenDangNhap;
-
-  const assetTransferCount1 = getAssetTransferCount(
-    1,
-    tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-  const assetTransferCount2 = getAssetTransferCount(
-    2,
-    tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-  const assetTransferCount3 = getAssetTransferCount(
-    3,
-    tenDangNhap,
-    assetTransfer.items,
-    isBanHanh,
-  );
-
-  const toolTransferCount1 = getToolTransferCount(
-    1,
-    tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-  const toolTransferCount2 = getToolTransferCount(
-    2,
-    tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-  const toolTransferCount3 = getToolTransferCount(
-    3,
-    tenDangNhap,
-    toolTransfer.items,
-    isBanHanh,
-  );
-
-  // bàn giao tài sản
-  const assetHandoverCount = getAssetHandoverCount(
-    tenDangNhap,
-    assetHandover.items,
-  );
-  // bàn giao công cụ
-  const toolHandoverCount = getToolHandoverCount(
-    tenDangNhap,
-    toolHandover.items,
-  );
 
   // share counts
   const { data: shareCountsData = { total: 0 } } = useQuery({
@@ -377,38 +187,51 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
     enabled: !!tenDangNhap,
   });
 
+  // sign counts
+  const { data: signCountsData = { total: 0 } } = useQuery({
+    queryKey: ["maintenanceSignCounts", tenDangNhap],
+    queryFn: async () => {
+      const res = await api.get(`/maintenance/sign-counts`, {
+        params: { userid: tenDangNhap },
+      });
+      return res.data?.data || { total: 0 };
+    },
+    enabled: !!tenDangNhap,
+  });
+
   const value = {
     config,
     updateConfig: updateConfigMutation.mutate,
     isUpdatingConfig: updateConfigMutation.isPending,
     counts: {
       assetTransfer: {
-        total: assetTransferCount1 + assetTransferCount2 + assetTransferCount3,
-        c1: assetTransferCount1,
-        c2: assetTransferCount2,
-        c3: assetTransferCount3,
+        total: signCountsData.totalAssetTransfer || 0,
+        c1: signCountsData.totalAssetTransfer1 || 0,
+        c2: signCountsData.totalAssetTransfer2 || 0,
+        c3: signCountsData.totalAssetTransfer3 || 0,
+        banHanhTotal:
+          (signCountsData.totalAssetTransferBanHanh1 || 0) +
+          (signCountsData.totalAssetTransferBanHanh2 || 0) +
+          (signCountsData.totalAssetTransferBanHanh3 || 0),
+        banHanh1: signCountsData.totalAssetTransferBanHanh1 || 0,
+        banHanh2: signCountsData.totalAssetTransferBanHanh2 || 0,
+        banHanh3: signCountsData.totalAssetTransferBanHanh3 || 0,
       },
       toolTransfer: {
-        total: toolTransferCount1 + toolTransferCount2 + toolTransferCount3,
-        c1: toolTransferCount1,
-        c2: toolTransferCount2,
-        c3: toolTransferCount3,
+        total: signCountsData.totalToolTransfer || 0,
+        c1: signCountsData.totalToolTransfer1 || 0,
+        c2: signCountsData.totalToolTransfer2 || 0,
+        c3: signCountsData.totalToolTransfer3 || 0,
+        banHanhTotal:
+          (signCountsData.totalToolTransferBanHanh1 || 0) +
+          (signCountsData.totalToolTransferBanHanh2 || 0) +
+          (signCountsData.totalToolTransferBanHanh3 || 0),
+        banHanh1: signCountsData.totalToolTransferBanHanh1 || 0,
+        banHanh2: signCountsData.totalToolTransferBanHanh2 || 0,
+        banHanh3: signCountsData.totalToolTransferBanHanh3 || 0,
       },
-      assetHandover: assetHandoverCount,
-      toolHandover: toolHandoverCount,
       transferAssetPageItems: transferAssetPage.totalItems,
       transferToolPageItems: transferToolPage.totalItems,
-      totalPlan: plan.totalItems,
-      totalIncident: incident.totalItems,
-      totalRepair: repair.totalItems,
-      totalIncidentInspection: incidentInspection.totalItems,
-      totalMaterialAssessment: materialAssessment.totalItems,
-      totalMachineInspection: machineInspection.totalItems,
-      totalVehicleAcceptance: vehicleAcceptance.totalItems,
-      totalInspectionMachine: inspectionMachine.totalItems,
-      totalInspectionVehicle: inspectionVehicle.totalItems,
-      totalMeasureMachine: bienPhapMayMoc.totalItems,
-      totalMeasureVehicle: bienPhapPhuongTien.totalItems,
       shareCounts: {
         totalPlan: shareCountsData.totalPlan || 0,
         totalIncident: shareCountsData.totalIncident || 0,
@@ -421,11 +244,43 @@ export const MenuDataProvider = ({ children }: { children: ReactNode }) => {
         totalVehicleAcceptance: shareCountsData.totalVehicleAcceptance || 0,
         totalMeasureMachine: shareCountsData.totalMeasureMachine || 0,
         totalMeasureVehicle: shareCountsData.totalMeasureVehicle || 0,
+        totalAssetTransfer1: shareCountsData.totalAssetTransfer1 || 0,
+        totalAssetTransfer2: shareCountsData.totalAssetTransfer2 || 0,
+        totalAssetTransfer3: shareCountsData.totalAssetTransfer3 || 0,
+        totalToolTransfer1: shareCountsData.totalToolTransfer1 || 0,
+        totalToolTransfer2: shareCountsData.totalToolTransfer2 || 0,
+        totalToolTransfer3: shareCountsData.totalToolTransfer3 || 0,
         totalAssetTransfer: shareCountsData.totalAssetTransfer || 0,
         totalToolTransfer: shareCountsData.totalToolTransfer || 0,
         totalAssetHandover: shareCountsData.totalAssetHandover || 0,
         totalToolHandover: shareCountsData.totalToolHandover || 0,
-        total: shareCountsData.total || 0,
+        totalTransfer: shareCountsData.totalTransfer || 0,
+        totalHandover: shareCountsData.totalHandover || 0,
+        totalMaintance: shareCountsData.totalMaintance || 0,
+      },
+      signCounts: {
+        totalPlan: signCountsData.totalPlan || 0,
+        totalIncident: signCountsData.totalIncident || 0,
+        totalRepair: signCountsData.totalRepair || 0,
+        totalIncidentInspection: signCountsData.totalIncidentInspection || 0,
+        totalMaterialAssessment: signCountsData.totalMaterialAssessment || 0,
+        totalInspectionMachine: signCountsData.totalInspectionMachine || 0,
+        totalInspectionVehicle: signCountsData.totalInspectionVehicle || 0,
+        totalMachineInspection: signCountsData.totalMachineInspection || 0,
+        totalVehicleAcceptance: signCountsData.totalVehicleAcceptance || 0,
+        totalMeasureMachine: signCountsData.totalMeasureMachine || 0,
+        totalMeasureVehicle: signCountsData.totalMeasureVehicle || 0,
+        totalAssetTransfer1: signCountsData.totalAssetTransfer1 || 0,
+        totalAssetTransfer2: signCountsData.totalAssetTransfer2 || 0,
+        totalAssetTransfer3: signCountsData.totalAssetTransfer3 || 0,
+        totalToolTransfer1: signCountsData.totalToolTransfer1 || 0,
+        totalToolTransfer2: signCountsData.totalToolTransfer2 || 0,
+        totalToolTransfer3: signCountsData.totalToolTransfer3 || 0,
+        totalAssetTransfer: signCountsData.totalAssetTransfer || 0,
+        totalToolTransfer: signCountsData.totalToolTransfer || 0,
+        totalAssetHandover: signCountsData.totalAssetHandover || 0,
+        totalToolHandover: signCountsData.totalToolHandover || 0,
+        totalMaintance: signCountsData.totalMaintance || 0,
       },
     },
   };

@@ -1,5 +1,5 @@
 import { useState, SyntheticEvent } from "react";
-import { Badge, Box, Tab, Tabs } from "@mui/material";
+import { Badge, Box, Tab, Tabs, Grid, IconButton } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
@@ -29,11 +29,29 @@ import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../AssetTransfer/components/SignDocumentForm";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { Construction } from "@mui/icons-material";
+import { Construction, VisibilityOff } from "@mui/icons-material";
+import SignerSidebar from "../AssetTransfer/components/SignerSidebar";
+import BienBanTabContent from "../AssetTransfer/components/BienBanTabContent";
 import { currentBrandConfig } from "../../config/brandConfig";
+import { useTabForm } from "../../redux/useTabForm";
 
 interface AssetTransferApprovalTabProps {
   assetTransferCounts: any;
+}
+
+interface AssetTransferTabState {
+  showForm: boolean;
+  selectedRow: any | null;
+  showSidebar: boolean;
+  readOnly: boolean;
+  tabValue: number;
+  sidebarMode: "document" | "signer" | null;
+  status: string;
+  showSignDocument: boolean;
+  isFullPageSign: boolean;
+  selectedDocument: any | null;
+  draftForm?: Record<string, any>;
+  prevType: string | null;
 }
 
 export default function AssetTransferApprovalTab({
@@ -47,15 +65,39 @@ export default function AssetTransferApprovalTab({
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [showSignDocument, setShowSignDocument] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
+    null,
+  );
+  const [tabValue, setTabValue] = useState(0);
+  const [assetTransferDetail, setAssetTransferDetail] = useState<any[]>([]);
+  const [assetHandover, setAssetHandover] = useState<any[]>([]);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  const [showSignerSidebar, setShowSignerSidebar] = useState(true);
+  const type = subTab + 1; // 1, 2, 3
+
+  const { formData, setField } = useTabForm<AssetTransferTabState>(
+    `/dieu_chuyen_thiet_bi/phe_duyet`,
+  );
+
+  // Đọc từ Redux
+  const showSignDocument = formData.showSignDocument ?? false;
+  const isFullPageSign = formData.isFullPageSign ?? false;
+
+  // Setter helpers
+  const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
+  const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
 
   const { user } = useSelector((state: any) => state.user);
-  const { signMutation, updateManyMutation, decisionMutation } =
-    useAssetTranferMutation();
+  const {
+    signMutation,
+    updateManyMutation,
+    decisionMutation,
+    getAssetHandoverMutation,
+    handleSignatureList,
+  } = useAssetTranferMutation();
 
-  const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
 
   const {
@@ -89,17 +131,34 @@ export default function AssetTransferApprovalTab({
   };
 
   const handleClose = () => {
+    setField({ draftForm: undefined });
+    setSelectedIds([]);
+    setSelectedDocument(null);
+    setSearchValue("");
     setShowSignDocument(false);
     setSelectedRow(null);
-    setSelectedDocument(null);
-    setSelectedIds([]);
+    setShowSidebar(false);
+    setAssetHandover([]);
+    setSidebarMode(null);
+    setIsFullPageSign(false);
+    setTabValue(0);
   };
 
-  const handleRowClick = (params: GridRowParams) => {
+  const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
     setSelectedRow(data);
     setSelectedDocument(data.taiLieuCuoi);
-    setShowSignDocument(true);
+    setAssetTransferDetail(data.chiTietDieuDongTaiSanDTOS || []);
+    setShowSidebar(true);
+    setSidebarMode("document");
+    setTabValue(0);
+
+    if (data.coPhieuBanGiao) {
+      const result: any[] = await getAssetHandoverMutation.mutateAsync(data.id);
+      setAssetHandover(result);
+    } else {
+      setAssetHandover([]);
+    }
   };
 
   const handleSign = (data: SignaturesData[]) => {
@@ -109,10 +168,6 @@ export default function AssetTransferApprovalTab({
     });
   };
 
-  const handleSend = (items: any[]) => {
-    handleSendToSigner(items, updateManyMutation.mutateAsync, handleClose);
-  };
-
   const handleDecision = (data: any[]) => {
     decisionMutation.mutate(data);
   };
@@ -120,7 +175,10 @@ export default function AssetTransferApprovalTab({
   const handleViewSignAssets = async (fileName: string, item: any) => {
     setSelectedDocument(fileName);
     setShowSignDocument(true);
+    setIsFullPageSign(true);
     setSelectedRow(item);
+    setAssetTransferDetail(item.chiTietDieuDongTaiSanDTOS);
+    setShowSignerSidebar(true);
   };
 
   const { label } = getTypeInfo(type.toString());
@@ -254,109 +312,255 @@ export default function AssetTransferApprovalTab({
     },
   ];
 
-  if (showSignDocument) {
-    return (
-      <SignDocumentForm
-        key={selectedRow?.id}
-        selectedIds={selectedIds}
-        document={selectedDocument}
-        onCancel={handleClose}
-        onSign={handleSign}
-        assetTransferDetail={selectedRow?.chiTietDieuDongTaiSanDTOS || []}
-        showSignerSidebar={true}
-        allUnits={allUnits}
-        allCurrentStatus={allCurrentStatus}
-        fullscreen={true}
-        staffs={allStaffs}
-        isEdit={false}
-      />
-    );
-  }
-
   return (
-    <Box sx={{ p: 2 }}>
-      <Box
-        sx={{
-          mb: 2,
-          borderBottom: 1,
-          borderColor: "divider",
-          display: "flex",
-          justifyContent: "flex-end",
-        }}
-      >
-        <Tabs
-          value={subTab}
-          onChange={handleSubTabChange}
-          sx={{
-            minHeight: "40px",
-            "& .MuiTabs-indicator": {
-              backgroundColor: currentBrandConfig.primaryColor,
-            },
-            "& .MuiTab-root": {
-              textTransform: "none",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              minHeight: "40px",
-              "&.Mui-selected": {
-                color: currentBrandConfig.primaryColor,
-              },
-            },
-          }}
-        >
-          <Tab
-            icon={
-              <Badge badgeContent={assetTransferCounts?.c1 ?? 0} color="error">
-                <Construction sx={{ fontSize: 20 }} />
-              </Badge>
-            }
-            label="Cấp phát tài sản"
-          />
-          <Tab
-            icon={
-              <Badge badgeContent={assetTransferCounts?.c2 ?? 0} color="error">
-                <Construction sx={{ fontSize: 20 }} />
-              </Badge>
-            }
-            label="Điều chuyển tài sản"
-          />
-          <Tab
-            icon={
-              <Badge badgeContent={assetTransferCounts?.c3 ?? 0} color="error">
-                <Construction sx={{ fontSize: 20 }} />
-              </Badge>
-            }
-            label="Thu hồi tài sản"
-          />
-        </Tabs>
-      </Box>
+    <>
+      {showSignDocument && isFullPageSign ? (
+        <SignDocumentForm
+          key={selectedRow?.id}
+          selectedIds={
+            selectedIds.length > 0
+              ? selectedIds
+              : selectedRow
+                ? [selectedRow.id]
+                : []
+          }
+          document={selectedDocument}
+          onCancel={handleClose}
+          onSign={handleSign}
+          assetTransferDetail={assetTransferDetail}
+          showSignerSidebar={showSignerSidebar}
+          allUnits={allUnits}
+          allCurrentStatus={allCurrentStatus}
+          fullscreen={true}
+          staffs={allStaffs}
+          isEdit={false}
+        />
+      ) : (
+        <Box sx={{ p: 2 }}>
+          <Box
+            sx={{
+              mb: 2,
+              borderBottom: 1,
+              borderColor: "divider",
+              display: "flex",
+              justifyContent: "flex-end",
+            }}
+          >
+            <Tabs
+              value={subTab}
+              onChange={handleSubTabChange}
+              sx={{
+                minHeight: "40px",
+                "& .MuiTabs-indicator": {
+                  backgroundColor: currentBrandConfig.primaryColor,
+                },
+                "& .MuiTab-root": {
+                  textTransform: "none",
+                  fontWeight: 600,
+                  fontSize: "0.85rem",
+                  minHeight: "40px",
+                  "&.Mui-selected": {
+                    color: currentBrandConfig.primaryColor,
+                  },
+                },
+              }}
+            >
+              <Tab
+                icon={
+                  <Badge
+                    badgeContent={assetTransferCounts?.c1 ?? 0}
+                    color="error"
+                  >
+                    <Construction sx={{ fontSize: 20 }} />
+                  </Badge>
+                }
+                label="Cấp phát tài sản"
+              />
+              <Tab
+                icon={
+                  <Badge
+                    badgeContent={assetTransferCounts?.c2 ?? 0}
+                    color="error"
+                  >
+                    <Construction sx={{ fontSize: 20 }} />
+                  </Badge>
+                }
+                label="Điều chuyển tài sản"
+              />
+              <Tab
+                icon={
+                  <Badge
+                    badgeContent={assetTransferCounts?.c3 ?? 0}
+                    color="error"
+                  >
+                    <Construction sx={{ fontSize: 20 }} />
+                  </Badge>
+                }
+                label="Thu hồi tài sản"
+              />
+            </Tabs>
+          </Box>
 
-      <TableCustom
-        tableId={`assetTransferApproval-${subTab}`}
-        title=""
-        columns={columns}
-        rows={pageData.items}
-        total={pageData.totalItems}
-        paginationModel={paginationModel}
-        onPaginationModelChange={setPaginationModel}
-        onRowClick={() => {}}
-        selectedIds={selectedIds}
-        onSelectionChange={setSelectedIds}
-        onSign={handleViewSignAssets}
-        handleSignDocument={handleSignDocument}
-        canSign={canSign}
-        searchValue={searchValue}
-        setSearchValue={setSearchValue}
-        showStatusFilter={true}
-        showDelete={false}
-        handleSendToSigner={handleSend}
-        statusOptions={statusOptions}
-        onStatusChange={setStatus}
-        handleDecision={handleDecision}
-        isDecision={getDecision}
-        statusValue={status}
-        isCheckShowShare={isCheckShowShare}
-        loading={isLoading}
-      />
-    </Box>
+          <Grid
+            container
+            sx={{
+              display: "flex",
+              alignItems: "stretch",
+              bgcolor: "background.paper",
+              borderRadius: "8px",
+              overflow: "hidden",
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Grid
+              size={{
+                xs: showSidebar ? (sidebarMode === "document" ? 6 : 9) : 12,
+              }}
+              sx={{
+                transition: "all 0.3s ease",
+                borderRight: showSidebar ? "1px solid" : "none",
+                borderColor: "divider",
+                "& .MuiPaper-root": {
+                  margin: 0,
+                  boxShadow: "none",
+                  borderRadius: 0,
+                },
+              }}
+            >
+              <TableCustom
+                tableId={`assetTransferApproval-${subTab}`}
+                title={`Phiếu ${subTab === 0 ? "cấp phát" : subTab === 1 ? "điều chuyển" : "thu hồi"} tài sản`}
+                columns={columns}
+                rows={pageData.items}
+                total={pageData.totalItems}
+                paginationModel={paginationModel}
+                onPaginationModelChange={setPaginationModel}
+                onRowClick={handleRowClick}
+                selectedIds={selectedIds}
+                onSelectionChange={setSelectedIds}
+                onSign={handleViewSignAssets}
+                handleSignDocument={handleSignDocument}
+                canSign={canSign}
+                searchValue={searchValue}
+                setSearchValue={setSearchValue}
+                showStatusFilter={true}
+                showDelete={false}
+                statusOptions={statusOptions}
+                onStatusChange={setStatus}
+                handleDecision={handleDecision}
+                isDecision={getDecision}
+                statusValue={status}
+                loading={isLoading}
+              />
+            </Grid>
+            {showSidebar && (
+              <Grid
+                size={{ xs: sidebarMode === "document" ? 6 : 3 }}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  bgcolor: "background.paper",
+                  borderLeft: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Box
+                  sx={{
+                    borderBottom: 1,
+                    borderColor: "divider",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    pr: 1,
+                  }}
+                >
+                  <Tabs
+                    value={tabValue}
+                    onChange={(_, newValue) => setTabValue(newValue)}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={{
+                      "& .MuiTabs-indicator": {
+                        backgroundColor: "#04b46eff",
+                      },
+                      "& .MuiTab-root": {
+                        textTransform: "none",
+                        fontWeight: 600,
+                        fontSize: "0.875rem",
+                        minWidth: 100,
+                        "&.Mui-selected": {
+                          color: "#04b46eff",
+                        },
+                      },
+                    }}
+                  >
+                    <Tab label="Tài liệu" />
+                    <Tab label="Quy trình ký" />
+                  </Tabs>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setShowSidebar(false);
+                      setSidebarMode(null);
+                    }}
+                  >
+                    <VisibilityOff sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Box>
+                <Box sx={{ flex: 1, overflow: "hidden" }}>
+                  {tabValue === 0 ? (
+                    <Box
+                      sx={{
+                        height: "calc(100vh - 120px)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <SignDocumentForm
+                        key={selectedRow?.id}
+                        selectedIds={
+                          selectedIds.length > 0
+                            ? selectedIds
+                            : selectedRow
+                              ? [selectedRow.id]
+                              : []
+                        }
+                        document={selectedDocument}
+                        onCancel={handleClose}
+                        onSign={handleSign}
+                        assetTransferDetail={assetTransferDetail}
+                        showSignerSidebar={false}
+                        allUnits={allUnits}
+                        allCurrentStatus={allCurrentStatus}
+                        fullscreen={false}
+                        staffs={allStaffs}
+                        isEdit={false}
+                        title={`${selectedRow?.tenPhieu || ""} (${selectedRow?.id || ""})`}
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        height: "calc(100vh - 120px)",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <SignerSidebar
+                        key={selectedRow?.id}
+                        selectedRow={selectedRow}
+                        onClose={() => {
+                          setShowSidebar(false);
+                          setSidebarMode(null);
+                        }}
+                      />
+                    </Box>
+                  )}
+                </Box>
+              </Grid>
+            )}
+          </Grid>
+        </Box>
+      )}
+    </>
   );
 }

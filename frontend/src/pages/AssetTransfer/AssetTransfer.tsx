@@ -550,7 +550,7 @@ export default function AssetTransfer() {
     <>
       {/* Biên bản Dialog không còn dùng trực tiếp ở đây nữa vì đã tích hợp vào Tab */}
 
-      {showSignDocument && isFullPageSign ? (
+      {/* {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
           key={selectedRow?.id}
           selectedIds={selectedIds}
@@ -566,7 +566,7 @@ export default function AssetTransfer() {
           isEdit={false}
         />
       ) : (
-        <>
+        <> */}
           <PageAction
             title={title}
             onNewClick={() => {
@@ -661,22 +661,22 @@ export default function AssetTransfer() {
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
                   // onDelete={handleDelete}
-                  onSign={handleViewSignAssets}
-                  handleSignDocument={handleSignDocument}
-                  canSign={canSign}
+                  // onSign={handleViewSignAssets}
+                  // handleSignDocument={handleSignDocument}
+                  // canSign={canSign}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
                   showDelete={false}
-                  handleSendToSigner={handleSend}
+                  // handleSendToSigner={handleSend}
                   statusOptions={statusOptions}
                   onStatusChange={(value) => {
                     setStatus(value);
                   }}
-                  handleDecision={handleDecision}
-                  isDecision={getDecision}
+                  // handleDecision={handleDecision}
+                  // isDecision={getDecision}
                   statusValue={status}
-                  isCheckShowShare={isCheckShowShare}
+                  // isCheckShowShare={isCheckShowShare}
                   loading={isLoading}
                 />
               </Grid>
@@ -795,8 +795,8 @@ export default function AssetTransfer() {
               )}
             </Grid>
           </Box>
-        </>
-      )}
+        {/* </>
+      )} */}
     </>
   );
 }

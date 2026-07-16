@@ -62,6 +62,7 @@ import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
 import { currentBrandConfig } from "../../config/brandConfig";
+import { useMenuData } from "../../hooks/useMenuData";
 
 interface ToolHandoverTabState {
   showForm: boolean;
@@ -107,15 +108,14 @@ export default function ToolHandover() {
   const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
   const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
 
+  const { counts } = useMenuData();
+
   // Giữ nguyên
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [selectedDocument_local, setSelectedDocument_local] = useState<
-    any | null
-  >(null);
   const [searchValue, setSearchValue] = useState("");
   const handleEdit = () => setReadOnly(false);
   const { user } = useSelector((state: RootState) => state.user);
@@ -766,13 +766,12 @@ export default function ToolHandover() {
                       label: "Biên bản bàn giao",
                       subLabel: "Bàn giao ccdc",
                       icon: FileText,
-                      count: toolHandoverCount,
                     },
                     {
                       label: "Quyết định điều động",
                       subLabel: "Điều động thiết bị",
                       icon: Truck,
-                      count: transferPage?.totalItems || 0,
+                      count: counts?.transferToolPageItems || 0,
                     },
                   ].map((t, idx) => {
                     const IconComponent = t.icon;
@@ -850,7 +849,7 @@ export default function ToolHandover() {
                           >
                             <IconComponent size={20} />
                           </Box>
-                          {t.count > 0 && (
+                          {(t?.count || 0) > 0 && (
                             <Badge
                               badgeContent={t.count}
                               color="error"

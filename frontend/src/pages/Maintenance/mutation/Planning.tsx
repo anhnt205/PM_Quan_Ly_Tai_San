@@ -73,6 +73,7 @@ export const useMaintenancePlanningGroupedQuery = (
   dateFrom?: string,
   dateTo?: string,
   nhomTaiSan?: string,
+  enabled = true,
 ) => {
   return useQuery({
     queryKey: [
@@ -101,6 +102,7 @@ export const useMaintenancePlanningGroupedQuery = (
       });
       return res.data;
     },
+    enabled,
   });
 };
 

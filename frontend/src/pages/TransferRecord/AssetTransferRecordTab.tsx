@@ -1,11 +1,12 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
+import { Badge, Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
 import { AssetTransferData } from "../AssetTransfer/types";
-import { useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
+import { useAssetTranferMutation, useAssetTransferPageQuery } from "../AssetTransfer/Mutation";
 import {
+  getDecision,
   getTypeInfo,
   showDownloadFile,
   showShareStatus,
@@ -13,6 +14,8 @@ import {
   showStatusDocument,
   getPermissionSigning,
   ShowPermissionSigning,
+  isCheckShowShare,
+  handleSendToSigner,
 } from "../AssetTransfer/config";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery } from "../Staff/Mutation";
@@ -20,11 +23,14 @@ import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../AssetTransfer/components/SignDocumentForm";
+import SignerSidebar from "../AssetTransfer/components/SignerSidebar";
+import BienBanTabContent from "../AssetTransfer/components/BienBanTabContent";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { VisibilityOff } from "@mui/icons-material";
+import { Construction, VisibilityOff } from "@mui/icons-material";
 import { currentBrandConfig } from "../../config/brandConfig";
+import DecisionButton from "../../components/Button/DecisionButton";
 
-export default function AssetTransferRecordTab() {
+export default function AssetTransferRecordTab({ counts }: { counts: any }) {
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -32,13 +38,23 @@ export default function AssetTransferRecordTab() {
   });
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
-  const [showViewDocument, setShowViewDocument] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
   const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [assetHandover, setAssetHandover] = useState<any[]>([]);
 
   const { user } = useSelector((state: any) => state.user);
 
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
+
+  const {
+    updateManyMutation,
+    decisionMutation,
+    getAssetHandoverMutation,
+    handleSignatureList,
+  } = useAssetTranferMutation();
 
   const {
     data: pageData = {
@@ -64,12 +80,41 @@ export default function AssetTransferRecordTab() {
   const handleSubTabChange = (_event: SyntheticEvent, newValue: number) => {
     setSubTab(newValue);
     setPaginationModel({ ...paginationModel, page: 0 });
+    setShowSidebar(false);
+    setSelectedRow(null);
   };
 
-  const handleRowClick = (params: GridRowParams) => {
+  const handleClose = () => {
+    setShowSidebar(false);
+    setTabValue(0);
+    setSelectedRow(null);
+    setSelectedIds([]);
+    setAssetHandover([]);
+  };
+
+  const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as AssetTransferData;
     setSelectedRow(data);
-    setShowViewDocument(true);
+    setTabValue(0);
+    setShowSidebar(true);
+
+    if (data.coPhieuBanGiao) {
+      const result: any[] = await getAssetHandoverMutation.mutateAsync(data.id);
+      setAssetHandover(result);
+    } else {
+      setAssetHandover([]);
+    }
+  };
+
+
+  const handleDecision = (data: any[]) => {
+    decisionMutation.mutate(data);
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, () => {
+      setSelectedIds([]);
+    });
   };
 
   const { label } = getTypeInfo(type.toString());
@@ -203,25 +248,6 @@ export default function AssetTransferRecordTab() {
     },
   ];
 
-  // if (showViewDocument) {
-  //   return (
-  //     <SignDocumentForm
-  //       key={selectedRow?.id}
-  //       selectedIds={[selectedRow?.id]}
-  //       document={selectedRow?.taiLieuCuoi}
-  //       onCancel={() => setShowViewDocument(false)}
-  //       onSign={() => {}} // Read-only
-  //       assetTransferDetail={selectedRow?.chiTietDieuDongTaiSanDTOS || []}
-  //       showSignerSidebar={true}
-  //       allUnits={allUnits}
-  //       allCurrentStatus={allCurrentStatus}
-  //       fullscreen={true}
-  //       staffs={allStaffs}
-  //       isEdit={false}
-  //     />
-  //   );
-  // }
-
   return (
     <Box sx={{ p: 2 }}>
       <Box
@@ -252,9 +278,51 @@ export default function AssetTransferRecordTab() {
             },
           }}
         >
-          <Tab label="Cấp phát tài sản" />
-          <Tab label="Điều chuyển tài sản" />
-          <Tab label="Thu hồi tài sản" />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.assetTransfer?.banHanh1 || 0) +
+                  (counts?.shareCounts.totalAssetTransfer1 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            iconPosition="start"
+            label="Cấp phát tài sản"
+          />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.assetTransfer?.banHanh2 || 0) +
+                  (counts?.shareCounts.totalAssetTransfer2 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            iconPosition="start"
+            label="Điều chuyển tài sản"
+          />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.assetTransfer?.banHanh3 || 0) +
+                  (counts?.shareCounts.totalAssetTransfer3 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            iconPosition="start"
+            label="Thu hồi tài sản"
+          />
         </Tabs>
       </Box>
 
@@ -268,16 +336,15 @@ export default function AssetTransferRecordTab() {
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
-          // height: "calc(100vh - 270px)",
         }}
       >
         <Grid
           size={{
-            xs: showViewDocument ? 6 : 12,
+            xs: showSidebar ? 6 : 12,
           }}
           sx={{
             transition: "all 0.3s ease",
-            borderRight: showViewDocument ? "1px solid" : "none",
+            borderRight: showSidebar ? "1px solid" : "none",
             borderColor: "divider",
             height: "100%",
             display: "flex",
@@ -288,12 +355,14 @@ export default function AssetTransferRecordTab() {
           <TableCustom
             tableId={`assetTransferRecordTab-${subTab}`}
             sx={{ height: "100%" }}
-            title=""
+            title={`Phiếu ${subTab === 0 ? "cấp phát" : subTab === 1 ? "điều chuyển" : "thu hồi"} tài sản`}
             columns={columns}
             rows={pageData.items}
             total={pageData.totalItems}
             paginationModel={paginationModel}
             onPaginationModelChange={setPaginationModel}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
             onRowClick={handleRowClick}
             searchValue={searchValue}
             setSearchValue={setSearchValue}
@@ -302,39 +371,65 @@ export default function AssetTransferRecordTab() {
             statusOptions={statusOptions}
             onStatusChange={setStatus}
             statusValue={status}
-            isCheckShowShare={() => false}
+            isCheckShowShare={isCheckShowShare}
+            handleSendToSigner={handleSend}
+            handleDecision={handleDecision}
+            isDecision={getDecision}
             loading={isLoading}
           />
         </Grid>
-        {showViewDocument && (
+        {showSidebar && (
           <Grid
             size={{ xs: 6 }}
             sx={{
               display: "flex",
               flexDirection: "column",
-              bgcolor: "white",
-              // height: "100%",
-              overflow: "hidden",
+              bgcolor: "background.paper",
+              borderLeft: "1px solid",
+              borderColor: "divider",
               height: "calc(100vh)",
+              overflow: "hidden",
             }}
           >
             <Box
               sx={{
-                p: 1,
-                borderBottom: "1px solid",
+                borderBottom: 1,
                 borderColor: "divider",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                bgcolor: "white",
                 pr: 1,
               }}
             >
-              <Box sx={{ ml: 2, fontWeight: "bold" }}>Xem tài liệu</Box>
+              <Tabs
+                value={tabValue}
+                onChange={(_, newValue) => setTabValue(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: "#04b46eff",
+                  },
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    minWidth: 100,
+                    "&.Mui-selected": {
+                      color: "#04b46eff",
+                    },
+                  },
+                }}
+              >
+                <Tab label="Tài liệu" />
+                <Tab label="Quy trình ký" />
+                <Tab label="Biên bản" />
+              </Tabs>
               <IconButton
                 size="small"
                 onClick={() => {
-                  setShowViewDocument(false);
+                  setShowSidebar(false);
+                  setTabValue(0);
                 }}
               >
                 <VisibilityOff sx={{ fontSize: 20 }} />
@@ -342,24 +437,52 @@ export default function AssetTransferRecordTab() {
             </Box>
 
             <Box sx={{ flex: 1, overflow: "hidden" }}>
-              <Box sx={{ height: "100%", overflow: "hidden" }}>
-                <SignDocumentForm
-                  key={selectedRow?.id}
-                  selectedIds={[selectedRow?.id]}
-                  document={selectedRow?.taiLieuCuoi}
-                  onCancel={() => setShowViewDocument(false)}
-                  onSign={() => {}} // Read-only
-                  assetTransferDetail={
-                    selectedRow?.chiTietDieuDongTaiSanDTOS || []
-                  }
-                  showSignerSidebar={false}
-                  allUnits={allUnits}
-                  allCurrentStatus={allCurrentStatus}
-                  fullscreen={false}
-                  staffs={allStaffs}
-                  isEdit={false}
-                />
-              </Box>
+              {tabValue === 0 ? (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <SignDocumentForm
+                    key={selectedRow?.id}
+                    selectedIds={
+                      selectedIds.length > 0
+                        ? selectedIds
+                        : selectedRow
+                          ? [selectedRow.id]
+                          : []
+                    }
+                    document={selectedRow?.taiLieuCuoi}
+                    onCancel={handleClose}
+                    onSign={() => {}} // Read-only
+                    assetTransferDetail={
+                      selectedRow?.chiTietDieuDongTaiSanDTOS || []
+                    }
+                    showSignerSidebar={false}
+                    allUnits={allUnits}
+                    allCurrentStatus={allCurrentStatus}
+                    fullscreen={false}
+                    staffs={allStaffs}
+                    isEdit={false}
+                    title={`${selectedRow?.tenPhieu || ""} (${selectedRow?.id || ""})`}
+                  />
+                </Box>
+              ) : tabValue === 1 ? (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <SignerSidebar
+                    key={selectedRow?.id}
+                    selectedRow={selectedRow}
+                    onClose={() => {
+                      setShowSidebar(false);
+                      setTabValue(0);
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <BienBanTabContent
+                    assetHandover={assetHandover}
+                    handleSignatureList={handleSignatureList}
+                    onClose={handleClose}
+                  />
+                </Box>
+              )}
             </Box>
           </Grid>
         )}

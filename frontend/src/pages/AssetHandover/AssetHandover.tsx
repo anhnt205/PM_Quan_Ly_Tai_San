@@ -67,6 +67,7 @@ import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
 import { currentBrandConfig } from "../../config/brandConfig";
+import { useMenuData } from "../../hooks/useMenuData";
 
 interface AssetHandoverTabState {
   showForm: boolean;
@@ -111,6 +112,8 @@ export default function AssetHandover() {
   const setIsFullPageSign = (v: boolean) => setField({ isFullPageSign: v });
   const setShowSignDocument = (v: boolean) => setField({ showSignDocument: v });
   const setSelectedDocument = (v: any) => setField({ selectedDocument: v });
+
+  const { counts } = useMenuData();
 
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -740,7 +743,9 @@ export default function AssetHandover() {
               </DialogContent>
             </Dialog>
 
-            {isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />}
+            {isMinimized && (
+              <DraftIndicator onClick={() => setShowForm(true)} />
+            )}
 
             {/* Bước 1: Cấu trúc lại Grid để Tabs luôn chiếm 100% chiều ngang */}
             <Grid
@@ -785,6 +790,7 @@ export default function AssetHandover() {
                       label: "Quyết định điều động",
                       subLabel: "Điều động thiết bị",
                       icon: Truck,
+                      count: counts?.transferAssetPageItems || 0,
                     },
                   ].map((t, idx) => {
                     const IconComponent = t.icon;
@@ -824,29 +830,56 @@ export default function AssetHandover() {
                             ? "0 4px 12px rgba(4, 180, 110, 0.15)"
                             : "0 2px 4px rgba(0, 0, 0, 0.05)",
                           "&:hover": {
-                            borderColor: isActive ? "transparent" : currentBrandConfig.primaryColor,
-                            bgcolor: isActive ? undefined : "rgba(4, 180, 110, 0.04)",
+                            borderColor: isActive
+                              ? "transparent"
+                              : currentBrandConfig.primaryColor,
+                            bgcolor: isActive
+                              ? undefined
+                              : "rgba(4, 180, 110, 0.04)",
                           },
                         }}
                       >
                         {/* Top Row: Icon */}
                         <Box
                           sx={{
+                            width: "100%",
                             display: "flex",
+                            justifyContent: "space-between",
                             alignItems: "center",
-                            justifyContent: "center",
-                            width: 36,
-                            height: 36,
-                            borderRadius: "10px",
-                            bgcolor: isActive
-                              ? "rgba(255, 255, 255, 0.18)"
-                              : "rgba(4, 180, 110, 0.08)",
-                            color: isActive ? "#ffffff" : currentBrandConfig.primaryColor,
-                            transition: "all 0.25s ease",
-                            mb: 1.5,
                           }}
                         >
-                          <IconComponent size={20} />
+                          <Box
+                            sx={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: 36,
+                              height: 36,
+                              borderRadius: "10px",
+                              bgcolor: isActive
+                                ? "rgba(255, 255, 255, 0.18)"
+                                : "rgba(4, 180, 110, 0.08)",
+                              color: isActive
+                                ? "#ffffff"
+                                : currentBrandConfig.primaryColor,
+                              transition: "all 0.25s ease",
+                              mb: 1.5,
+                            }}
+                          >
+                            <IconComponent size={20} />
+                          </Box>
+                          {(t?.count || 0) > 0 && (
+                            <Badge
+                              badgeContent={t.count}
+                              color="error"
+                              sx={{
+                                "& .MuiBadge-badge": {
+                                  position: "static",
+                                  transform: "none",
+                                },
+                              }}
+                            />
+                          )}
                         </Box>
 
                         {/* Bottom: Labels */}
@@ -866,7 +899,9 @@ export default function AssetHandover() {
                             sx={{
                               fontSize: 11,
                               lineHeight: 1.3,
-                              color: isActive ? "rgba(255,255,255,0.75)" : "#94a3b8",
+                              color: isActive
+                                ? "rgba(255,255,255,0.75)"
+                                : "#94a3b8",
                               fontWeight: 400,
                             }}
                           >

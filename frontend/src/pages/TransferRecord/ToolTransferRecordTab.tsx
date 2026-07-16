@@ -1,11 +1,15 @@
 import { useState, SyntheticEvent } from "react";
-import { Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
+import { Badge, Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
 import TableCustom from "../../components/common/TableCustom";
 import { ToolTransferData } from "../ToolTransfer/types";
-import { useToolTransferPageQuery } from "../ToolTransfer/Mutation";
 import {
+  useToolTransferMutation,
+  useToolTransferPageQuery,
+} from "../ToolTransfer/Mutation";
+import {
+  getDecision,
   getTypeInfo,
   showDownloadFile,
   showShareStatus,
@@ -13,17 +17,22 @@ import {
   showStatusDocument,
   getPermissionSigning,
   ShowPermissionSigning,
+  isCheckShowShare,
 } from "../AssetTransfer/config";
+import { handleSendToSigner } from "../ToolTransfer/config";
 import { useDebounce } from "../../hooks/useDebounce";
 import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import S3Service from "../../services/S3Service";
 import SignDocumentForm from "../ToolTransfer/components/SignDocumentForm";
+import SignerSidebar from "../ToolTransfer/components/SignerSidebar";
+import BienBanTabContent from "../ToolTransfer/components/BienBanTabContent";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
-import { VisibilityOff } from "@mui/icons-material";
+import { Construction, VisibilityOff } from "@mui/icons-material";
 import { currentBrandConfig } from "../../config/brandConfig";
+import { useToolHandoverDetailsQuery } from "../ToolHandover/Mutation";
 
-export default function ToolTransferRecordTab() {
+export default function ToolTransferRecordTab({ counts }: { counts: any }) {
   const [subTab, setSubTab] = useState(0); // 0: Cấp phát, 1: Điều chuyển, 2: Thu hồi
   const [paginationModel, setPaginationModel] = useState({
     page: 0,
@@ -31,13 +40,27 @@ export default function ToolTransferRecordTab() {
   });
   const [searchValue, setSearchValue] = useState("");
   const [status, setStatus] = useState("");
-  const [showViewDocument, setShowViewDocument] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
   const [selectedRow, setSelectedRow] = useState<any>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [toolHandover, setToolHandover] = useState<any[]>([]);
 
   const { user } = useSelector((state: any) => state.user);
 
+  const {
+    updateManyMutation,
+    decisionMutation,
+    getToolHandoverMutation,
+    handleSignatureList,
+  } = useToolTransferMutation();
+
   const type = subTab + 1; // 1, 2, 3
   const debouncedSearch = useDebounce(searchValue, 600);
+
+  const { data: detailData = [] } = useToolHandoverDetailsQuery(
+    selectedRow?.id || "",
+  );
 
   const {
     data: pageData = {
@@ -62,12 +85,41 @@ export default function ToolTransferRecordTab() {
   const handleSubTabChange = (_event: SyntheticEvent, newValue: number) => {
     setSubTab(newValue);
     setPaginationModel({ ...paginationModel, page: 0 });
+    setShowSidebar(false);
+    setSelectedRow(null);
   };
 
-  const handleRowClick = (params: GridRowParams) => {
+  const handleClose = () => {
+    setShowSidebar(false);
+    setTabValue(0);
+    setSelectedRow(null);
+    setSelectedIds([]);
+    setToolHandover([]);
+  };
+
+  const handleRowClick = async (params: GridRowParams) => {
     const data = params.row as ToolTransferData;
     setSelectedRow(data);
-    setShowViewDocument(true);
+    setTabValue(0);
+    setShowSidebar(true);
+
+    if (data.coPhieuBanGiao) {
+      const result: any[] = await getToolHandoverMutation.mutateAsync(data.id);
+      setToolHandover(result);
+    } else {
+      setToolHandover([]);
+    }
+  };
+
+
+  const handleDecision = (data: any[]) => {
+    decisionMutation.mutate(data);
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, () => {
+      setSelectedIds([]);
+    });
   };
 
   const { label } = getTypeInfo(type.toString());
@@ -202,24 +254,6 @@ export default function ToolTransferRecordTab() {
     },
   ];
 
-  // if (showViewDocument) {
-  //   return (
-  //     <SignDocumentForm
-  //       key={selectedRow?.id}
-  //       selectedIds={[selectedRow?.id]}
-  //       document={selectedRow?.taiLieuCuoi}
-  //       onCancel={() => setShowViewDocument(false)}
-  //       onSign={() => {}} // Read-only
-  //       toolTransferDetail={selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []}
-  //       showSignerSidebar={true}
-  //       allUnits={allUnits}
-  //       fullscreen={true}
-  //       staffs={allStaffs}
-  //       isEdit={false}
-  //     />
-  //   );
-  // }
-
   return (
     <Box sx={{ p: 2 }}>
       <Box
@@ -250,9 +284,48 @@ export default function ToolTransferRecordTab() {
             },
           }}
         >
-          <Tab label="Cấp phát CCDC" />
-          <Tab label="Điều chuyển CCDC" />
-          <Tab label="Thu hồi CCDC" />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.toolTransfer?.banHanh1 || 0) +
+                  (counts?.shareCounts.totalToolTransfer1 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Cấp phát CCDC"
+          />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.toolTransfer?.banHanh2 || 0) +
+                  (counts?.shareCounts.totalToolTransfer2 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Điều chuyển CCDC"
+          />
+          <Tab
+            icon={
+              <Badge
+                badgeContent={
+                  (counts?.toolTransfer?.banHanh3 || 0) +
+                  (counts?.shareCounts.totalToolTransfer3 || 0)
+                }
+                color="error"
+              >
+                <Construction sx={{ fontSize: 20 }} />
+              </Badge>
+            }
+            label="Thu hồi CCDC"
+          />
         </Tabs>
       </Box>
 
@@ -266,16 +339,15 @@ export default function ToolTransferRecordTab() {
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
-          // height: "calc(100vh - 270px)",
         }}
       >
         <Grid
           size={{
-            xs: showViewDocument ? 6 : 12,
+            xs: showSidebar ? 6 : 12,
           }}
           sx={{
             transition: "all 0.3s ease",
-            borderRight: showViewDocument ? "1px solid" : "none",
+            borderRight: showSidebar ? "1px solid" : "none",
             borderColor: "divider",
             height: "100%",
             display: "flex",
@@ -286,11 +358,13 @@ export default function ToolTransferRecordTab() {
           <TableCustom
             tableId={`toolTransferRecordTab-${subTab}`}
             sx={{ height: "100%" }}
-            title=""
+            title={`Phiếu ${subTab === 0 ? "cấp phát" : subTab === 1 ? "điều chuyển" : "thu hồi"} CCDC`}
             columns={columns}
             rows={pageData.items}
             total={pageData.totalItems}
             paginationModel={paginationModel}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
             onPaginationModelChange={setPaginationModel}
             onRowClick={handleRowClick}
             searchValue={searchValue}
@@ -300,38 +374,65 @@ export default function ToolTransferRecordTab() {
             statusOptions={statusOptions}
             onStatusChange={setStatus}
             statusValue={status}
-            isCheckShowShare={() => false}
+            isCheckShowShare={isCheckShowShare}
             loading={isLoading}
+            handleSendToSigner={handleSend}
+            handleDecision={handleDecision}
+            isDecision={getDecision}
           />
         </Grid>
-        {showViewDocument && (
+        {showSidebar && (
           <Grid
             size={{ xs: 6 }}
             sx={{
               display: "flex",
               flexDirection: "column",
-              bgcolor: "white",
-              overflow: "hidden",
+              bgcolor: "background.paper",
+              borderLeft: "1px solid",
+              borderColor: "divider",
               height: "calc(100vh)",
+              overflow: "hidden",
             }}
           >
             <Box
               sx={{
-                p: 1,
-                borderBottom: "1px solid",
+                borderBottom: 1,
                 borderColor: "divider",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                bgcolor: "white",
                 pr: 1,
               }}
             >
-              <Box sx={{ ml: 2, fontWeight: "bold" }}>Xem tài liệu</Box>
+              <Tabs
+                value={tabValue}
+                onChange={(_, newValue) => setTabValue(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  "& .MuiTabs-indicator": {
+                    backgroundColor: "#04b46eff",
+                  },
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    minWidth: 100,
+                    "&.Mui-selected": {
+                      color: "#04b46eff",
+                    },
+                  },
+                }}
+              >
+                <Tab label="Tài liệu" />
+                <Tab label="Quy trình ký" />
+                <Tab label="Biên bản" />
+              </Tabs>
               <IconButton
                 size="small"
                 onClick={() => {
-                  setShowViewDocument(false);
+                  setShowSidebar(false);
+                  setTabValue(0);
                 }}
               >
                 <VisibilityOff sx={{ fontSize: 20 }} />
@@ -339,23 +440,53 @@ export default function ToolTransferRecordTab() {
             </Box>
 
             <Box sx={{ flex: 1, overflow: "hidden" }}>
-              <Box sx={{ height: "100%", overflow: "hidden" }}>
-                <SignDocumentForm
-                  key={selectedRow?.id}
-                  selectedIds={[selectedRow?.id]}
-                  document={selectedRow?.taiLieuCuoi}
-                  onCancel={() => setShowViewDocument(false)}
-                  onSign={() => {}} // Read-only
-                  toolTransferDetail={
-                    selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []
-                  }
-                  showSignerSidebar={false}
-                  allUnits={allUnits}
-                  fullscreen={false}
-                  staffs={allStaffs}
-                  isEdit={false}
-                />
-              </Box>
+              {tabValue === 0 ? (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <SignDocumentForm
+                    key={selectedRow?.id}
+                    selectedIds={
+                      selectedIds.length > 0
+                        ? selectedIds
+                        : selectedRow
+                          ? [selectedRow.id]
+                          : []
+                    }
+                    document={selectedRow?.taiLieuCuoi}
+                    onCancel={handleClose}
+                    onSign={() => {}} // Read-only
+                    toolTransferDetail={
+                      selectedRow?.chiTietDieuDongCCDCVatTuDTOS || []
+                    }
+                    showSignerSidebar={false}
+                    allUnits={allUnits}
+                    fullscreen={false}
+                    staffs={allStaffs}
+                    handleSignatureList={handleSignatureList}
+                    isEdit={false}
+                    title={`${selectedRow?.tenPhieu || ""} (${selectedRow?.id || ""})`}
+                  />
+                </Box>
+              ) : tabValue === 1 ? (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <SignerSidebar
+                    key={selectedRow?.id}
+                    selectedRow={selectedRow}
+                    handoverDetails={detailData}
+                    onClose={() => {
+                      setShowSidebar(false);
+                      setTabValue(0);
+                    }}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ height: "calc(100vh - 120px)", overflow: "hidden" }}>
+                  <BienBanTabContent
+                    toolHandover={toolHandover}
+                    handleSignatureList={handleSignatureList}
+                    onClose={handleClose}
+                  />
+                </Box>
+              )}
             </Box>
           </Grid>
         )}

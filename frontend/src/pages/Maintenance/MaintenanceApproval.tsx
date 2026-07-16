@@ -335,7 +335,7 @@ export default function MaintenanceApprovalPage() {
     true,
     dateFrom,
     dateTo,
-    undefined,
+    bienPhapType,
     undefined,
     activeTab === 1,
   );
@@ -1265,51 +1265,55 @@ export default function MaintenanceApprovalPage() {
                 label: "Kế hoạch",
                 subLabel: "Kế hoạch bảo trì",
                 icon: ClipboardList,
-                count: counts.totalPlan,
+                count: counts.signCounts.totalPlan,
               },
               {
                 label: "Phiếu báo sự cố",
                 subLabel: "Báo cáo sự cố thiết bị",
                 icon: AlertTriangle,
-                count: counts.totalIncident,
+                count: counts.signCounts.totalIncident,
               },
               {
                 label: "BB Kiểm tra sự cố",
                 subLabel: "Kiểm tra hiện trạng SC",
                 icon: FileWarning,
-                count: counts.totalIncidentInspection,
+                count: counts.signCounts.totalIncidentInspection,
               },
               {
                 label: "Lệnh sửa chữa",
                 subLabel: "Lệnh xử lý kỹ thuật",
                 icon: Wrench,
-                count: counts.totalRepair,
+                count: counts.signCounts.totalRepair,
               },
               {
                 label: "BB Giám định",
                 subLabel: "Giám định máy móc",
                 icon: FileSearch,
                 count:
-                  counts.totalInspectionMachine + counts.totalInspectionVehicle,
+                  counts.signCounts.totalInspectionMachine +
+                  counts.signCounts.totalInspectionVehicle,
               },
               {
                 label: "Biện pháp sửa chữa",
                 subLabel: "Biện pháp xử lý thiết bị",
                 icon: Wrench,
-                count: counts.totalMeasureMachine + counts.totalMeasureVehicle,
+                count:
+                  counts.signCounts.totalMeasureMachine +
+                  counts.signCounts.totalMeasureVehicle,
               },
               {
                 label: "BB Nghiệm thu",
                 subLabel: "Nghiệm thu hoàn thành",
                 icon: ClipboardCheck,
                 count:
-                  counts.totalMachineInspection + counts.totalVehicleAcceptance,
+                  counts.signCounts.totalMachineInspection +
+                  counts.signCounts.totalVehicleAcceptance,
               },
               {
                 label: "BB Đánh giá VT",
                 subLabel: "Đánh giá vật tư tiêu hao",
                 icon: Boxes,
-                count: counts.totalMaterialAssessment,
+                count: counts.signCounts.totalMaterialAssessment,
               },
             ].map((tab, idx) => {
               const IconComponent = tab.icon;
@@ -1464,6 +1468,7 @@ export default function MaintenanceApprovalPage() {
             setDateTo={setDateTo}
             nhomTaiSanFilter={
               activeTab === 0 ||
+              activeTab === 1 ||
               activeTab === 4 ||
               activeTab === 5 ||
               activeTab === 6
@@ -1472,6 +1477,7 @@ export default function MaintenanceApprovalPage() {
             }
             setNhomTaiSanFilter={
               activeTab === 0 ||
+              activeTab === 1 ||
               activeTab === 4 ||
               activeTab === 5 ||
               activeTab === 6

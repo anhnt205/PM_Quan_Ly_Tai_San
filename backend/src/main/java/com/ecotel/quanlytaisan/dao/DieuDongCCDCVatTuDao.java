@@ -362,8 +362,8 @@ public class DieuDongCCDCVatTuDao {
         int thoiHanTaiLieu = 60;
         int ngayBaoHetHan = 3;
         if (config != null) {
-            thoiHanTaiLieu = config.getThoiHanTaiLieu();
-            ngayBaoHetHan = config.getNgayBaoHetHan();
+            if (config.getThoiHanTaiLieu() != null && config.getThoiHanTaiLieu() > 0) thoiHanTaiLieu = config.getThoiHanTaiLieu();
+            if (config.getNgayBaoHetHan() != null && config.getNgayBaoHetHan() > 0) ngayBaoHetHan = config.getNgayBaoHetHan();
         }
 
         if (dieuDongCCDCVatTuDTO.getTrangThai() == 3) {
@@ -398,7 +398,7 @@ public class DieuDongCCDCVatTuDao {
         Config config = configDao.findByIdAccount(idNguoiTao);
         String ngayTao = dieuDongCCDCVatTuDTO.getNgayTao();
         int soNgay = 60;
-        if (config != null) soNgay = config.getThoiHanTaiLieu();
+        if (config != null && config.getThoiHanTaiLieu() != null && config.getThoiHanTaiLieu() > 0) soNgay = config.getThoiHanTaiLieu();
 
         LocalDateTime createdDate = LocalDateTime.now();
         try {

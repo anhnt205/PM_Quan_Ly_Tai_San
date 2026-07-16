@@ -206,7 +206,7 @@ export default function MaintenanceRecordPage() {
     undefined,
     dateFrom,
     dateTo,
-    undefined,
+    bienPhapType,
     undefined,
     activeTab === 1,
   );
@@ -1223,6 +1223,7 @@ export default function MaintenanceRecordPage() {
             setDateTo={setDateTo}
             nhomTaiSanFilter={
               activeTab === 0 ||
+              activeTab === 1 ||
               activeTab === 4 ||
               activeTab === 5 ||
               activeTab === 6
@@ -1231,6 +1232,7 @@ export default function MaintenanceRecordPage() {
             }
             setNhomTaiSanFilter={
               activeTab === 0 ||
+              activeTab === 1 ||
               activeTab === 4 ||
               activeTab === 5 ||
               activeTab === 6

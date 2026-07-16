@@ -396,8 +396,8 @@ public class DieuDongTaiSanDao {
         int thoiHanTaiLieu = 60;
         int ngayBaoHetHan = 3;
         if (config != null) {
-            thoiHanTaiLieu = config.getThoiHanTaiLieu();
-            ngayBaoHetHan = config.getNgayBaoHetHan();
+            if (config.getThoiHanTaiLieu() != null && config.getThoiHanTaiLieu() > 0) thoiHanTaiLieu = config.getThoiHanTaiLieu();
+            if (config.getNgayBaoHetHan() != null && config.getNgayBaoHetHan() > 0) ngayBaoHetHan = config.getNgayBaoHetHan();
         }
 
         if (dieuDongTaiSanDTO.getTrangThai() == 3) {
@@ -466,7 +466,7 @@ public class DieuDongTaiSanDao {
         Config config = configDao.findByIdAccount(idNguoiTao);
         String ngayTao = dieuDongTaiSanDTO.getNgayTao();
         int soNgay = 60;
-        if (config != null) {
+        if (config != null && config.getThoiHanTaiLieu() != null && config.getThoiHanTaiLieu() > 0) {
             soNgay = config.getThoiHanTaiLieu();
         }
 

@@ -272,7 +272,10 @@ export default function Menuheader() {
   const { user } = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const permissions = user?.role?.filter((r: any) => r.canRead).map((r: any) => r.permissionCode) || [];
+  const permissions =
+    user?.role
+      ?.filter((r: any) => r.canRead)
+      .map((r: any) => r.permissionCode) || [];
   const hasPermission = (code?: string) => {
     if (!code) return true; // menu không yêu cầu quyền
     return permissions.includes(code);
@@ -321,22 +324,10 @@ export default function Menuheader() {
   const {
     assetTransfer: assetTransferCounts,
     toolTransfer: toolTransferCounts,
-    assetHandover: assetHandoverCount,
-    toolHandover: toolHandoverCount,
     transferAssetPageItems,
     transferToolPageItems,
-    totalPlan,
-    totalIncident,
-    totalRepair,
-    totalIncidentInspection,
-    totalMaterialAssessment,
-    totalInspectionMachine,
-    totalInspectionVehicle,
-    totalMachineInspection,
-    totalVehicleAcceptance,
-    totalMeasureMachine,
-    totalMeasureVehicle,
     shareCounts,
+    signCounts,
   } = counts;
 
   const handleConfirmExpiration = async (
@@ -409,8 +400,16 @@ export default function Menuheader() {
           text: "Danh mục thiết bị",
           path: "#",
           subMenu: [
-            { text: "Nhóm tài sản", path: ROUTES.ASSETGROUP,code:"NHOMTAISAN" },
-            { text: "Mô hình tài sản", path: ROUTES.MODELASSET,code:"MOHINHTAISAN" },
+            {
+              text: "Nhóm tài sản",
+              path: ROUTES.ASSETGROUP,
+              code: "NHOMTAISAN",
+            },
+            {
+              text: "Mô hình tài sản",
+              path: ROUTES.MODELASSET,
+              code: "MOHINHTAISAN",
+            },
             { text: "Lý lịch tài sản", path: ROUTES.ASSETPROFILE },
             { text: "Loại tài sản", path: ROUTES.TYPEASSET },
             { text: "Nhóm ccdc", path: ROUTES.TOOLGROUP },
@@ -423,7 +422,11 @@ export default function Menuheader() {
           path: "#",
           subMenu: [
             { text: "Quản lý dự án", path: ROUTES.PROJECT, code: "DUAN" },
-            { text: "Quản lý nguồn vốn", path: ROUTES.CAPITALSOURCE,code:"NGUONVON" },
+            {
+              text: "Quản lý nguồn vốn",
+              path: ROUTES.CAPITALSOURCE,
+              code: "NGUONVON",
+            },
             { text: "Lý do tăng", path: ROUTES.REASONINCREASE },
             { text: "Loại sửa chữa", path: ROUTES.MAINTENANCEREPAIRTYPE },
             { text: "Đơn vị tính", path: ROUTES.UNIT },
@@ -453,29 +456,26 @@ export default function Menuheader() {
       count:
         assetTransferCounts.total +
         toolTransferCounts.total +
-        shareCounts.totalAssetTransfer +
-        shareCounts.totalToolTransfer,
+        assetTransferCounts.banHanhTotal +
+        toolTransferCounts.banHanhTotal +
+        shareCounts.totalTransfer,
       subMenu: [
         {
           text: "Điều chuyển tài sản",
           path: "#",
           code: "DIEUDONG_TAISAN",
-          count: assetTransferCounts.total,
           subMenu: [
             {
               text: "Cấp phát tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=1`,
-              count: assetTransferCounts.c1,
             },
             {
               text: "Điều chuyển tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=2`,
-              count: assetTransferCounts.c2,
             },
             {
               text: "Thu hồi tài sản",
               path: `${ROUTES.ASSETTRANSFER}?type=3`,
-              count: assetTransferCounts.c3,
             },
           ],
         },
@@ -483,22 +483,18 @@ export default function Menuheader() {
           text: "Điều chuyển CCDC",
           path: "#",
           code: "DIEUDONG_CCDC",
-          count: toolTransferCounts.total,
           subMenu: [
             {
               text: "Cấp phát CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=1`,
-              count: toolTransferCounts.c1,
             },
             {
               text: "Điều chuyển CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=2`,
-              count: toolTransferCounts.c2,
             },
             {
               text: "Thu hồi CCDC",
               path: `${ROUTES.TOOLTRANSFER}?type=3`,
-              count: toolTransferCounts.c3,
             },
           ],
         },
@@ -510,7 +506,10 @@ export default function Menuheader() {
         {
           text: "Quản lý biên bản",
           path: ROUTES.TRANSFER_RECORD,
-          count: shareCounts.totalAssetTransfer + shareCounts.totalToolTransfer,
+          count:
+            shareCounts.totalTransfer +
+            assetTransferCounts.banHanhTotal +
+            toolTransferCounts.banHanhTotal,
         },
       ],
     },
@@ -519,38 +518,33 @@ export default function Menuheader() {
       icon: <Handshake fontSize="small" />,
       path: "#",
       count:
-        assetHandoverCount +
-        toolHandoverCount +
+        signCounts.totalAssetHandover +
+        signCounts.totalToolHandover +
         transferAssetPageItems +
         transferToolPageItems +
-        shareCounts.totalAssetHandover +
-        shareCounts.totalToolHandover,
+        shareCounts.totalHandover,
       subMenu: [
         {
           text: "Bàn giao tài sản",
           path: "/ban_giao_tai_san",
           code: "BANGIAO_TAISAN",
-          count: assetHandoverCount + transferAssetPageItems,
+          count: transferAssetPageItems,
         },
         {
           text: "Bàn giao CCDC",
           path: ROUTES.TOOLHANDOVER,
           code: "BANGIAO_CCDC",
-          count: toolHandoverCount + transferToolPageItems,
+          count: transferToolPageItems,
         },
         {
           text: "Phê duyệt",
           path: ROUTES.HANDOVER_APPROVAL,
-          count:
-            assetHandoverCount +
-            toolHandoverCount +
-            transferAssetPageItems +
-            transferToolPageItems,
+          count: signCounts.totalAssetHandover + signCounts.totalToolHandover,
         },
         {
           text: "Quản lý biên bản",
           path: ROUTES.HANDOVER_RECORD,
-          count: shareCounts.totalAssetHandover + shareCounts.totalToolHandover,
+          count: shareCounts.totalHandover,
         },
       ],
     },
@@ -558,19 +552,7 @@ export default function Menuheader() {
       text: "Sửa chữa bảo dưỡng",
       icon: <Engineering fontSize="small" />,
       path: "#",
-      count:
-        totalPlan +
-        totalIncident +
-        totalRepair +
-        totalIncidentInspection +
-        totalMaterialAssessment +
-        totalInspectionMachine +
-        totalInspectionVehicle +
-        totalMachineInspection +
-        totalVehicleAcceptance +
-        totalMeasureMachine +
-        totalMeasureVehicle +
-        shareCounts.total,
+      count: signCounts.totalMaintance + shareCounts.totalMaintance,
       subMenu: [
         {
           text: "Quản lý sửa chữa",
@@ -591,23 +573,12 @@ export default function Menuheader() {
         {
           text: "Phê duyệt",
           path: ROUTES.MAINTENANCE_APPROVAL,
-          count:
-            totalPlan +
-            totalIncident +
-            totalRepair +
-            totalIncidentInspection +
-            totalMaterialAssessment +
-            totalInspectionMachine +
-            totalInspectionVehicle +
-            totalMachineInspection +
-            totalVehicleAcceptance +
-            totalMeasureMachine +
-            totalMeasureVehicle,
+          count: signCounts.totalMaintance,
         },
         {
           text: "Quản lý biên bản",
           path: ROUTES.MAINTENANCE_RECORD,
-          count: shareCounts.total,
+          count: shareCounts.totalMaintance,
         },
       ],
     },
@@ -784,7 +755,10 @@ export default function Menuheader() {
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleCloseSettingMenu}>
             <ListItemIcon>
-              <Person fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
+              <Person
+                fontSize="small"
+                sx={{ color: currentBrandConfig.primaryColor }}
+              />
             </ListItemIcon>
             <Typography
               component={Link}
@@ -800,13 +774,19 @@ export default function Menuheader() {
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenExpirationDialog}>
             <ListItemIcon>
-              <Settings fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
+              <Settings
+                fontSize="small"
+                sx={{ color: currentBrandConfig.primaryColor }}
+              />
             </ListItemIcon>
             <Typography>Thiết lập thời gian</Typography>
           </MenuItem>
           <MenuItem sx={{ py: 2 }} onClick={handleOpenMssqlDialog}>
             <ListItemIcon>
-              <Storage fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
+              <Storage
+                fontSize="small"
+                sx={{ color: currentBrandConfig.primaryColor }}
+              />
             </ListItemIcon>
             <Typography>Cấu hình server</Typography>
           </MenuItem>
@@ -820,7 +800,10 @@ export default function Menuheader() {
             }}
           >
             <ListItemIcon>
-              <Logout fontSize="small" sx={{color:currentBrandConfig.primaryColor}} />
+              <Logout
+                fontSize="small"
+                sx={{ color: currentBrandConfig.primaryColor }}
+              />
             </ListItemIcon>
             <Typography>Đăng xuất</Typography>
           </MenuItem>

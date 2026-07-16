@@ -543,7 +543,7 @@ export default function ToolTransfer() {
     <>
       {/* Biên bản Dialog không còn dùng trực tiếp vì chuyển sang Tab */}
 
-      {showSignDocument && isFullPageSign ? (
+      {/* {showSignDocument && isFullPageSign ? (
         <SignDocumentForm
           key={selectedRow?.id}
           selectedIds={selectedIds}
@@ -559,7 +559,7 @@ export default function ToolTransfer() {
           isEdit={false}
         />
       ) : (
-        <>
+        <> */}
           <PageAction
             title={title}
             onNewClick={() => {
@@ -657,22 +657,22 @@ export default function ToolTransfer() {
                   selectedIds={selectedIds}
                   onSelectionChange={setSelectedIds}
                   onDelete={(ids: string[]) => {}}
-                  onSign={handleViewSignAssets}
-                  handleSignDocument={handleSignDocument}
-                  canSign={canSign}
+                  // onSign={handleViewSignAssets}
+                  // handleSignDocument={handleSignDocument}
+                  // canSign={canSign}
                   searchValue={searchValue}
                   setSearchValue={setSearchValue}
                   showStatusFilter={true}
                   showDelete={false}
-                  handleSendToSigner={handleSend}
+                  // handleSendToSigner={handleSend}
                   statusOptions={statusOptions}
                   onStatusChange={(value) => {
                     setStatus(value);
                   }}
                   statusValue={status}
-                  handleDecision={handleDecision}
+                  // handleDecision={handleDecision}
                   isDecision={getDecision}
-                  isCheckShowShare={isCheckShowShare}
+                  // isCheckShowShare={isCheckShowShare}
                   loading={isLoading}
                 />
               </Grid>
@@ -794,8 +794,8 @@ export default function ToolTransfer() {
               )}
             </Grid>
           </Box>
-        </>
-      )}
+        {/* </>
+      )} */}
     </>
   );
 }
