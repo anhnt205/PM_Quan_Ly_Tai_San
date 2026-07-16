@@ -99,7 +99,12 @@ export const useAssetHandoverMutation = () => {
       const res = await api.put(`/bangiaotaisan/batch`, data);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
+      const list = await listNguoiKy(data);
+      socketService.send({
+        type: MessageTypeFunctions.ASSET_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       console.log("Sửa bàn giao tài sản thành công");
     },

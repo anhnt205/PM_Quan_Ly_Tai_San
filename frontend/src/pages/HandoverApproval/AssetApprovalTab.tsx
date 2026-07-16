@@ -224,7 +224,13 @@ export default function AssetApprovalTab() {
     return (
       <SignDocumentForm
         key={selectedRow?.id}
-        selectedIds={selectedIds}
+        selectedIds={
+          selectedIds.length > 0
+            ? selectedIds
+            : selectedRow
+              ? [selectedRow.id]
+              : []
+        }
         onCancel={handleClose}
         onSign={handleSign}
         assetHandover={selectedRow}

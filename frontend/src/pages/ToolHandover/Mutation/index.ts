@@ -68,7 +68,6 @@ export const useToolHandoverMutation = () => {
       return res.data;
     },
     onSuccess: async (response, data) => {
-
       const list = await listNguoiKy([data]);
       socketService.send({
         type: MessageTypeFunctions.TOOL_HANDOVER,
@@ -104,7 +103,12 @@ export const useToolHandoverMutation = () => {
       const res = await api.put(`/bangiaoccdcvattu/batch`, data);
       return res.data;
     },
-    onSuccess: (response, data) => {
+    onSuccess: async (response, data) => {
+      const list = await listNguoiKy([data]);
+      socketService.send({
+        type: MessageTypeFunctions.TOOL_HANDOVER,
+        recieve: list,
+      });
       queryClient.invalidateQueries({ queryKey: [mainKey] });
       console.log("Sửa bàn giao ccdc vật tư thành công");
     },

@@ -3,7 +3,8 @@ import {
   Box,
   Grid,
   IconButton,
-  Tooltip,
+  Tab,
+  Tabs,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
@@ -12,6 +13,7 @@ import { VisibilityOff } from "@mui/icons-material";
 import TableCustom from "../../components/common/TableCustom";
 import { AssetHandoverData } from "../AssetHandover/types";
 import {
+  useAssetHandoverMutation,
   useAssetHandoverPageQuery,
 } from "../AssetHandover/Mutation";
 import { useDebounce } from "../../hooks/useDebounce";
@@ -19,7 +21,6 @@ import { useAllStaffsQuery } from "../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
 import { useAllUnitsQuery } from "../Unit/Mutation";
 import { useAllPositionsQuery } from "../Position/Mutation";
-import { useAllCurrentStatusQuery } from "../CurrentStatus/Mutation";
 import S3Service from "../../services/S3Service";
 import { FilterOption } from "../../components/common/FilterStatusGroup";
 import {
@@ -27,11 +28,14 @@ import {
 } from "../AssetTransfer/config";
 import {
   getPermissionSigning,
+  handleSendToSigner,
+  isCheckShowShare,
   ShowPermissionSigning,
   showStatus,
   StatusHandover,
 } from "../AssetHandover/config";
 import SignDocumentForm from "../AssetHandover/components/SignDocumentForm";
+import SignerSidebar from "../AssetHandover/components/SignerSidebar";
 
 export default function AssetRecordTab() {
   const [paginationModel, setPaginationModel] = useState({
@@ -40,12 +44,13 @@ export default function AssetRecordTab() {
   });
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [showViewDocument, setShowViewDocument] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [currentStatus, setCurrentStatus] = useState("");
   const [showSidebar, setShowSidebar] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
 
   const { user } = useSelector((state: any) => state.user);
+  const { updateManyMutation } = useAssetHandoverMutation();
 
   const searchDebounce = useDebounce(searchValue, 600);
   
@@ -66,9 +71,15 @@ export default function AssetRecordTab() {
   const handleClose = () => {
     setSelectedIds([]);
     setSearchValue("");
-    setShowViewDocument(false);
     setSelectedRow(null);
     setShowSidebar(false);
+    setTabValue(0);
+  };
+
+  const handleSend = (items: any[]) => {
+    handleSendToSigner(items, updateManyMutation.mutateAsync, () => {
+      setSelectedIds([]);
+    });
   };
 
   const statusOptions: FilterOption[] = [
@@ -112,7 +123,7 @@ export default function AssetRecordTab() {
     const data = params.row as any;
     setSelectedRow({ ...data, isNew: false });
     setShowSidebar(true);
-    setShowViewDocument(true);
+    setTabValue(0);
   };
 
   const columns: GridColDef<AssetHandoverData>[] = [
@@ -207,7 +218,6 @@ export default function AssetRecordTab() {
           border: "1px solid #e0e0e0",
           borderRadius: "8px",
           overflow: "hidden",
-          // height: "calc(100vh - 220px)",
         }}
       >
         <Grid 
@@ -240,8 +250,8 @@ export default function AssetRecordTab() {
             selectedIds={selectedIds}
             onSelectionChange={setSelectedIds}
             showDelete={false}
-            isCheckShowShare={() => false}
-            // Signing features disabled for Record page
+            isCheckShowShare={isCheckShowShare}
+            handleSendToSigner={handleSend}
           />
         </Grid>
 
@@ -258,21 +268,38 @@ export default function AssetRecordTab() {
           >
             <Box
               sx={{
-                p: 1,
                 borderBottom: "1px solid",
                 borderColor: "divider",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                bgcolor: "white",
                 pr: 1,
               }}
             >
-              <Box sx={{ ml: 2, fontWeight: "bold" }}>Xem tài liệu</Box>
+              <Tabs
+                value={tabValue}
+                onChange={(_, newValue) => setTabValue(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  "& .MuiTabs-indicator": { backgroundColor: "#04b46eff" },
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    minWidth: 100,
+                    "&.Mui-selected": { color: "#04b46eff" },
+                  },
+                }}
+              >
+                <Tab label="Tài liệu" />
+                <Tab label="Quy trình ký" />
+              </Tabs>
               <IconButton
                 size="small"
                 onClick={() => {
                   setShowSidebar(false);
+                  setTabValue(0);
                 }}
               >
                 <VisibilityOff sx={{ fontSize: 20 }} />
@@ -280,24 +307,37 @@ export default function AssetRecordTab() {
             </Box>
 
             <Box sx={{ flex: 1, overflow: "hidden" }}>
-              <Box sx={{ height: "100%", overflow: "hidden" }}>
-                <SignDocumentForm
-                  key={selectedRow?.id}
-                  selectedIds={[selectedRow?.id]}
-                  onCancel={handleClose}
-                  onSign={() => {}} // No-op
-                  assetHandover={selectedRow}
-                  showSignerSidebar={false} // Hide signing sidebar
-                  allUnits={allUnits}
-                  fullscreen={false}
-                  staffs={staffs}
-                  departments={departments}
-                  positions={positions}
-                  isEdit={false}
-                  bangKe={selectedRow.taiLieuBangKe}
-                  title={`${selectedRow?.banGiaoTaiSan || ""} (${selectedRow?.id || ""})`}
-                />
-              </Box>
+              {tabValue === 0 ? (
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
+                  <SignDocumentForm
+                    key={selectedRow?.id}
+                    selectedIds={[selectedRow?.id]}
+                    onCancel={handleClose}
+                    onSign={() => {}} // Read-only
+                    assetHandover={selectedRow}
+                    showSignerSidebar={false}
+                    allUnits={allUnits}
+                    fullscreen={false}
+                    staffs={staffs}
+                    departments={departments}
+                    positions={positions}
+                    isEdit={false}
+                    bangKe={selectedRow.taiLieuBangKe}
+                    title={`${selectedRow?.banGiaoTaiSan || ""} (${selectedRow?.id || ""})`}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
+                  <SignerSidebar
+                    key={selectedRow?.id}
+                    selectedRow={selectedRow}
+                    onClose={() => {
+                      setShowSidebar(false);
+                      setTabValue(0);
+                    }}
+                  />
+                </Box>
+              )}
             </Box>
           </Grid>
         )}

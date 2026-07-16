@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Box, Grid, IconButton, Tooltip } from "@mui/material";
+import { Box, Grid, IconButton, Tab, Tabs } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { useSelector } from "react-redux";
-import { Eye } from "lucide-react";
+import { VisibilityOff } from "@mui/icons-material";
 
 import TableCustom from "../../components/common/TableCustom";
 import { ToolHandoverData, SignaturesData } from "../ToolHandover/types";
@@ -27,6 +27,7 @@ import {
   StatusHandover,
 } from "../ToolHandover/config";
 import SignDocumentForm from "../ToolHandover/components/SignDocumentForm";
+import SignerSidebar from "../ToolHandover/components/SignerSidebar";
 
 export default function ToolApprovalTab() {
   const [paginationModel, setPaginationModel] = useState({
@@ -39,6 +40,11 @@ export default function ToolApprovalTab() {
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const [isFullPageSign, setIsFullPageSign] = useState(false);
   const [currentStatus, setCurrentStatus] = useState("");
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [tabValue, setTabValue] = useState(0);
+  const [sidebarMode, setSidebarMode] = useState<"document" | "signer" | null>(
+    null,
+  );
 
   const { user } = useSelector((state: any) => state.user);
   const { signMutation } = useToolHandoverMutation();
@@ -101,26 +107,33 @@ export default function ToolApprovalTab() {
     setSearchValue("");
     setShowSignDocument(false);
     setSelectedRow(null);
+    setShowSidebar(false);
+    setSidebarMode(null);
+    setTabValue(0);
   };
 
   const handleRowClick = (params: GridRowParams) => {
     const data = params.row as any;
     setSelectedRow({ ...data, isNew: false });
+    setShowSidebar(true);
+    setSidebarMode("document");
     setShowSignDocument(true);
-    setIsFullPageSign(true);
+    setIsFullPageSign(false);
+    setTabValue(0);
   };
 
   const handleViewSignTools = async (fileName: string, item: any) => {
     setShowSignDocument(true);
     setSelectedRow(item);
     setIsFullPageSign(true);
+    setShowSidebar(false);
   };
 
   const handleSign = (
     data: SignaturesData[],
-    assetHandover: ToolHandoverData,
+    toolHandover: ToolHandoverData,
   ) => {
-    signMutation.mutate({ data, assetHandover });
+    signMutation.mutate({ data, assetHandover: toolHandover });
   };
 
   const columns: GridColDef<any>[] = [
@@ -211,7 +224,13 @@ export default function ToolApprovalTab() {
     return (
       <SignDocumentForm
         key={selectedRow?.id}
-        selectedIds={selectedIds}
+        selectedIds={
+          selectedIds.length > 0
+            ? selectedIds
+            : selectedRow
+              ? [selectedRow.id]
+              : []
+        }
         onCancel={handleClose}
         onSign={handleSign}
         toolHandover={selectedRow}
@@ -235,11 +254,25 @@ export default function ToolApprovalTab() {
           border: "1px solid #e0e0e0",
           borderRadius: "8px",
           overflow: "hidden",
+          height: "calc(100vh - 220px)",
         }}
       >
-        <Grid size={{ xs: 12 }}>
+        <Grid
+          size={{ xs: showSidebar && sidebarMode === "document" ? 6 : 12 }}
+          sx={{
+            transition: "all 0.3s ease",
+            borderRight:
+              showSidebar && sidebarMode === "document" ? "1px solid" : "none",
+            borderColor: "divider",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+          }}
+        >
           <TableCustom
             tableId="toolHandoverApproval"
+            sx={{ height: "100%" }}
             loading={isLoading}
             title="Phê duyệt bàn giao ccdc"
             columns={columns}
@@ -261,6 +294,101 @@ export default function ToolApprovalTab() {
             isCheckShowShare={() => false}
           />
         </Grid>
+
+        {showSidebar && sidebarMode === "document" && (
+          <Grid
+            size={{ xs: 6 }}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              bgcolor: "white",
+              height: "100%",
+              overflow: "hidden",
+            }}
+          >
+            <Box
+              sx={{
+                p: 1,
+                borderBottom: "1px solid",
+                borderColor: "divider",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                bgcolor: "white",
+                pr: 1,
+              }}
+            >
+              <Tabs
+                value={tabValue}
+                onChange={(_, newValue) => setTabValue(newValue)}
+                variant="scrollable"
+                scrollButtons="auto"
+                sx={{
+                  "& .MuiTabs-indicator": { backgroundColor: "#04b46eff" },
+                  "& .MuiTab-root": {
+                    textTransform: "none",
+                    fontWeight: 600,
+                    fontSize: "0.875rem",
+                    minWidth: 100,
+                    "&.Mui-selected": { color: "#04b46eff" },
+                  },
+                }}
+              >
+                <Tab label="Tài liệu" />
+                <Tab label="Quy trình ký" />
+              </Tabs>
+              <IconButton
+                size="small"
+                onClick={() => {
+                  setShowSidebar(false);
+                  setSidebarMode(null);
+                }}
+              >
+                <VisibilityOff sx={{ fontSize: 20 }} />
+              </IconButton>
+            </Box>
+
+            <Box sx={{ flex: 1, overflow: "hidden" }}>
+              {tabValue === 0 ? (
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
+                  <SignDocumentForm
+                    key={selectedRow?.id}
+                    selectedIds={
+                      selectedIds.length > 0
+                        ? selectedIds
+                        : selectedRow
+                          ? [selectedRow.id]
+                          : []
+                    }
+                    onCancel={handleClose}
+                    onSign={handleSign}
+                    toolHandover={selectedRow}
+                    showSignerSidebar={false}
+                    allUnits={allUnits}
+                    fullscreen={false}
+                    staffs={staffs}
+                    departments={departments}
+                    positions={positions}
+                    isEdit={false}
+                    bangKe={selectedRow.taiLieuBangKe}
+                    title={`${selectedRow?.banGiaoCCDCVatTu || ""} (${selectedRow?.id || ""})`}
+                  />
+                </Box>
+              ) : (
+                <Box sx={{ height: "100%", overflow: "hidden" }}>
+                  <SignerSidebar
+                    key={selectedRow?.id}
+                    selectedRow={selectedRow}
+                    onClose={() => {
+                      setShowSidebar(false);
+                      setSidebarMode(null);
+                    }}
+                  />
+                </Box>
+              )}
+            </Box>
+          </Grid>
+        )}
       </Grid>
     </Box>
   );
