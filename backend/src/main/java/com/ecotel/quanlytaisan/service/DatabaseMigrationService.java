@@ -171,7 +171,7 @@ public class DatabaseMigrationService {
             : "";
 
         String sql = String.format(
-            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT,dmvt.MA_DVT1, dmvt.MA_NHOM_VTHH, dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
+            "SELECT dmvt.MA_VTHH, dmvt.TEN_VTHH, dmvt.MA_DVT,dmvt.MA_DVT1, dmvt.MA_NHOM_VTHH5, dmvt.LOAI_VTHH, dmvt.PROPERTY1, " +
             "       (SELECT TOP 1 vc.GIA_GOC " +
             "        FROM [%s].dbo.VTHH_CT vc " +
             "        WHERE vc.MA_VTHH = dmvt.MA_VTHH AND vc.GIA_GOC IS NOT NULL AND vc.GIA_GOC > 0 " +
@@ -202,7 +202,7 @@ public class DatabaseMigrationService {
             vatTu.setTen(nvl(row.get("TEN_VTHH")));
             vatTu.setDonViTinh(nvl(row.get("MA_DVT")));
             vatTu.setDonViTinh2(nvl(row.get("MA_DVT1")));
-            vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
+            vatTu.setIdNhomCCDC(nvl(row.get("MA_NHOM_VTHH5")));   // dùng MA_NHOM_VTHH thay MA_NHOM_VTHH1
             vatTu.setNuocSanXuat(nvl(row.get("PROPERTY1")));      // PROPERTY1 = nuớc sản xuất
             vatTu.setIdLoaiCCDCCon(nvl(row.get("LOAI_VTHH")));
             vatTu.setIdCongTy("ct001");
@@ -225,9 +225,9 @@ public class DatabaseMigrationService {
      * rồi upsert vào bảng NhomCCDC local (id = MA_NHOM_VTHH, ten = TEN_NHOM_VTHH).
      */
     private void loadAndSyncNhomVthh(JdbcTemplate remote, String dbStr) {
-        System.out.println("  Đồng bộ danh mục NhomCCDC từ DM_NHOM_VTHH...");
+        System.out.println("  Đồng bộ danh mục NhomCCDC từ DM_NHOM_VTHH5...");
         String sql = String.format(
-            "SELECT MA_NHOM_VTHH, TEN_NHOM_VTHH FROM [%s].dbo.DM_NHOM_VTHH",
+            "SELECT MA_NHOM_VTHH5, TEN_NHOM_VTHH5 FROM [%s].dbo.DM_NHOM_VTHH5",
             dbStr
         );
 
@@ -244,8 +244,8 @@ public class DatabaseMigrationService {
         int count = 0;
 
         for (Map<String, Object> row : rows) {
-            String maNhom = nvl(row.get("MA_NHOM_VTHH"));
-            String tenNhom = nvl(row.get("TEN_NHOM_VTHH"));
+            String maNhom = nvl(row.get("MA_NHOM_VTHH5"));
+            String tenNhom = nvl(row.get("TEN_NHOM_VTHH5"));
             if (maNhom.isEmpty()) continue;
 
             NhomCCDC nhom = new NhomCCDC();
@@ -257,6 +257,14 @@ public class DatabaseMigrationService {
             nhom.setNgayCapNhat(now);
             nhom.setNguoiTao("system");
             nhom.setNguoiCapNhat("system");
+
+            if ("CCPT".equalsIgnoreCase(maNhom.trim())) {
+                nhom.setLaCCDC(true);
+                nhom.setLaVatTu(false);
+            } else {
+                nhom.setLaCCDC(false);
+                nhom.setLaVatTu(true);
+            }
 
             try {
                 nhomCCDCDAO.insert(nhom);  // insert() đã có logic check tồn tại → upsert
