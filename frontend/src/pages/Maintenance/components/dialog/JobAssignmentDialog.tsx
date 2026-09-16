@@ -32,6 +32,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import FieldDate from "../../../../components/TextField/FieldDate";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
+import { JobAssignmentValidation } from "../../validation";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { useJobAssignmentMutation } from "../../mutation";
@@ -86,6 +87,7 @@ const JobAssignmentDialog = ({
       idNguoiLap: "",
       idGiamDoc: "",
     },
+    validationSchema: JobAssignmentValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -630,7 +632,7 @@ const JobAssignmentDialog = ({
             color="primary"
             onClick={() => formik.handleSubmit()}
           >
-            Lưu &amp; Gửi duyệt
+            {initialData?.id ? "Cập nhật" : "Lưu & Gửi duyệt"}
           </Button>
         </DialogActions>
       </Dialog>

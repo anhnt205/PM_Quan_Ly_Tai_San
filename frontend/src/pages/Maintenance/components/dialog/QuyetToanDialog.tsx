@@ -39,6 +39,7 @@ import FieldInput from "../../../../components/TextField/FieldInput";
 import TextFieldNumber from "../../../../components/TextField/TextFieldNumber";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import QuyetToanPreview from "../preview/QuyetToanPreview";
+import { QuyetToanValidation } from "../../validation";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
@@ -125,6 +126,7 @@ const QuyetToanDialog = ({
       danhSachChiTiet: [] as QuyetToanChiTietData[],
       nguoiKyList: [] as any[],
     },
+    validationSchema: QuyetToanValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";

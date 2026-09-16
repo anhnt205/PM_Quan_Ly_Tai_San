@@ -9,6 +9,7 @@ import {
   Typography,
   Divider,
   IconButton,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import IncidentPreview from "../preview/IncidentPreview";
@@ -87,6 +88,12 @@ const IncidentDialog = ({
     );
   const mauMacDinh = repairReportPage?.data?.items?.[0];
 
+  const isEdit = Boolean(
+    initialIncident?.id ||
+      savedDraft?.isEdit ||
+      (savedDraft?.id && savedDraft.id !== ""),
+  );
+
   const formik = useFormik({
     initialValues: {
       id: "",
@@ -112,7 +119,7 @@ const IncidentDialog = ({
       nguoiKyList: [] as any[],
       danhSachTaiSan: [] as any[],
     },
-    // validationSchema: IncidentValidation,
+    validationSchema: IncidentValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -136,6 +143,7 @@ const IncidentDialog = ({
 
       const rec: any = {
         ...values,
+        id: values.id || savedDraft?.id || initialIncident?.id || "",
         idNguoiLap: idNguoiLapBieu,
         idGiamDoc: idTrinhDuyetGiamDoc,
         nguoiKyList: intermediateSigners,
@@ -160,6 +168,54 @@ const IncidentDialog = ({
   // Load and Reset initial values
   useEffect(() => {
     if (!open) return;
+
+    const listInfoFromParent =
+      selectedPlans && selectedPlans.length > 0
+        ? listSigneInfo(selectedPlans[0] as any, apiUsers, apiDepartments)
+        : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
+    if (savedDraft) {
+      setAssets(savedDraft.assets || []);
+      formik.setValues({
+        id: savedDraft.id ?? (initialIncident?.id ?? ""),
+        idCongTy: CongTy.CT001,
+        idKeHoach: selectedPlans[0]?.id ?? "",
+        soPhieu: savedDraft.soPhieu ?? "",
+        idDonViBaoCao: savedDraft.idDonViBaoCao ?? "",
+        ngayPhatHien:
+          savedDraft.ngayPhatHien ?? dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        tenHeThongThietBi: savedDraft.tenHeThongThietBi ?? "",
+        phanHeViTri: savedDraft.phanHeViTri ?? "",
+        mucDo: savedDraft.mucDo ?? 2,
+        moTa: savedDraft.moTa ?? "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        trangThai: 0,
+        share: false,
+        tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
+        congTy: savedDraft.congTy ?? currentBrandConfig.company,
+        ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        nhomTaiSan: savedDraft.nhomTaiSan ?? nhomTaiSan ?? AssetGroup.MAYMOC,
+        nguoiKyList: savedDraft.nguoiKyList?.length
+          ? savedDraft.nguoiKyList
+          : signersListFromParent,
+        danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
+      });
+      return;
+    }
 
     if (initialIncident) {
       const listInfo = listSigneInfo(initialIncident, apiUsers, apiDepartments);
@@ -216,53 +272,6 @@ const IncidentDialog = ({
           initialIncident.nhomTaiSan ?? nhomTaiSan ?? AssetGroup.MAYMOC,
         nguoiKyList: signersList,
         danhSachTaiSan: initialIncident.danhSachTaiSan || [],
-      });
-      return;
-    }
-
-    const listInfoFromParent =
-      selectedPlans && selectedPlans.length > 0
-        ? listSigneInfo(selectedPlans[0] as any, apiUsers, apiDepartments)
-        : [];
-    const signersListFromParent = (listInfoFromParent || []).map(
-      (item: any, idx: number) => ({
-        ...item,
-        userId: item.idNhanVien || item.userId,
-        userName: item.hoTen || item.userName,
-        departmentId: item.idDonVi || item.departmentId,
-        departmentName: item.donVi || item.departmentName,
-        position: item.tenChucVu || item.position || "",
-        order: idx + 1,
-      }),
-    );
-
-    if (savedDraft) {
-      setAssets(savedDraft.assets);
-      formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idKeHoach: selectedPlans[0]?.id ?? "",
-        soPhieu: savedDraft.soPhieu,
-        idDonViBaoCao: savedDraft.idDonViBaoCao,
-        ngayPhatHien: savedDraft.ngayPhatHien,
-        tenHeThongThietBi: savedDraft.tenHeThongThietBi,
-        phanHeViTri: savedDraft.phanHeViTri,
-        mucDo: savedDraft.mucDo,
-        moTa: savedDraft.moTa,
-        idNguoiLap: "",
-        nguoiLapXacNhan: false,
-        idGiamDoc: "",
-        giamDocXacNhan: false,
-        trangThai: 0,
-        share: false,
-        tenMauBienBan: savedDraft.tenMauBienBan ?? `PHIẾU BÁO SỰ CỐ THIẾT BỊ`,
-        congTy: savedDraft.congTy ?? currentBrandConfig.company,
-        ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-        nhomTaiSan: savedDraft.nhomTaiSan ?? nhomTaiSan ?? AssetGroup.MAYMOC,
-        nguoiKyList: savedDraft.nguoiKyList?.length
-          ? savedDraft.nguoiKyList
-          : signersListFromParent,
-        danhSachTaiSan: savedDraft.danhSachTaiSan ?? [],
       });
       return;
     }
@@ -344,6 +353,8 @@ const IncidentDialog = ({
         path: tabPath,
         data: {
           incidentDraft: {
+            id: formik.values.id || initialIncident?.id || "",
+            isEdit: isEdit,
             soPhieu: formik.values.soPhieu,
             idDonViBaoCao: formik.values.idDonViBaoCao,
             ngayPhatHien: formik.values.ngayPhatHien,
@@ -504,6 +515,11 @@ const IncidentDialog = ({
                     Danh sách thiết bị liên quan{" "}
                     <span style={{ color: "#d32f2f" }}>*</span>
                   </Typography>
+                  {formik.submitCount > 0 && formik.errors.danhSachTaiSan && (
+                    <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+                      {formik.errors.danhSachTaiSan as string}
+                    </Alert>
+                  )}
                   <Box
                     sx={{ display: "flex", flexDirection: "column", gap: 1 }}
                   >
@@ -562,23 +578,13 @@ const IncidentDialog = ({
         <Button onClick={handleClose} color="inherit">
           Hủy
         </Button>
-        {initialIncident?.id ? (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => formik.handleSubmit()}
-          >
-            Cập Nhật
-          </Button>
-        ) : (
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => formik.handleSubmit()}
-          >
-            Tạo Phiếu và Lưu
-          </Button>
-        )}
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => formik.handleSubmit()}
+        >
+          {isEdit ? "Cập Nhật" : "Tạo Phiếu và Lưu"}
+        </Button>
       </DialogActions>
     </Dialog>
   );

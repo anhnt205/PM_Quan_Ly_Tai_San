@@ -1,427 +1,327 @@
 import {
-  InfoOutlineRounded,
-  ArrowDropUp,
-  ArrowDropDown,
-  Remove,
-  Close,
   Add,
-  Delete,
+  Close,
   ContentCopy,
+  Delete,
+  InfoOutlineRounded,
+  Remove,
 } from "@mui/icons-material";
 import {
+  Box,
   Button,
   Card,
-  TextField as MuiTextField,
-  Switch,
-  FormControlLabel,
-  Box,
+  Chip,
   Grid,
   IconButton,
-  Paper,
   Typography,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { FieldArray, FormikProvider, useFormik } from "formik";
+import { useEffect, useRef } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
-import { FormikProvider, useFormik } from "formik";
-import { ProjectValidation } from "../validation/Validation";
-import ViewBtn from "../../../components/Button/ViewBtn";
-import EditButton from "../../../components/Button/EditButton";
 import { CongTy } from "../../../utils/const";
-import { useDebounce } from "../../../hooks/useDebounce";
+import { ProjectBulkValidation } from "../validation/Validation";
+
+export interface ProjectItem {
+  id: string;
+  tenDuAn: string;
+  ghiChu?: string;
+  idCongTy?: string;
+  hieuLuc?: boolean;
+  isActive?: boolean;
+}
+
+export interface ProjectFormProps {
+  /** "create" = thêm mới (hiện nút thêm/copy/xóa), "edit" = sửa (ẩn nút thêm/copy) */
+  mode: "create" | "edit";
+  initialItems?: ProjectItem[];
+  onSave: (items: ProjectItem[]) => void;
+  onCancel: () => void;
+  onMinimize: () => void;
+  onItemsChange?: (items: ProjectItem[]) => void;
+  initialFormData?: any;
+}
+
+const emptyItem = (): ProjectItem => ({
+  id: "",
+  tenDuAn: "",
+  ghiChu: "",
+  idCongTy: CongTy.CT001,
+  hieuLuc: true,
+  isActive: true,
+});
+
+const normalizeItem = (item: any): ProjectItem => ({
+  id: item?.id ?? "",
+  tenDuAn: item?.tenDuAn ?? "",
+  ghiChu: item?.ghiChu ?? "",
+  idCongTy: item?.idCongTy ?? CongTy.CT001,
+  hieuLuc: item?.hieuLuc ?? true,
+  isActive: item?.isActive ?? true,
+});
 
 export default function ProjectForm({
-  onEdit,
-  onCancel,
-  selectedProject,
-  readOnly,
+  mode = "create",
+  initialItems,
   onSave,
-  initialFormData,
-  onFormChange,
+  onCancel,
   onMinimize,
-  isBulkMode,
-  bulkEditType,
-  bulkItems,
-  onBulkItemsChange,
-}: {
-  onEdit: () => void;
-  onCancel: () => void;
-  selectedProject?: any;
-  readOnly: boolean;
-  onSave: (values: any) => void;
-  onFormChange?: (values: any) => void;
-  initialFormData?: Record<string, any>;
-  onMinimize: () => void;
-  isBulkMode?: boolean;
-  bulkItems?: any[];
-  onBulkItemsChange?: (items: any[]) => void;
-  bulkEditType?: "create" | "edit";
-}) {
-  const [expanded, setExpanded] = useState(true);
+  onItemsChange,
+  initialFormData,
+}: ProjectFormProps) {
+  const isEdit = mode === "edit";
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      id: initialFormData?.id ?? "",
-      tenDuAn: initialFormData?.tenDuAn ?? "",
-      ghiChu: initialFormData?.ghiChu ?? "",
-      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
-      hieuLuc: initialFormData?.hieuLuc ?? true,
-      isActive: initialFormData?.isActive ?? true,
+      items:
+        initialFormData?.items &&
+        Array.isArray(initialFormData.items) &&
+        initialFormData.items.length > 0
+          ? initialFormData.items.map(normalizeItem)
+          : initialItems && initialItems.length > 0
+            ? initialItems.map(normalizeItem)
+            : [emptyItem()],
     },
-    validationSchema: ProjectValidation,
-    onSubmit(values) {
-      onSave(values);
+    validationSchema: ProjectBulkValidation,
+    onSubmit: async (values) => {
+      onSave(values.items);
     },
   });
 
-  const [localBulkItems, setLocalBulkItems] = useState<any[]>(
-    initialFormData?.items && initialFormData.items.length > 0
-      ? initialFormData.items
-      : (bulkItems ?? []),
-  );
-
-  const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  const onItemsChangeRef = useRef(onItemsChange);
   useEffect(() => {
-    onBulkItemsChange?.(debouncedBulkItems);
-  }, [debouncedBulkItems]);
-
-  const handleAddItem = () => {
-    const newItem = {
-      id: "",
-      tenDuAn: "",
-      ghiChu: "",
-      hieuLuc: true,
-      isActive: true,
-      idCongTy: CongTy.CT001,
-      nguoiTao: "admin",
-      nguoiCapNhat: "admin",
-      ngayTao: new Date().toISOString(),
-      ngayCapNhat: new Date().toISOString(),
-    };
-    const updated = [...localBulkItems, newItem];
-    setLocalBulkItems(updated);
-  };
-
-  const handleCopyItem = (index: number) => {
-    const { id, ...rest } = localBulkItems[index];
-    const newItem = { ...rest, id: "" };
-    const updated = [
-      ...localBulkItems.slice(0, index + 1),
-      newItem,
-      ...localBulkItems.slice(index + 1),
-    ];
-    setLocalBulkItems(updated);
-  };
-
-  const handleDeleteItem = (index: number) => {
-    if (localBulkItems.length === 1) return;
-    const updated = localBulkItems.filter((_, i) => i !== index);
-    setLocalBulkItems(updated);
-  };
-
-  const handleBulkItemChange = (index: number, field: string, value: any) => {
-    const updated = [...localBulkItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setLocalBulkItems(updated);
-  };
-
-  const validateBulkItems = async () => {
-    let hasError = false;
-    const updated = await Promise.all(
-      localBulkItems.map(async (item) => {
-        try {
-          await ProjectValidation.validate(item, { abortEarly: false });
-          return { ...item, errors: undefined };
-        } catch (error: any) {
-          hasError = true;
-          const errors = error.inner?.reduce((acc: any, e: any) => {
-            acc[e.path] = e.message;
-            return acc;
-          }, {}) ?? { [error.path]: error.message };
-          return { ...item, errors };
-        }
-      }),
-    );
-    setLocalBulkItems(updated);
-    onBulkItemsChange?.(updated);
-    return { hasError };
-  };
-
-  const handleBulkSave = async () => {
-    const { hasError } = await validateBulkItems();
-    if (hasError) return;
-    onSave(localBulkItems);
-  };
-
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    onFormChange?.(debouncedValues);
-  }, [debouncedValues]);
+    onItemsChangeRef.current = onItemsChange;
+  });
 
   useEffect(() => {
-    if (selectedProject) {
-      formik.setValues(selectedProject);
-      formik.setErrors({});
+    onItemsChangeRef.current?.(formik.values.items);
+  }, [formik.values.items]);
+
+  const listEndRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(formik.values.items.length);
+  useEffect(() => {
+    if (formik.values.items.length > prevLengthRef.current) {
+      listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [selectedProject, readOnly]); // Add readOnly to dependencies
+    prevLengthRef.current = formik.values.items.length;
+  }, [formik.values.items.length]);
 
-  if (isBulkMode) {
-    return (
-      <Box
-        sx={{
-          bgcolor: "#ffffff",
-          p: 4,
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
-        }}
-      >
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pb: 2,
-            borderBottom: "1px solid #f1f5f9",
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-            {bulkEditType === "create"
-              ? `Thêm mới dự án (${localBulkItems.length})`
-              : `Sửa hàng loạt dự án (${localBulkItems.length})`}
-          </Typography>
-          <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
-              <Remove fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={onCancel} title="Đóng">
-              <Close fontSize="small" />
-            </IconButton>
-          </Box>
-        </Box>
-
-        {/* Items */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            maxHeight: "65vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            pr: 1,
-          }}
-        >
-          {localBulkItems.map((item, index) => (
-            <Card
-              key={index}
-              sx={{
-                flexShrink: 0,
-                p: 2,
-                borderRadius: "12px",
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-              >
-                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
-                  Item {index + 1}
-                </Typography>
-                <Box display="flex" gap={1}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleCopyItem(index)}
-                    title="Sao chép"
-                  >
-                    <ContentCopy fontSize="small" color="primary" />
-                  </IconButton>
-                  {localBulkItems.length > 1 && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteItem(index)}
-                      title="Xóa"
-                    >
-                      <Delete fontSize="small" color="error" />
-                    </IconButton>
-                  )}
-                </Box>
-              </Box>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Mã dự án *"
-                    value={item.id}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "id", e.target.value)
-                    }
-                    disabled={bulkEditType === "edit"}
-                    error={!!item.errors?.id}
-                    helperText={item.errors?.id}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Tên dự án *"
-                    value={item.tenDuAn}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "tenDuAn", e.target.value)
-                    }
-                    error={!!item.errors?.tenDuAn}
-                    helperText={item.errors?.tenDuAn}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Ghi chú"
-                    value={item.ghiChu}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "ghiChu", e.target.value)
-                    }
-                  />
-                </Grid>
-                {/* <Grid size={{ xs: 12 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={item.hieuLuc ?? true}
-                        onChange={(e) =>
-                          handleBulkItemChange(
-                            index,
-                            "hieuLuc",
-                            e.target.checked,
-                          )
-                        }
-                        color="success"
-                      />
-                    }
-                    label="Hiệu lực"
-                  />
-                </Grid> */}
-              </Grid>
-            </Card>
-          ))}
-        </Box>
-
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          pt={2.5}
-          sx={{ borderTop: "1px solid #f1f5f9" }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<Add />}
-            onClick={handleAddItem}
-            sx={{
-              bgcolor: "#1FA463",
-              color: "#fff",
-              "&:hover": { bgcolor: "#178a52" },
-            }}
-          >
-            Thêm dòng mới
-          </Button>
-          <Box display="flex" gap={2}>
-            <CancelBtn onClick={onCancel} />
-            <SaveBtn onSave={handleBulkSave} />
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
+  const handleMinimize = () => {
+    onItemsChange?.(formik.values.items);
+    onMinimize();
+  };
 
   return (
-    <FormikProvider value={formik}>
+    <Box
+      sx={{
+        bgcolor: "#ffffff",
+        p: 4,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        flex: 1,
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
       <Box
         sx={{
-          bgcolor: "#ffffff",
-          p: 4,
           display: "flex",
-          flexDirection: "column",
-          gap: 3,
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 2,
+          borderBottom: "1px solid #f1f5f9",
         }}
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pb: 2,
-            borderBottom: "1px solid #f1f5f9",
-          }}
-        >
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
           <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-            Chi tiết dự án
+            {isEdit && formik.values.items.length === 1
+              ? "Chỉnh sửa dự án"
+              : isEdit
+                ? "Sửa hàng loạt dự án"
+                : "Thêm mới dự án"}
           </Typography>
-          <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
-              <Remove fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={onCancel} title="Đóng">
-              <Close fontSize="small" />
-            </IconButton>
-          </Box>
+          <Chip
+            label={`${formik.values.items.length} dự án`}
+            size="small"
+            sx={{ bgcolor: "#e8f5e9", color: "#1FA463", fontWeight: 600 }}
+          />
         </Box>
-
-        {/* Body */}
-        <Paper sx={{ p: 2, borderRadius: "12px" }}>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-            <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
-              Thông tin dự án
-            </Typography>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 6 }}>
-              <FieldInput
-                title="Mã dự án *"
-                name="id"
-                disabled={Boolean(selectedProject?.id)}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FieldInput
-                title="Tên dự án *"
-                name="tenDuAn"
-                disabled={readOnly}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <FieldInput title="Ghi chú" name="ghiChu" disabled={readOnly} />
-            </Grid>
-          </Grid>
-        </Paper>
-
-        {/* Footer */}
-        <Box
-          display="flex"
-          justifyContent="flex-end"
-          gap={2}
-          pt={2.5}
-          sx={{ borderTop: "1px solid #f1f5f9" }}
-        >
-          {readOnly ? (
-            <EditButton onClick={onEdit} />
-          ) : (
-            <>
-              <CancelBtn onClick={onCancel} />
-              <SaveBtn onSave={formik.submitForm} />
-            </>
-          )}
+        <Box display="flex" gap={0.5}>
+          <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
+            <Remove fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={onCancel} title="Đóng">
+            <Close fontSize="small" />
+          </IconButton>
         </Box>
       </Box>
-    </FormikProvider>
+
+      {/* Formik Provider & Danh sách items */}
+      <FormikProvider value={formik}>
+        <form
+          onSubmit={formik.handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            overflow: "hidden",
+          }}
+        >
+          <FieldArray name="items">
+            {({ remove, push, insert }) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  pr: 0.5,
+                }}
+              >
+                {formik.values.items.map((item: any, index: number) => (
+                  <Card
+                    key={index}
+                    sx={{
+                      p: 2,
+                      flexShrink: 0,
+                      borderRadius: "12px",
+                      border: "1px solid #e0e0e0",
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    {/* Header từng item */}
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={2}
+                    >
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: "50%",
+                            bgcolor: "#1FA463",
+                            color: "#fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {index + 1}
+                        </Box>
+                        <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                          {item.tenDuAn || item.id || `Dự án ${index + 1}`}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" gap={0.5}>
+                        {/* Sao chép: chỉ hiện khi tạo mới */}
+                        {!isEdit && (
+                          <IconButton
+                            size="small"
+                            onClick={() =>
+                              insert(index + 1, {
+                                ...item,
+                                id: "",
+                              })
+                            }
+                            title="Sao chép"
+                            sx={{ p: 0.5, color: "primary.main" }}
+                          >
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        )}
+                        {/* Xóa dòng: chỉ hiện khi có nhiều hơn 1 dòng */}
+                        {formik.values.items.length > 1 && (
+                          <IconButton
+                            size="small"
+                            onClick={() => remove(index)}
+                            title="Xóa dòng"
+                            sx={{ p: 0.5, color: "error.main" }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Các trường dữ liệu */}
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FieldInput
+                          title="Mã dự án *"
+                          name={`items.${index}.id`}
+                          disabled={isEdit}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FieldInput
+                          title="Tên dự án *"
+                          name={`items.${index}.tenDuAn`}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <FieldInput
+                          title="Ghi chú"
+                          name={`items.${index}.ghiChu`}
+                        />
+                      </Grid>
+                    </Grid>
+                  </Card>
+                ))}
+                <div ref={listEndRef} />
+              </Box>
+            )}
+          </FieldArray>
+
+          {/* Footer */}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            pt={2.5}
+            sx={{ borderTop: "1px solid #f1f5f9" }}
+          >
+            {/* Nút thêm dòng: chỉ hiện khi tạo mới */}
+            {!isEdit ? (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => {
+                  formik.setFieldValue("items", [
+                    ...formik.values.items,
+                    emptyItem(),
+                  ]);
+                }}
+                sx={{
+                  bgcolor: "#1FA463",
+                  color: "#fff",
+                  "&:hover": { bgcolor: "#178a52" },
+                }}
+              >
+                Thêm dòng mới
+              </Button>
+            ) : (
+              <Box />
+            )}
+            <Box display="flex" gap={2}>
+              <CancelBtn onClick={onCancel} />
+              <SaveBtn onSave={formik.submitForm} />
+            </Box>
+          </Box>
+        </form>
+      </FormikProvider>
+    </Box>
   );
 }
+

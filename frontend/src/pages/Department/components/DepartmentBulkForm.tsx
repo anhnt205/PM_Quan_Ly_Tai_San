@@ -50,6 +50,7 @@ interface BulkDepartmentFormProps {
   mode: "create" | "edit";
   onRowsChange?: (rows: Partial<DepartmentType>[]) => void;
   onCancel: () => void;
+  onMinimize?: () => void;
 }
 
 interface RowFormProps {
@@ -237,6 +238,7 @@ export default function BulkDepartmentForm({
   mode,
   onRowsChange,
   onCancel,
+  onMinimize,
 }: BulkDepartmentFormProps) {
   const [rows, setRows] = useState<BulkRowState[]>([]);
   const [expanded, setExpanded] = useState<string | false>(false);
@@ -343,7 +345,7 @@ export default function BulkDepartmentForm({
 
   const handleMinimize = () => {
     onRowsChange?.(rows.map((r) => r.data as DepartmentType));
-    onClose();
+    onMinimize ? onMinimize() : onClose();
   };
 
   return (
@@ -445,14 +447,17 @@ export default function BulkDepartmentForm({
                   {getRowLabel(row, index)}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={0.25}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleCopyRow(row.key)}
-                    sx={{ p: 0.5, color: "primary.main" }}
-                  >
-                    <ContentCopy fontSize="small" />
-                  </IconButton>
-                  {rows.length > 1 && (
+                  {/* Copy và Delete chỉ hiện khi mode=create */}
+                  {mode === "create" && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleCopyRow(row.key)}
+                      sx={{ p: 0.5, color: "primary.main" }}
+                    >
+                      <ContentCopy fontSize="small" />
+                    </IconButton>
+                  )}
+                  {mode === "create" && rows.length > 1 && (
                     <IconButton
                       size="small"
                       onClick={() => handleDeleteRow(row.key)}

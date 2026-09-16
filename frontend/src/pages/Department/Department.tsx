@@ -9,9 +9,9 @@ import {
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import DepartmentForm from "./components/DepartmentForm";
+
 import { ContentCopy, Delete, Edit } from "@mui/icons-material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import {
   useDepartmentMutation,
@@ -96,7 +96,8 @@ export default function Department() {
     setShowForm(true);
   };
 
-  const handleSave = (values: any) => {
+  const handleSave = (rows: DepartmentType[]) => {
+    const values = rows[0];
     if (selectedDepartment && !isCopy) {
       updateMutation.mutate(values);
     } else {
@@ -136,12 +137,21 @@ export default function Department() {
     setSelectedIds([]);
   };
 
+  const formValuesRef = useRef<DepartmentType[]>([]);
+
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
   const isMinimizedBulk = !bulkOpen && bulkInitialRows.length > 0;
-  const handleMinimize = () => setShowForm(false);
 
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleMinimize = () => {
+    // Lưu dữ liệu đang sạn vào draftForm để restore khi mở lại
+    if (formValuesRef.current.length > 0) {
+      setField({ draftForm: { rows: formValuesRef.current } });
+    } else if (selectedDepartment) {
+      setField({ draftForm: { rows: [selectedDepartment] } });
+    } else {
+      setField({ draftForm: { _hasData: "1" } });
+    }
+    setShowForm(false);
   };
 
   const columns: GridColDef[] = [
@@ -267,31 +277,28 @@ export default function Department() {
           </DialogContent>
         </Dialog>
 
-        {/* Single form Dialog */}
-        <Dialog
+        {/* Single form — dùng BulkDepartmentForm với 1 dòng */}
+        <BulkDepartmentForm
           open={showForm}
+          mode={selectedDepartment && !isCopy ? "edit" : "create"}
+          initialRows={
+            formData.draftForm?.rows ??
+            (selectedDepartment ? [selectedDepartment] : [])
+          }
+          onCancel={() => {
+            setShowForm(false);
+            setSelectedDepartment(null);
+            setReadOnly(false);
+            setIsCopy(false);
+            setField({ draftForm: undefined });
+          }}
+          onMinimize={handleMinimize}
           onClose={handleMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <DepartmentForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedDepartment(null);
-                setReadOnly(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedDepartment={selectedDepartment}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
-          </DialogContent>
-        </Dialog>
+          onSave={handleSave}
+          onRowsChange={(rows) => {
+            formValuesRef.current = rows as DepartmentType[];
+          }}
+        />
 
         {/* Bulk form Dialog */}
         <BulkDepartmentForm

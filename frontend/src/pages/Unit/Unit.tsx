@@ -1,62 +1,44 @@
 import { ContentCopy, Delete, Edit } from "@mui/icons-material";
 import {
   Box,
-  Checkbox,
   CircularProgress,
   Dialog,
   DialogContent,
   IconButton,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { showConfirmAlert } from "../../components/Alert";
+import DraftIndicator from "../../components/common/DraftIndicator";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import TypeAssetForm from "./components/UnitForm";
-import {
-  useAllUnitsQuery,
-  useUnitMutation,
-  useUnitPagesQuery,
-} from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
-import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
-import DraftIndicator from "../../components/common/DraftIndicator";
+import UnitForm, { UnitItem } from "./components/UnitForm";
+import { useUnitMutation, useUnitPagesQuery } from "./Mutation";
 
 interface UnitTabState {
   showForm: boolean;
-  selectedUnit: any | null;
-  readOnly: boolean;
-  isCopy: boolean;
-  draftForm?: Record<string, any>;
-  showBulkForm: boolean;
-  bulkEditType?: "create" | "edit";
-  bulkItems?: any[];
-  bulkDraftData?: Record<string, any>;
+  formMode: "create" | "edit";
+  items: UnitItem[];
+  draftData?: {
+    items: UnitItem[];
+    formMode: "create" | "edit";
+  };
 }
 
 export default function Unit() {
   const { formData, setField } = useTabForm<UnitTabState>("/don_vi_tinh");
   const showForm = formData.showForm ?? false;
-  const selectedUnit = formData.selectedUnit ?? null;
-  const readOnly = formData.readOnly ?? false;
-  const isCopy = formData.isCopy ?? false;
-  const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedUnit = (v: any) => setField({ selectedUnit: v });
-  const setReadOnly = (v: boolean) => setField({ readOnly: v });
-  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const formMode = formData.formMode ?? "create";
+  const items = formData.items ?? [];
 
-  const showBulkForm = formData.showBulkForm ?? false;
-  const bulkEditType = formData.bulkEditType ?? "create";
-  const bulkItems = formData.bulkItems ?? [];
-  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
-  const setBulkEditType = (v: "create" | "edit") =>
-    setField({ bulkEditType: v });
-  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -70,22 +52,60 @@ export default function Unit() {
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
-  const handleBulkMinimize = () => setShowBulkForm(false);
-  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
+  const itemsRef = useRef<UnitItem[]>(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  const handleMinimize = () => {
+    const currentItems = itemsRef.current;
+    if (currentItems && currentItems.length > 0) {
+      setField({
+        draftData: {
+          items: currentItems,
+          formMode,
+        },
+        showForm: false,
+      });
+    } else {
+      setShowForm(false);
+    }
+  };
+
+  const handleRestoreFromDraft = () => {
+    const draft = formData.draftData;
+    if (draft?.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      itemsRef.current = draft.items;
+      setField({
+        items: draft.items,
+        formMode: draft.formMode || "create",
+        showForm: true,
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setField({
+      showForm: false,
+      draftData: undefined,
+      items: [],
+    });
+  };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftData?.items);
 
   const {
     createMutation,
     updateMutation,
-    importExcelMutation,
-    exportMutation,
     deleteOneMutation,
     deleteManyMutation,
+    importExcelMutation,
+    exportMutation,
     deleteAllMutation,
     createBatchMutation,
     updateBatchMutation,
   } = useUnitMutation();
+
   const debouncedSearchValue = useDebounce(searchValue, 600);
   const { data: unitPages = { items: [], totalItems: 0 }, isLoading } =
     useUnitPagesQuery(
@@ -98,56 +118,104 @@ export default function Unit() {
     importExcelMutation.mutate(file, {
       onError: (error: any) => {
         if (error.message && error.message.includes("\n")) {
-          setImportErrors(error.message.split("\n"));
+          const errorList = error.message.split("\n");
+          setImportErrors(errorList);
           setShowErrorDialog(true);
         }
       },
     });
   };
 
-  const handleRowClick = (params: GridRowParams) => {
-    setSelectedUnit(params.row);
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
-  };
-
-  const handleSave = (values: any) => {
-    if (Array.isArray(values)) {
-      if (bulkEditType === "create") {
-        createBatchMutation.mutate(values);
-      } else {
-        updateBatchMutation.mutate(values);
-      }
-      setShowBulkForm(false);
-      setBulkItems([]);
-      setSelectedIds([]);
-      setField({ bulkDraftData: undefined });
-    } else {
-      if (selectedUnit && !isCopy) {
-        updateMutation.mutate(values);
-      } else {
-        createMutation.mutate(values);
-      }
-      setShowForm(false);
-      setSelectedUnit(null);
-      setIsCopy(false);
-      setField({ draftForm: undefined });
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      handleRestoreFromDraft();
+      return;
     }
+    const emptyItem: UnitItem = {
+      id: "",
+      tenDonVi: "",
+      note: "",
+    };
+    itemsRef.current = [emptyItem];
+    setField({
+      formMode: "create",
+      items: [emptyItem],
+      showForm: true,
+    });
   };
 
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleEditRow = (row: any) => {
+    const editItem: UnitItem = {
+      id: row.id,
+      tenDonVi: row.tenDonVi ?? "",
+      note: row.note ?? "",
+    };
+    itemsRef.current = [editItem];
+    setField({
+      formMode: "edit",
+      items: [editItem],
+      showForm: true,
+    });
+  };
+
+  const handleCopyRow = (row: any) => {
+    const copiedItem: UnitItem = {
+      id: "",
+      tenDonVi: row.tenDonVi ?? "",
+      note: row.note ?? "",
+    };
+    itemsRef.current = [copiedItem];
+    setField({
+      formMode: "create",
+      items: [copiedItem],
+      showForm: true,
+    });
   };
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
-    const itemsToEdit = unitPages.items
+    const selectedRows = unitPages.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
-    setBulkEditType("edit");
-    setBulkItems(itemsToEdit);
-    setShowBulkForm(true);
+
+    const editItems: UnitItem[] = selectedRows.map((row: any) => ({
+      id: row.id,
+      tenDonVi: row.tenDonVi ?? "",
+      note: row.note ?? "",
+    }));
+
+    itemsRef.current = editItems;
+    setField({
+      formMode: "edit",
+      items: editItems,
+      showForm: true,
+    });
+  };
+
+  const handleSave = async (savedItems: UnitItem[]) => {
+    try {
+      if (formMode === "create") {
+        if (savedItems.length === 1) {
+          await createMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await createBatchMutation.mutateAsync(savedItems as any);
+        }
+      } else {
+        if (savedItems.length === 1) {
+          await updateMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await updateBatchMutation.mutateAsync(savedItems as any);
+        }
+      }
+      setField({
+        showForm: false,
+        draftData: undefined,
+        items: [],
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Lỗi khi lưu đơn vị tính:", error);
+    }
   };
 
   const columns: GridColDef[] = [
@@ -162,7 +230,7 @@ export default function Unit() {
       field: "tenDonVi",
       headerName: "Tên đơn vị tính",
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
       align: "center",
       headerAlign: "center",
     },
@@ -170,19 +238,9 @@ export default function Unit() {
       field: "note",
       headerName: "Ghi chú",
       flex: 1,
-      minWidth: 150,
+      minWidth: 200,
       align: "center",
       headerAlign: "center",
-    },
-    {
-      field: "laHeThong",
-      headerName: "Hệ thống",
-      minWidth: 70,
-      align: "center",
-      headerAlign: "center",
-      renderCell: (params) => (
-        <Typography>{params.row.laHeThong ? "✓" : ""}</Typography>
-      ),
     },
     {
       field: "action",
@@ -195,22 +253,18 @@ export default function Unit() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setIsCopy(false);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              const { id, ...copyData } = params.row;
-              setSelectedUnit({ ...copyData, id: "" });
-              setIsCopy(true);
-              setReadOnly(false);
-              setShowForm(true);
+              handleCopyRow(params.row);
             }}
+            title="Sao chép"
           >
             <ContentCopy color="primary" />
           </IconButton>
@@ -222,6 +276,7 @@ export default function Unit() {
                 deleteOneMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -234,21 +289,7 @@ export default function Unit() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý đơn vị tính"
-        onNewClick={() => {
-          if (isBulkMinimized) {
-            setShowBulkForm(true);
-            return;
-          }
-          if (isMinimized) {
-            setShowForm(true);
-            return;
-          }
-          setBulkEditType("create");
-          setBulkItems([{}]);
-          setShowBulkForm(true);
-          setSelectedUnit(null);
-          setReadOnly(false);
-        }}
+        onNewClick={handleStartCreate}
         onExport={() => exportMutation.mutate()}
         onImport={handleImport}
         showExcel={true}
@@ -261,11 +302,21 @@ export default function Unit() {
       />
 
       {/* Dialog Loading */}
-      <Dialog open={exportMutation.isPending || importExcelMutation.isPending}>
+      <Dialog
+        open={exportMutation.isPending || importExcelMutation.isPending}
+        PaperProps={{
+          sx: {
+            borderRadius: 0,
+            boxShadow: "none",
+            border: "1px solid #d9d9d9",
+            minWidth: "240px",
+          },
+        }}
+      >
         <DialogContent>
           <Box display="flex" alignItems="center" gap={2}>
-            <CircularProgress size={20} />
-            <Typography variant="body2">
+            <CircularProgress size={20} color="inherit" thickness={4} />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
               Đang xử lý dữ liệu đơn vị tính...
             </Typography>
           </Box>
@@ -275,78 +326,68 @@ export default function Unit() {
       <Box p={2}>
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
-          maxWidth="md"
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
+          maxWidth="sm"
           fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
+            },
+          }}
         >
-          <DialogContent sx={{ p: 0 }}>
-            <TypeAssetForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedUnit(null);
-                setReadOnly(false);
-                setIsCopy(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedUnit={selectedUnit}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
+            {showForm && (
+              <UnitForm
+                key={`${formMode}-${items.map((i) => i.id).join("-") || "new"}`}
+                mode={formMode}
+                initialItems={items}
+                onSave={handleSave}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onItemsChange={(newItems) => {
+                  itemsRef.current = newItems;
+                }}
+                initialFormData={formData.draftData}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
-        <Dialog
-          open={showBulkForm}
-          onClose={handleBulkMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <TypeAssetForm
-              onEdit={() => {}}
-              onCancel={() => {
-                setBulkItems([]);
-                setSelectedIds([]);
-                setField({ bulkDraftData: undefined });
-                setShowBulkForm(false);
-              }}
-              onMinimize={handleBulkMinimize}
-              selectedUnit={null}
-              readOnly={false}
-              onSave={handleSave}
-              isBulkMode={true}
-              bulkItems={bulkItems}
-              onBulkItemsChange={(items) => {
-                setField({
-                  bulkDraftData: { items, bulkEditType },
-                  bulkItems: items,
-                });
-              }}
-              bulkEditType={bulkEditType}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {isBulkMinimized ? (
-          <DraftIndicator onClick={() => setShowBulkForm(true)} />
-        ) : (
-          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        {isMinimized && (
+          <DraftIndicator onClick={handleRestoreFromDraft} />
         )}
 
         <TableCustom
           tableId="unit"
-          title="Quản lý đơn vị tính"
+          title="Danh sách đơn vị tính"
           columns={columns}
           rows={unitPages.items}
           total={unitPages.totalItems}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
-          onRowClick={handleRowClick}
+          onRowClick={(params: GridRowParams) => handleEditRow(params.row)}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}

@@ -33,6 +33,7 @@ import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import AcceptanceTestPreview from "../preview/AcceptanceTestPreview";
 
 import { useAcceptanceMutation } from "../../mutation";
+import { AcceptanceTestValidation } from "../../validation";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAllPositionsQuery } from "../../../Position/Mutation";
@@ -89,6 +90,7 @@ const AcceptanceTestDialog = ({
       danhSachVatTu: [] as any[],
       nguoiKyList: [] as any[],
     },
+    validationSchema: AcceptanceTestValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";

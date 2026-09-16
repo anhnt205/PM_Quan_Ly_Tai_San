@@ -1,3 +1,4 @@
+import { ContentCopy, Delete, Edit } from "@mui/icons-material";
 import {
   Box,
   CircularProgress,
@@ -6,36 +7,34 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+import { showConfirmAlert } from "../../components/Alert";
+import DraftIndicator from "../../components/common/DraftIndicator";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import MaintenanceRepairTypeForm from "./components/MaintenanceRepairTypeForm";
-import { ContentCopy, Delete, Edit } from "@mui/icons-material";
-import { useState, useEffect, useCallback } from "react";
-import {
-  showConfirmAlert,
-  showSuccessAlert,
-  showErrorAlert,
-} from "../../components/Alert";
 import { useDebounce } from "../../hooks/useDebounce";
-import { useLoaiSCBDMutation, useloaiscbdPageQuery } from "./Mutation";
-import { useLocation, useNavigate } from "react-router-dom";
 import { RootState } from "../../redux/store";
-import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
-import DraftIndicator from "../../components/common/DraftIndicator";
+import MaintenanceRepairTypeForm, {
+  MaintenanceRepairTypeItem,
+} from "./components/MaintenanceRepairTypeForm";
+import {
+  useLoaiSCBDMutation,
+  useloaiscbdPageQuery,
+} from "./Mutation";
 
 interface MaintenanceRepairTypeTabState {
   showForm: boolean;
-  selectedRepairType: any | null;
-  readOnly: boolean;
-  isCopy: boolean;
-  draftForm?: Record<string, any>;
-  showBulkForm: boolean;
-  bulkEditType?: "create" | "edit";
-  bulkItems?: any[];
-  bulkDraftData?: Record<string, any>;
+  formMode: "create" | "edit";
+  items: MaintenanceRepairTypeItem[];
+  draftData?: {
+    items: MaintenanceRepairTypeItem[];
+    formMode: "create" | "edit";
+  };
 }
 
 export default function MaintenanceRepairType() {
@@ -43,21 +42,10 @@ export default function MaintenanceRepairType() {
     "/loai_sua_chua_bao_duong",
   );
   const showForm = formData.showForm ?? false;
-  const selectedRepairType = formData.selectedRepairType ?? null;
-  const readOnly = formData.readOnly ?? false;
-  const isCopy = formData.isCopy ?? false;
-  const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedRepairType = (v: any) => setField({ selectedRepairType: v });
-  const setReadOnly = (v: boolean) => setField({ readOnly: v });
-  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const formMode = formData.formMode ?? "create";
+  const items = formData.items ?? [];
 
-  const showBulkForm = formData.showBulkForm ?? false;
-  const bulkEditType = formData.bulkEditType ?? "create";
-  const bulkItems = formData.bulkItems ?? [];
-  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
-  const setBulkEditType = (v: "create" | "edit") =>
-    setField({ bulkEditType: v });
-  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -70,10 +58,47 @@ export default function MaintenanceRepairType() {
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
-  const handleBulkMinimize = () => setShowBulkForm(false);
-  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
+  const itemsRef = useRef<MaintenanceRepairTypeItem[]>(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  const handleMinimize = () => {
+    const currentItems = itemsRef.current;
+    if (currentItems && currentItems.length > 0) {
+      setField({
+        draftData: {
+          items: currentItems,
+          formMode,
+        },
+        showForm: false,
+      });
+    } else {
+      setShowForm(false);
+    }
+  };
+
+  const handleRestoreFromDraft = () => {
+    const draft = formData.draftData;
+    if (draft?.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      itemsRef.current = draft.items;
+      setField({
+        items: draft.items,
+        formMode: draft.formMode || "create",
+        showForm: true,
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setField({
+      showForm: false,
+      draftData: undefined,
+      items: [],
+    });
+  };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftData?.items);
 
   const {
     createMutation,
@@ -96,66 +121,106 @@ export default function MaintenanceRepairType() {
     debouncedSearchValue,
   );
 
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      handleRestoreFromDraft();
+      return;
+    }
+    const emptyItem: MaintenanceRepairTypeItem = {
+      id: "",
+      ten: "",
+      ghiChu: "",
+    };
+    itemsRef.current = [emptyItem];
+    setField({
+      formMode: "create",
+      items: [emptyItem],
+      showForm: true,
+    });
+  };
+
   useEffect(() => {
     if (location.state?.autoCreate) {
-      setShowForm(true);
-      setSelectedRepairType(null);
-      setReadOnly(false);
-      setField({ draftForm: undefined });
+      handleStartCreate();
       navigate(location.pathname + location.search, { replace: true });
     }
   }, [location, navigate]);
 
-  const handleRowClick = (params: GridRowParams) => {
-    setSelectedRepairType(params.row);
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
+  const handleEditRow = (row: any) => {
+    const editItem: MaintenanceRepairTypeItem = {
+      id: row.id,
+      ten: row.ten,
+      ghiChu: row.ghiChu ?? "",
+    };
+    itemsRef.current = [editItem];
+    setField({
+      formMode: "edit",
+      items: [editItem],
+      showForm: true,
+    });
   };
 
-  const handleSave = (values: any) => {
-    if (Array.isArray(values)) {
-      if (bulkEditType === "create") {
-        createBatchMutation.mutate(values);
-      } else {
-        updateBatchMutation.mutate(values);
-      }
-      setShowBulkForm(false);
-      setBulkItems([]);
-      setSelectedIds([]);
-      setField({ bulkDraftData: undefined });
-    } else {
-      if (selectedRepairType && !isCopy) {
-        updateMutation.mutate(values);
-      } else {
-        createMutation.mutate(values);
-      }
-      setShowForm(false);
-      setSelectedRepairType(null);
-      setField({ draftForm: undefined });
-    }
-  };
-
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleCopyRow = (row: any) => {
+    const copiedItem: MaintenanceRepairTypeItem = {
+      id: "",
+      ten: row.ten,
+      ghiChu: row.ghiChu ?? "",
+    };
+    itemsRef.current = [copiedItem];
+    setField({
+      formMode: "create",
+      items: [copiedItem],
+      showForm: true,
+    });
   };
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
-    const itemsToEdit = maintenanceRepairTypes.items
+    const selectedRows = maintenanceRepairTypes.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
-    setBulkEditType("edit");
-    setBulkItems(itemsToEdit);
-    setShowBulkForm(true);
+
+    const editItems: MaintenanceRepairTypeItem[] = selectedRows.map(
+      (row: any) => ({
+        id: row.id,
+        ten: row.ten,
+        ghiChu: row.ghiChu ?? "",
+      }),
+    );
+
+    itemsRef.current = editItems;
+    setField({
+      formMode: "edit",
+      items: editItems,
+      showForm: true,
+    });
   };
 
-  const handleBulkItemsChange = useCallback(
-    (items: any[]) => {
-      setField({ bulkDraftData: { items, bulkEditType }, bulkItems: items });
-    },
-    [bulkEditType],
-  );
+  const handleSave = async (savedItems: MaintenanceRepairTypeItem[]) => {
+    try {
+      if (formMode === "create") {
+        if (savedItems.length === 1) {
+          await createMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await createBatchMutation.mutateAsync(savedItems as any);
+        }
+      } else {
+        if (savedItems.length === 1) {
+          await updateMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await updateBatchMutation.mutateAsync(savedItems as any);
+        }
+      }
+      setField({
+        showForm: false,
+        draftData: undefined,
+        items: [],
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Lỗi khi lưu loại sửa chữa:", error);
+    }
+  };
 
   const columns: GridColDef[] = [
     {
@@ -192,22 +257,18 @@ export default function MaintenanceRepairType() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setIsCopy(false);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              const { id, ...copyData } = params.row;
-              setSelectedRepairType({ ...copyData, id: "" });
-              setIsCopy(true);
-              setReadOnly(false);
-              setShowForm(true);
+              handleCopyRow(params.row);
             }}
+            title="Sao chép"
           >
             <ContentCopy color="primary" />
           </IconButton>
@@ -219,6 +280,7 @@ export default function MaintenanceRepairType() {
                 deleteOneMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -231,22 +293,9 @@ export default function MaintenanceRepairType() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý loại sửa chữa"
-        onNewClick={() => {
-          if (isBulkMinimized) {
-            setShowBulkForm(true);
-            return;
-          }
-          if (isMinimized) {
-            setShowForm(true);
-            return;
-          }
-          setBulkEditType("create");
-          setBulkItems([{}]);
-          setShowBulkForm(true);
-          setSelectedRepairType(null);
-          setReadOnly(false);
-        }}
+        onNewClick={handleStartCreate}
       />
+
       <Box p={2}>
         <Dialog
           open={isLoading}
@@ -268,63 +317,59 @@ export default function MaintenanceRepairType() {
             </Box>
           </DialogContent>
         </Dialog>
+
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
-          maxWidth="md"
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
+          maxWidth="sm"
           fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
+            },
+          }}
         >
-          <DialogContent sx={{ p: 0 }}>
-            <MaintenanceRepairTypeForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedRepairType(null);
-                setReadOnly(false);
-                setIsCopy(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedRepairType={selectedRepairType}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
+            {showForm && (
+              <MaintenanceRepairTypeForm
+                key={`${formMode}-${items.map((i) => i.id).join("-") || "new"}`}
+                mode={formMode}
+                initialItems={items}
+                onSave={handleSave}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onItemsChange={(newItems) => {
+                  itemsRef.current = newItems;
+                }}
+                initialFormData={formData.draftData}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
-        <Dialog
-          open={showBulkForm}
-          onClose={handleBulkMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <MaintenanceRepairTypeForm
-              onEdit={() => {}}
-              onCancel={() => {
-                setBulkItems([]);
-                setSelectedIds([]);
-                setField({ bulkDraftData: undefined });
-                setShowBulkForm(false);
-              }}
-              onMinimize={handleBulkMinimize}
-              selectedRepairType={null}
-              readOnly={false}
-              onSave={handleSave}
-              isBulkMode={true}
-              bulkItems={bulkItems}
-              onBulkItemsChange={handleBulkItemsChange}
-              bulkEditType={bulkEditType}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {isBulkMinimized ? (
-          <DraftIndicator onClick={() => setShowBulkForm(true)} />
-        ) : (
-          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        {isMinimized && (
+          <DraftIndicator onClick={handleRestoreFromDraft} />
         )}
 
         <TableCustom
@@ -335,7 +380,7 @@ export default function MaintenanceRepairType() {
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
-          onRowClick={handleRowClick}
+          onRowClick={(params: GridRowParams) => handleEditRow(params.row)}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}
@@ -349,3 +394,4 @@ export default function MaintenanceRepairType() {
     </Box>
   );
 }
+

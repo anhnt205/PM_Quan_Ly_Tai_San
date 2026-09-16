@@ -31,8 +31,9 @@ import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
 import { currentBrandConfig } from "../../../../config/brandConfig";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
-import FieldDate from "../../../../components/TextField/FieldDate";
 import { useTechnicalReportMutation } from "../../mutation";
+import { TechnicalReportValidation } from "../../validation";
+import FieldDate from "../../../../components/TextField/FieldDate";
 
 interface Props {
   open: boolean;
@@ -99,6 +100,7 @@ const TechnicalReportDialog = ({
       danhSachTaiSan: [] as any[],
       nguoiKyList: [] as any[],
     },
+    validationSchema: TechnicalReportValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";

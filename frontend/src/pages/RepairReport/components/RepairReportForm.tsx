@@ -1,4 +1,4 @@
-import { Remove, Close } from "@mui/icons-material";
+import { Close, Remove } from "@mui/icons-material";
 import {
   Box,
   Checkbox,
@@ -6,8 +6,6 @@ import {
   FormControlLabel,
   Grid,
   IconButton,
-  MenuItem,
-  TextField,
   Typography,
 } from "@mui/material";
 import { useEffect } from "react";
@@ -45,8 +43,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ── Main form ─────────────────────────────────────────────────
-
+// ── Preview helper ───────────────────────────────────────────
 const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
   if (!loai) return <Typography>Vui lòng chọn Loại biên bản</Typography>;
 
@@ -106,6 +103,19 @@ const renderPreviewComponent = (loai: string, values: BienBanSuaChua) => {
       return <Typography>Vui lòng chọn Loại biên bản</Typography>;
   }
 };
+
+export interface RepairReportFormProps {
+  onEdit: () => void;
+  onCancel: () => void;
+  editData?: BienBanSuaChua | null;
+  readOnly: boolean;
+  onSave: (values: BienBanSuaChua) => void;
+  onFormChange?: (values: BienBanSuaChua) => void;
+  initialFormData?: BienBanSuaChua;
+  onMinimize: () => void;
+  isCopy?: boolean;
+}
+
 export default function RepairReportForm({
   onEdit,
   onCancel,
@@ -115,23 +125,24 @@ export default function RepairReportForm({
   initialFormData,
   onFormChange,
   onMinimize,
-}: {
-  onEdit: () => void;
-  onCancel: () => void;
-  editData?: BienBanSuaChua | null;
-  readOnly: boolean;
-  onSave: (values: BienBanSuaChua) => void;
-  onFormChange?: (values: BienBanSuaChua) => void;
-  initialFormData?: BienBanSuaChua;
-  onMinimize: () => void;
-}) {
+  isCopy = false,
+}: RepairReportFormProps) {
+  const isEdit = Boolean(editData?.id) && !isCopy;
+
+  const source =
+    initialFormData && Object.keys(initialFormData).length > 0
+      ? initialFormData
+      : editData;
+
   const formik = useFormik<BienBanSuaChua>({
+    enableReinitialize: true,
     initialValues: {
-      ma: initialFormData?.ma ?? "",
-      ten: initialFormData?.ten ?? "",
-      congTy: initialFormData?.congTy ?? "",
-      loaiBienBan: initialFormData?.loaiBienBan ?? "",
-      macDinh: initialFormData?.macDinh ?? false,
+      id: source?.id,
+      ma: source?.ma ?? "",
+      ten: source?.ten ?? "",
+      congTy: source?.congTy ?? "",
+      loaiBienBan: source?.loaiBienBan ?? "",
+      macDinh: source?.macDinh ?? false,
     },
     validationSchema: RepairReportValidation,
     onSubmit(values) {
@@ -139,18 +150,16 @@ export default function RepairReportForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 800);
+  const debouncedValues = useDebounce(formik.values, 500);
 
   useEffect(() => {
-    if (!editData) onFormChange?.(debouncedValues);
+    onFormChange?.(debouncedValues);
   }, [debouncedValues]);
 
-  useEffect(() => {
-    if (editData) {
-      formik.setValues(editData);
-      formik.setErrors({});
-    }
-  }, [editData, readOnly]);
+  const handleMinimize = () => {
+    onFormChange?.(formik.values);
+    onMinimize();
+  };
 
   return (
     <FormikProvider value={formik}>
@@ -160,17 +169,15 @@ export default function RepairReportForm({
           display: "flex",
           flexDirection: "column",
           height: "100%",
+          overflow: "hidden",
         }}
       >
         {/* ── Header ── */}
         <Box
           sx={{
-            p: 2,
+            p: 2.5,
             borderBottom: "1px solid",
             borderColor: "divider",
-            position: "sticky",
-            top: 0,
-            zIndex: 11,
             bgcolor: "#fff",
           }}
         >
@@ -180,10 +187,16 @@ export default function RepairReportForm({
             justifyContent="space-between"
           >
             <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-              Mẫu biên bản sửa chữa
+              {isEdit
+                ? readOnly
+                  ? "Chi tiết mẫu biên bản sửa chữa"
+                  : "Chỉnh sửa mẫu biên bản sửa chữa"
+                : isCopy
+                  ? "Sao chép mẫu biên bản sửa chữa"
+                  : "Thêm mới mẫu biên bản sửa chữa"}
             </Typography>
             <Box display="flex" gap={0.5}>
-              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
                 <Remove fontSize="small" />
               </IconButton>
               <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -194,7 +207,7 @@ export default function RepairReportForm({
         </Box>
 
         {/* ── Body ── */}
-        <Box sx={{ flex: 1, overflow: "auto", p: 2 }}>
+        <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
           <Grid container spacing={2}>
             {/* ── Thông tin chung ── */}
             <Grid size={{ xs: 12 }}>
@@ -202,7 +215,11 @@ export default function RepairReportForm({
             </Grid>
 
             <Grid size={{ xs: 12, md: 3 }}>
-              <FieldInput title="Mã *" name="ma" disabled={readOnly} />
+              <FieldInput
+                title="Mã *"
+                name="ma"
+                disabled={isEdit || readOnly}
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <FieldAutoCompleted
@@ -210,6 +227,7 @@ export default function RepairReportForm({
                 name="loaiBienBan"
                 labelkey="label"
                 title="Loại biên bản *"
+                disabled={readOnly}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }} display="flex" alignItems="center">
@@ -242,10 +260,10 @@ export default function RepairReportForm({
               <SectionLabel>Xem trước</SectionLabel>
               <Box
                 sx={{
-                  mt: 2,
+                  mt: 1.5,
                   bgcolor: "#f8fafc",
                   p: 2,
-                  borderRadius: 1,
+                  borderRadius: 2,
                   border: "1px solid",
                   borderColor: "divider",
                 }}

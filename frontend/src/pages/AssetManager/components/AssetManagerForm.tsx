@@ -62,6 +62,7 @@ import { useAllUnitsQuery } from "../../Unit/Mutation";
 import { useAllModelAssetQuery } from "../../ModelAsset/Mutation";
 import { useAllReasonIncreaseQuery } from "../../ReasonIncrease/Mutation";
 import { useAllLoaiSCBDQuery } from "../../MaintenanceRepairType/Mutation";
+import { AssetBulkValidation } from "../validation";
 
 const defaultAsset = {
   id: "",
@@ -119,6 +120,8 @@ const defaultAsset = {
 interface AssetRowProps {
   index: number;
   readOnly?: boolean;
+  isEdit?: boolean;
+  totalAssets?: number;
   onRemove: (index: number) => void;
   onCopy: (index: number) => void;
   allAssetModel: any[];
@@ -134,6 +137,8 @@ interface AssetRowProps {
 const AssetRow = React.memo(function AssetRow({
   index,
   readOnly,
+  isEdit,
+  totalAssets,
   onRemove,
   onCopy,
   allAssetModel,
@@ -208,7 +213,7 @@ const AssetRow = React.memo(function AssetRow({
             <FieldInput
               title="Mã tài sản *"
               name={`assets.${index}.id`}
-              disabled={!asset.isNew || readOnly}
+              disabled={!asset.isNew || readOnly || isEdit}
               onClick={(e: any) => e.stopPropagation()}
             />
           </Box>
@@ -233,30 +238,34 @@ const AssetRow = React.memo(function AssetRow({
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {!readOnly && (
             <>
-              <Tooltip title="Nhân bản">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onCopy(index);
-                  }}
-                  sx={{ color: "#6366f1" }}
-                >
-                  <ContentCopy fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Xóa">
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onRemove(index);
-                  }}
-                  sx={{ color: "#ef4444" }}
-                >
-                  <Close fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              {!isEdit && (
+                <Tooltip title="Nhân bản">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onCopy(index);
+                    }}
+                    sx={{ color: "#6366f1" }}
+                  >
+                    <ContentCopy fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
+              {(totalAssets ?? 1) > 1 && (
+                <Tooltip title="Xóa">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(index);
+                    }}
+                    sx={{ color: "#ef4444" }}
+                  >
+                    <Close fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              )}
             </>
           )}
         </Box>
@@ -930,6 +939,7 @@ export default function AssetManagerForm({
   initialFormData,
   onFormChange,
   onMinimize,
+  isCopy = false,
 }: {
   onEdit: () => void;
   onCancel: () => void;
@@ -941,6 +951,7 @@ export default function AssetManagerForm({
   onFormChange?: (values: any) => void;
   initialFormData?: Record<string, any>;
   onMinimize: () => void;
+  isCopy?: boolean;
 }) {
   const { data: allProjects = [] } = useAllProjectsQuery();
   const { data: allCurrentStatus = [] } = useAllCurrentStatusQuery();
@@ -950,38 +961,50 @@ export default function AssetManagerForm({
   const { data: allReasonIncreases = [] } = useAllReasonIncreaseQuery();
   const { data: allRepairTypes = [] } = useAllLoaiSCBDQuery();
 
+  const isEdit = selectedAssets && selectedAssets.length > 0 && !isCopy;
+
+  const sourceAssets = useMemo(() => {
+    if (initialFormData?.assets && initialFormData.assets.length > 0) {
+      return initialFormData.assets;
+    }
+    if (selectedAssets && selectedAssets.length > 0) {
+      return selectedAssets.map((a) => ({
+        ...a,
+        isNew: isCopy ? true : (a.isNew ?? false),
+      }));
+    }
+    return [{ ...defaultAsset, isNew: true }];
+  }, [initialFormData?.assets, selectedAssets, isCopy]);
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      assets:
-        selectedAssets && selectedAssets.length > 0
-          ? selectedAssets.map((a) => ({ ...a, isNew: a.isNew ?? false }))
-          : initialFormData?.assets
-            ? initialFormData.assets
-            : [{ ...defaultAsset, isNew: true }],
+      assets: sourceAssets,
     },
-    validateOnChange: false,
-    validateOnBlur: false,
+    validationSchema: AssetBulkValidation,
     onSubmit(values) {
       onSave(values.assets);
     },
   });
 
-  const debouncedAssets = useDebounce(formik.values.assets, 1500);
+  const debouncedAssets = useDebounce(formik.values.assets, 600);
   useEffect(() => {
-    if (!selectedAssets || selectedAssets.length === 0) {
-      onFormChange?.({ assets: debouncedAssets });
-    }
+    onFormChange?.({ assets: debouncedAssets });
   }, [debouncedAssets]);
 
-  const selectedIds = selectedAssets?.map((a) => a.id).join(",");
+  const handleMinimize = () => {
+    onFormChange?.({ assets: formik.values.assets });
+    onMinimize();
+  };
+
+  const listEndRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(formik.values.assets.length);
   useEffect(() => {
-    if (selectedAssets && selectedAssets.length > 0) {
-      formik.setFieldValue(
-        "assets",
-        selectedAssets.map((a) => ({ ...a, isNew: a.isNew ?? false })),
-      );
+    if (formik.values.assets.length > prevLengthRef.current) {
+      listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
-  }, [selectedIds]);
+    prevLengthRef.current = formik.values.assets.length;
+  }, [formik.values.assets.length]);
 
   const assetsRef = useRef(formik.values.assets);
   assetsRef.current = formik.values.assets;
@@ -996,7 +1019,7 @@ export default function AssetManagerForm({
         soThe: "",
         isNew: true,
         fileDinhKemList: [],
-        taiSanConList: source.taiSanConList.map((item: any) => ({
+        taiSanConList: (source.taiSanConList || []).map((item: any) => ({
           ...item,
           id: "",
           idTaiSanCha: "",
@@ -1020,7 +1043,7 @@ export default function AssetManagerForm({
         <Box
           sx={{
             p: 2,
-            bgcolor: "#fffff",
+            bgcolor: "#ffffff",
             borderBottom: "1px solid",
             borderColor: "divider",
             display: "flex",
@@ -1041,10 +1064,18 @@ export default function AssetManagerForm({
             }}
           >
             <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-              Chi tiết tài sản
+              {isEdit && formik.values.assets.length === 1
+                ? readOnly
+                  ? "Chi tiết tài sản"
+                  : "Chỉnh sửa tài sản"
+                : isEdit
+                  ? `Chỉnh sửa tài sản (${formik.values.assets.length})`
+                  : isCopy
+                    ? `Sao chép tài sản (${formik.values.assets.length})`
+                    : `Thêm mới tài sản (${formik.values.assets.length})`}
             </Typography>
             <Box display="flex" gap={0.5}>
-              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
                 <Remove fontSize="small" />
               </IconButton>
               <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -1055,7 +1086,7 @@ export default function AssetManagerForm({
           <Box display="flex" gap={1.5} alignItems="center">
             {!readOnly && <SaveBtn onSave={formik.submitForm} />}
             {readOnly && <EditButton onClick={onEdit} />}
-            {!readOnly && (
+            {!readOnly && !isEdit && (
               <Button
                 variant="contained"
                 size="small"
@@ -1083,13 +1114,15 @@ export default function AssetManagerForm({
         {/* List of Assets */}
         <Box sx={{ flex: 1, p: 3, overflowY: "auto", bgcolor: "#ffffff" }}>
           <FieldArray name="assets">
-            {({ push, remove }) => (
+            {({ remove }) => (
               <React.Fragment>
                 {formik.values.assets.map((_: any, index: number) => (
                   <AssetRow
                     key={index}
                     index={index}
                     readOnly={readOnly}
+                    isEdit={isEdit}
+                    totalAssets={formik.values.assets.length}
                     onRemove={remove}
                     onCopy={(idx) => handleCopy(idx)}
                     allAssetModel={allAssetModel}
@@ -1102,6 +1135,7 @@ export default function AssetManagerForm({
                     allRepairTypes={allRepairTypes}
                   />
                 ))}
+                <div ref={listEndRef} />
               </React.Fragment>
             )}
           </FieldArray>

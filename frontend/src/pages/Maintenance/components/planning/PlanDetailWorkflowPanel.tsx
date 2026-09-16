@@ -23,14 +23,38 @@ import {
   QuyetToanData,
 } from "../../types";
 
-import { useTechnicalReportByPlanQuery } from "../../mutation/TechnicalReport";
-import { useMaintenanceInspectionByBaoCaoQuery } from "../../mutation/Inspection";
-import { useMaintenanceRepairByInspectionQuery } from "../../mutation/Repair";
-import { useJobAssignmentByRepairQuery } from "../../mutation/JobAssignment";
-import { useMaterialRequisitionByJobAssignmentQuery } from "../../mutation/MaterialRequisition";
-import { useAcceptanceByBienBanQuery } from "../../mutation/Acceptance";
-import { useMaintenanceMaterialAssessmentByAcceptanceQuery } from "../../mutation/MaterialAssessment";
-import { useQuyetToanByDanhGiaQuery } from "../../mutation/QuyetToan";
+import {
+  useTechnicalReportByPlanQuery,
+  useTechnicalReportMutation,
+} from "../../mutation/TechnicalReport";
+import {
+  useMaintenanceInspectionByBaoCaoQuery,
+  useMaintenanceInspectionMutation,
+} from "../../mutation/Inspection";
+import {
+  useMaintenanceRepairByInspectionQuery,
+  useMaintenanceRepairMutation,
+} from "../../mutation/Repair";
+import {
+  useJobAssignmentByRepairQuery,
+  useJobAssignmentMutation,
+} from "../../mutation/JobAssignment";
+import {
+  useMaterialRequisitionByJobAssignmentQuery,
+  useMaterialRequisitionMutation,
+} from "../../mutation/MaterialRequisition";
+import {
+  useAcceptanceByBienBanQuery,
+  useAcceptanceMutation,
+} from "../../mutation/Acceptance";
+import {
+  useMaintenanceMaterialAssessmentByAcceptanceQuery,
+  useMaintenanceMaterialAssessmentMutation,
+} from "../../mutation/MaterialAssessment";
+import {
+  useQuyetToanByDanhGiaQuery,
+  useQuyetToanMutation,
+} from "../../mutation/QuyetToan";
 
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
@@ -49,7 +73,11 @@ import {
 
 import SignDocumentForm from "../signdocument/SignDocumentForm";
 import S3Service from "../../../../services/S3Service";
-import { showSuccessAlert, showErrorAlert } from "../../../../components/Alert";
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showConfirmAlert,
+} from "../../../../components/Alert";
 
 import TechnicalReportDialog from "../dialog/TechnicalReportDialog";
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
@@ -195,6 +223,20 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
     currentMaterial?.id ? currentMaterial.id : undefined,
   );
   const currentQuyetToan: QuyetToanData | undefined = quyetToanList[0];
+
+  // Delete mutations for all 8 steps
+  const { deleteMutation: deleteTechnicalReport } =
+    useTechnicalReportMutation();
+  const { deleteMutation: deleteInspection } =
+    useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteRepair } = useMaintenanceRepairMutation();
+  const { deleteMutation: deleteJobAssignment } = useJobAssignmentMutation();
+  const { deleteMutation: deleteMaterialRequisition } =
+    useMaterialRequisitionMutation();
+  const { deleteMutation: deleteAcceptance } = useAcceptanceMutation();
+  const { deleteMutation: deleteMaterialAssessment } =
+    useMaintenanceMaterialAssessmentMutation();
+  const { deleteMutation: deleteQuyetToan } = useQuyetToanMutation();
 
   // Helper: Format status string (0: Nháp, 1: Đã duyệt, 2: Đã hủy, 3: Hoàn thành)
   const getStatusInfo = (data: any, isPreviousApproved: boolean) => {
@@ -802,6 +844,52 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
     }
   };
 
+  const handleActionDelete = async () => {
+    if (!selectedStepData?.rawData?.id) {
+      showErrorAlert("Không tìm thấy biên bản để xóa!");
+      return;
+    }
+
+    const confirm = await showConfirmAlert(
+      `Bạn có chắc chắn muốn xóa ${selectedStepData.title} (${selectedStepData.subTitle}) không?`,
+    );
+    if (!confirm.isConfirmed) return;
+
+    const id = selectedStepData.rawData.id;
+    try {
+      switch (activeStep) {
+        case 1:
+          await deleteTechnicalReport.mutateAsync(id);
+          break;
+        case 2:
+          await deleteInspection.mutateAsync(id);
+          break;
+        case 3:
+          await deleteRepair.mutateAsync(id);
+          break;
+        case 4:
+          await deleteJobAssignment.mutateAsync(id);
+          break;
+        case 5:
+          await deleteMaterialRequisition.mutateAsync(id);
+          break;
+        case 6:
+          await deleteAcceptance.mutateAsync(id);
+          break;
+        case 7:
+          await deleteMaterialAssessment.mutateAsync(id);
+          break;
+        case 8:
+          await deleteQuyetToan.mutateAsync(id);
+          break;
+        default:
+          break;
+      }
+    } catch (err: any) {
+      console.error("Lỗi khi xóa biên bản:", err);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -991,6 +1079,7 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
         step={selectedStepData}
         onViewDetail={() => handleActionViewDetail(selectedStepData)}
         onEdit={handleActionEdit}
+        onDelete={handleActionDelete}
         onCreateNext={handleActionCreateNext}
         onDownload={() => handleDownloadPdf(selectedStepData)}
         onDownloadAttachment={handleDownloadAttachment}

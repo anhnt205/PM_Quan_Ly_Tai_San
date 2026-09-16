@@ -103,6 +103,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         tenMauMacDinh ??
         `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${new Date().getFullYear()}`,
     },
+    validationSchema: PlanMaintenanceValidation,
     onSubmit: (values) => {
       // 1. Ánh xạ chi tiết tài sản với 12 tháng
       const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({

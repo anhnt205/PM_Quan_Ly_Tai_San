@@ -33,6 +33,7 @@ import { currentBrandConfig } from "../../../../config/brandConfig";
 import { useMaintenanceRepairMutation } from "../../mutation";
 import FieldAutoCompleted from "../../../../components/TextField/FieldAutoCompleted";
 import FieldDate from "../../../../components/TextField/FieldDate";
+import { RepairRequestValidation } from "../../validation";
 import { useAllLoaiSCBDQuery } from "../../../MaintenanceRepairType/Mutation";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
 import api from "../../../../config/api.config";
@@ -109,6 +110,7 @@ const RepairRequestDialog = ({
       danhSachVatTu: [] as any[],
       nguoiKyList: [] as any[],
     },
+    validationSchema: RepairRequestValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -673,7 +675,7 @@ const RepairRequestDialog = ({
             color="primary"
             onClick={() => formik.handleSubmit()}
           >
-            Tạo &amp; Gửi duyệt
+            {initialData?.id ? "Cập nhật" : "Tạo & Gửi duyệt"}
           </Button>
         </DialogActions>
       </Dialog>

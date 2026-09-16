@@ -64,6 +64,59 @@ export const useAssetGroupMutation = () => {
     },
   });
 
+  const createBatchMutation = useMutation({
+    mutationFn: async (list: AssetGroupType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const payload = list.map((item) => ({
+        ...item,
+        idCongTy: item.idCongTy || CongTy.CT001,
+        ngayTao: now,
+        nguoiTao: currentUser,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      }));
+      const res = await api.post("/nhomtaisan/batch", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assetGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["assetGroupsPage"] });
+      showSuccessAlert("Tạo danh sách nhóm tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Tạo nhóm tài sản thất bại",
+      );
+    },
+  });
+
+  const updateBatchMutation = useMutation({
+    mutationFn: async (list: AssetGroupType[]) => {
+      const currentUser = user?.taiKhoan?.tenDangNhap || "admin";
+      const payload = list.map((item) => ({
+        ...item,
+        ngayCapNhat: now,
+        nguoiCapNhat: currentUser,
+      }));
+      const res = await api.put("/nhomtaisan/batch", payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assetGroups"] });
+      queryClient.invalidateQueries({ queryKey: ["assetGroupsPage"] });
+      showSuccessAlert("Cập nhật danh sách nhóm tài sản thành công");
+    },
+    onError: (error: any) => {
+      showErrorAlert(
+        error.response?.data?.message ||
+          error.message ||
+          "Cập nhật nhóm tài sản thất bại",
+      );
+    },
+  });
+
   const deleteOneMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await api.delete(`/nhomtaisan/${id}`);
@@ -236,7 +289,9 @@ export const useAssetGroupMutation = () => {
 
   return {
     createMutation,
+    createBatchMutation,
     updateMutation,
+    updateBatchMutation,
     deleteOneMutation,
     deleteManyMutation,
     exportMutation,

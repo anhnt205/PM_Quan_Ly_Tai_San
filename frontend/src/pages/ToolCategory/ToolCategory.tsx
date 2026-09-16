@@ -1,5 +1,5 @@
-import { Box, Dialog, DialogContent, Tab, Tabs } from "@mui/material";
-import { useEffect, useState } from "react";
+import { Box, Dialog, DialogContent } from "@mui/material";
+import { useEffect, useRef, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -11,8 +11,6 @@ import ToolDetailSidebar from "../ToolManager/components/ToolDetailSidebar";
 import { useToolManagerMutation, useToolPageQuery, fetchToolDetails } from "../ToolManager/Mutation";
 import { createColumns } from "./columnConfig";
 import { useAllDepartmentsQuery } from "../Department/Mutation";
-import { useAllToolTypeQuery } from "../ToolType/Mutation";
-import { useAllUnitsQuery } from "../Unit/Mutation";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import { useDebounce } from "../../hooks/useDebounce";
 import AssetHistoryModal from "../ToolManager/components/ToolHistoryModal";
@@ -64,18 +62,49 @@ export default function ToolCategory() {
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const formValuesRef = useRef<any>(formData.draftForm || selectedTool || null);
+  useEffect(() => {
+    if (formData.draftForm) {
+      formValuesRef.current = formData.draftForm;
+    } else if (selectedTool) {
+      formValuesRef.current = selectedTool;
+    }
+  }, [formData.draftForm, selectedTool]);
+
+  const handleMinimize = (values?: any) => {
+    const currentValues = values || formValuesRef.current || selectedTool;
+    setField({
+      draftForm: currentValues || { id: selectedTool?.id || "", isDraft: true },
+      showForm: false,
+    });
+  };
+
+  const handleClose = () => {
+    formValuesRef.current = null;
+    setField({
+      draftForm: undefined,
+      showForm: false,
+      selectedTool: null,
+      readOnly: false,
+      isCopy: false,
+    });
+  };
+
+  const isMinimized =
+    !showForm && (hasDraftData(formData.draftForm) || Boolean(formData.selectedTool) || Boolean(formData.draftForm));
 
   const location = useLocation();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (location.state?.autoCreate) {
-      setField({ draftForm: undefined });
-      setShowForm(true);
-      setSelectedTool(null);
-      setReadOnly(false);
+      setField({
+        draftForm: undefined,
+        showForm: true,
+        selectedTool: null,
+        readOnly: false,
+        isCopy: false,
+      });
       navigate(location.pathname, { replace: true });
     }
   }, [location, navigate]);
@@ -150,19 +179,13 @@ export default function ToolCategory() {
     if (selectedTool && !isCopy) {
       updateMutation.mutate(values, {
         onSuccess: () => {
-          setShowForm(false);
-          setSelectedTool(null);
-          setIsCopy(false);
-          setField({ draftForm: undefined });
+          handleClose();
         },
       });
     } else {
       createMutation.mutate(values, {
         onSuccess: () => {
-          setShowForm(false);
-          setSelectedTool(null);
-          setIsCopy(false);
-          setField({ draftForm: undefined });
+          handleClose();
         },
       });
     }
@@ -205,11 +228,14 @@ export default function ToolCategory() {
             setShowForm(true);
             return;
           }
-          setField({ draftForm: undefined });
-          setShowForm(true);
-          setSelectedTool(null);
-          setReadOnly(false);
-          setIsCopy(false);
+          formValuesRef.current = null;
+          setField({
+            draftForm: undefined,
+            showForm: true,
+            selectedTool: null,
+            readOnly: false,
+            isCopy: false,
+          });
         }}
         loading={exportExcelMutation.isPending || importExcelMutation.isPending}
         onExport={() => exportExcelMutation.mutate()}
@@ -226,10 +252,23 @@ export default function ToolCategory() {
       <Box p={2}>
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
           maxWidth="lg"
           fullWidth
-          PaperProps={{ sx: { height: "90vh" } }}
+          PaperProps={{
+            sx: {
+              height: "90vh",
+              borderRadius: "16px",
+              border: "2px solid #1FA463",
+              overflow: "hidden",
+            },
+          }}
         >
           <DialogContent
             sx={{
@@ -239,24 +278,24 @@ export default function ToolCategory() {
               flexDirection: "column",
             }}
           >
-            <ToolForm
-              key={`${selectedTool?.id}-${readOnly}`}
-              onCancel={() => {
-                setField({ draftForm: undefined });
-                setShowForm(false);
-                setReadOnly(true);
-                setIsCopy(false);
-              }}
-              onMinimize={handleMinimize}
-              selectedTool={selectedTool}
-              readOnly={readOnly}
-              onEdit={handleEdit}
-              onSave={handleSave}
-              departments={allDepartments}
-              toolGroups={toolGroups}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
+            {showForm && (
+              <ToolForm
+                key={selectedTool?.id || "new"}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                selectedTool={selectedTool}
+                readOnly={readOnly}
+                onEdit={handleEdit}
+                onSave={handleSave}
+                departments={allDepartments}
+                toolGroups={toolGroups}
+                onFormChange={(values) => {
+                  formValuesRef.current = values;
+                  setField({ draftForm: values });
+                }}
+                initialFormData={formData.draftForm}
+              />
+            )}
           </DialogContent>
         </Dialog>
 

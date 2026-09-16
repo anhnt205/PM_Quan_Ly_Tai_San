@@ -34,6 +34,7 @@ import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import MaterialRequisitionPreview from "../preview/MaterialRequisitionPreview";
 
 import { useMaterialRequisitionMutation } from "../../mutation";
+import { MaterialRequisitionValidation } from "../../validation";
 import { useAllDepartmentsQuery } from "../../../Department/Mutation";
 import { useAllStaffsQuery } from "../../../Staff/Mutation";
 import { useAllToolDetailQuery } from "../../../ToolManager/Mutation";
@@ -88,6 +89,7 @@ const MaterialRequisitionDialog = ({
       danhSachVatTu: [] as any[],
       nguoiKyList: [] as any[],
     },
+    validationSchema: MaterialRequisitionValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";

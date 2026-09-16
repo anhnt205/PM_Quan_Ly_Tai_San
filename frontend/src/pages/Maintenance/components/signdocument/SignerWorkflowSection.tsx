@@ -58,6 +58,11 @@ export default function SignerWorkflowSection({
     }));
 
   const signers = getIn(formik.values, fieldName) || [];
+  const signerError = getIn(formik.errors, fieldName);
+  const isTouched = getIn(formik.touched, fieldName);
+  const showError = Boolean(
+    signerError && (isTouched || formik.submitCount > 0),
+  );
 
   const handleAddSigner = () => {
     if (!addUserId) return;
@@ -79,6 +84,7 @@ export default function SignerWorkflowSection({
       },
     ];
     formik.setFieldValue(fieldName, updated);
+    formik.setFieldTouched(fieldName, true);
     setAddUserId("");
   };
 
@@ -87,6 +93,7 @@ export default function SignerWorkflowSection({
       .filter((s: any) => s.userId !== userId)
       .map((s: any, i: number) => ({ ...s, order: i + 1 }));
     formik.setFieldValue(fieldName, updated);
+    formik.setFieldTouched(fieldName, true);
   };
 
   const handleEdit = (signer: any) => {
@@ -174,7 +181,7 @@ export default function SignerWorkflowSection({
     <Box
       sx={{
         border: "1px solid",
-        borderColor: "divider",
+        borderColor: showError ? "error.main" : "divider",
         borderRadius: 3,
         p: 2.5,
         display: "flex",
@@ -185,18 +192,26 @@ export default function SignerWorkflowSection({
       <Typography
         variant="subtitle1"
         fontWeight={600}
-        mb={2}
+        mb={showError ? 1 : 2}
         sx={{ display: "flex", alignItems: "center", gap: 1 }}
       >
-        Quy trình duyệt
+        Quy trình duyệt *
         <Chip
           label={`${signers.length} người`}
           size="small"
-          color="primary"
+          color={showError ? "error" : "primary"}
           variant="outlined"
           sx={{ fontWeight: 400 }}
         />
       </Typography>
+
+      {showError && (
+        <Alert severity="error" sx={{ mb: 2, py: 0.5 }}>
+          {typeof signerError === "string"
+            ? signerError
+            : "Vui lòng chọn ít nhất một người duyệt"}
+        </Alert>
+      )}
 
       <Box sx={{ flex: 1, overflowY: "auto", mb: 2 }}>
         {signers.length > 0 ? (

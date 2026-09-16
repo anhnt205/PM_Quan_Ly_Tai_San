@@ -47,7 +47,7 @@ import { listSigneInfo } from "../../config";
 import FieldInput from "../../../../components/TextField/FieldInput";
 import SignerWorkflowSection from "../signdocument/SignerWorkflowSection";
 import InspectionRecordPreview from "../preview/InspectionRecordPreview";
-import { MachineInspectionValidation } from "../../validation";
+import { InspectionRecordValidation } from "../../validation";
 import { useLocation } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../redux/store";
 import { updateTabFormData } from "../../../../redux/tabsSlice";
@@ -127,7 +127,7 @@ const InspectionRecordDialog = ({
       danhSachChiTiet: [] as InspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: MachineInspectionValidation,
+    validationSchema: InspectionRecordValidation,
     onSubmit: (values) => {
       if (hasValidationError()) return;
       const idNguoiLapBieu =
@@ -616,11 +616,6 @@ const InspectionRecordDialog = ({
           <Button
             variant="contained"
             color="primary"
-            disabled={
-              formik.values.nguoiKyList.length === 0 ||
-              technicalReport?.danhSachTaiSan?.length === 0 ||
-              hasValidationError()
-            }
             onClick={() => formik.handleSubmit()}
           >
             {initData ? "Cập nhật" : "Tạo biên bản"}

@@ -17,6 +17,7 @@ import {
   TableRow,
   Paper,
   Grid,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import AddIcon from "@mui/icons-material/Add";
@@ -79,12 +80,18 @@ const IncidentInspectionDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftKey = `incidentInspectionDraft_${incidentReport?.id || initData?.idSuCo || initData?.id || "default"}`;
+
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return (
-      tab?.formData?.[`incidentInspectionDraft_${incidentReport?.id}`] ?? null
-    );
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+      savedDraft?.isEdit ||
+      (savedDraft?.id && savedDraft.id !== ""),
+  );
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -95,6 +102,32 @@ const IncidentInspectionDialog = ({
       true,
     );
   const mauMacDinh = repairReportPage?.data?.items?.[0];
+
+  function hasValidationError(values: any) {
+    if (
+      !values?.danhSachChiTiet ||
+      values.danhSachChiTiet.length === 0
+    ) {
+      return true;
+    }
+    for (const entry of values.danhSachChiTiet) {
+      if (!entry.danhSachVatTu || entry.danhSachVatTu.length === 0) {
+        return true;
+      }
+      for (const vt of entry.danhSachVatTu) {
+        const soLuong = Number(vt.soLuong || 0);
+        const suaChua = Number(vt.soLuongSuaChua || 0);
+        const thayMoi = Number(vt.soLuongThayMoi || 0);
+        if (soLuong <= 0 || suaChua + thayMoi !== soLuong) {
+          return true;
+        }
+        if (!vt.idChiTietVatTu) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   const formik = useFormik({
     initialValues: {
@@ -117,14 +150,16 @@ const IncidentInspectionDialog = ({
       danhSachChiTiet: [] as IncidentInspectionDetailData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: IncidentInspectionValidation,
+    validationSchema: IncidentInspectionValidation,
     onSubmit: (values) => {
+      if (hasValidationError(values)) return;
       dispatch(
         updateTabFormData({
           path: tabPath,
           data: {
-            [`incidentInspectionDraft_${incidentReport?.id}`]: null,
+            [draftKey]: null,
             lastMinimizedDialog: null,
+            lastMinimizedWorkflowContext: null,
           },
         }),
       );
@@ -148,11 +183,14 @@ const IncidentInspectionDialog = ({
               }))
           : [];
 
+      const finalId = values.id || savedDraft?.id || initData?.id || "";
+
       const record: IncidentInspectionData = {
         ...initData,
         ...values,
+        id: finalId,
         idCongTy: CongTy.CT001,
-        idSuCo: incidentReport.id,
+        idSuCo: incidentReport?.id || initData?.idSuCo || "",
         idNguoiLap: idNguoiLapBieu,
         idGiamDoc: idTrinhDuyetGiamDoc,
         nguoiKyList: intermediateSigners,
@@ -177,7 +215,7 @@ const IncidentInspectionDialog = ({
         }),
       };
 
-      if (initData) {
+      if (isEdit) {
         updateIncInspMutation.mutate(record, {
           onSuccess: () => {
             handleClose();
@@ -193,8 +231,73 @@ const IncidentInspectionDialog = ({
     },
   });
 
+  const assetsWithNoVatTu = (formik.values.danhSachChiTiet || []).filter(
+    (e) => !e.danhSachVatTu || e.danhSachVatTu.length === 0,
+  );
+
+  const hasQtyMismatch = (formik.values.danhSachChiTiet || []).some((e) =>
+    (e.danhSachVatTu || []).some((vt) => {
+      const soLuong = Number(vt.soLuong || 0);
+      const suaChua = Number(vt.soLuongSuaChua || 0);
+      const thayMoi = Number(vt.soLuongThayMoi || 0);
+      return soLuong <= 0 || suaChua + thayMoi !== soLuong;
+    }),
+  );
+
+  const hasMissingMaterial = (formik.values.danhSachChiTiet || []).some((e) =>
+    (e.danhSachVatTu || []).some((vt) => !vt.idChiTietVatTu),
+  );
+
   useEffect(() => {
     if (!open) return;
+
+    const listInfoFromParent = incidentReport
+      ? listSigneInfo(incidentReport as any, apiUsers, apiDepartments)
+      : [];
+    const signersListFromParent = (listInfoFromParent || []).map(
+      (item: any, idx: number) => ({
+        ...item,
+        userId: item.idNhanVien || item.userId,
+        userName: item.hoTen || item.userName,
+        departmentId: item.idDonVi || item.departmentId,
+        departmentName: item.donVi || item.departmentName,
+        position: item.tenChucVu || item.position || "",
+        order: idx + 1,
+      }),
+    );
+
+    if (savedDraft) {
+      formik.setValues({
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idCongTy: CongTy.CT001,
+        idSuCo: incidentReport?.id || initData?.idSuCo || "",
+        idNguoiLap: "",
+        nguoiLapXacNhan: false,
+        idGiamDoc: "",
+        giamDocXacNhan: false,
+        trangThai: 0,
+        share: false,
+        soPhieu: savedDraft.soPhieu ?? "",
+        ngayKiemTra: savedDraft.ngayKiemTra ?? dayjs().format("YYYY-MM-DD"),
+        viTri: savedDraft.viTri ?? "",
+        nhanXetKetLuan: savedDraft.nhanXetKetLuan ?? "",
+        bienPhapXuLy: savedDraft.bienPhapXuLy ?? "",
+        danhSachChiTiet: (savedDraft.danhSachChiTiet || []).map((d: any) => ({
+          ...d,
+          danhSachVatTu: (d.danhSachVatTu || []).map((vt: any) => ({ ...vt })),
+        })),
+        nguoiKyList: savedDraft.nguoiKyList?.length
+          ? savedDraft.nguoiKyList
+          : signersListFromParent,
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ??
+          mauMacDinh?.ten ??
+          `KIỂM TRA SỰ CỐ THIẾT BỊ`,
+        congTy:
+          savedDraft.congTy ?? mauMacDinh?.congTy ?? currentBrandConfig.company,
+      });
+      return;
+    }
 
     if (initData) {
       const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
@@ -211,7 +314,7 @@ const IncidentInspectionDialog = ({
       formik.setValues({
         id: initData.id ?? "",
         idCongTy: initData.idCongTy ?? CongTy.CT001,
-        idSuCo: initData.idSuCo ?? incidentReport.id,
+        idSuCo: initData.idSuCo ?? (incidentReport?.id || ""),
         soPhieu: initData.soPhieu ?? "",
         ngayKiemTra: initData.ngayKiemTra ?? dayjs().format("YYYY-MM-DD"),
         viTri: initData.viTri ?? "",
@@ -239,7 +342,11 @@ const IncidentInspectionDialog = ({
     }
 
     const danhSachChiTiet = (incidentReport?.danhSachTaiSan || [])
-      .filter((d: any) => selectedDeviceIds.includes(String(d.id ?? "")))
+      .filter(
+        (d: any) =>
+          selectedDeviceIds.length === 0 ||
+          selectedDeviceIds.includes(String(d.id ?? "")),
+      )
       .map((d: any) => ({
         id: "",
         idTaiSan: d.idTaiSan,
@@ -247,48 +354,6 @@ const IncidentInspectionDialog = ({
         tenTaiSan: d.tenTaiSan || d.idTaiSan,
         danhSachVatTu: [] as IncidentInspectionVatTuData[],
       }));
-
-    const listInfoFromParent = incidentReport
-      ? listSigneInfo(incidentReport as any, apiUsers, apiDepartments)
-      : [];
-    const signersListFromParent = (listInfoFromParent || []).map(
-      (item: any, idx: number) => ({
-        ...item,
-        userId: item.idNhanVien || item.userId,
-        userName: item.hoTen || item.userName,
-        departmentId: item.idDonVi || item.departmentId,
-        departmentName: item.donVi || item.departmentName,
-        position: item.tenChucVu || item.position || "",
-        order: idx + 1,
-      }),
-    );
-
-    if (savedDraft) {
-      formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idSuCo: incidentReport?.id || "",
-        idNguoiLap: "",
-        nguoiLapXacNhan: false,
-        idGiamDoc: "",
-        giamDocXacNhan: false,
-        trangThai: 0,
-        share: false,
-        // restore từ draft
-        soPhieu: savedDraft.soPhieu,
-        ngayKiemTra: savedDraft.ngayKiemTra,
-        viTri: savedDraft.viTri,
-        nhanXetKetLuan: savedDraft.nhanXetKetLuan,
-        bienPhapXuLy: savedDraft.bienPhapXuLy,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList?.length
-          ? savedDraft.nguoiKyList
-          : signersListFromParent,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-      });
-      return;
-    }
 
     formik.setValues({
       id: "",
@@ -389,12 +454,10 @@ const IncidentInspectionDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`incidentInspectionDraft_${incidentReport?.id}`]: {
-            soPhieu: formik.values.soPhieu,
-            ngayKiemTra: formik.values.ngayKiemTra,
-            viTri: formik.values.viTri,
-            nhanXetKetLuan: formik.values.nhanXetKetLuan,
-            bienPhapXuLy: formik.values.bienPhapXuLy,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
             tenMauBienBan:
               formik.values.tenMauBienBan ||
               mauMacDinh?.ten ||
@@ -403,10 +466,13 @@ const IncidentInspectionDialog = ({
               formik.values.congTy ||
               mauMacDinh?.congTy ||
               currentBrandConfig.company,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
           },
           lastMinimizedDialog: "incidentInspection",
+          lastMinimizedWorkflowContext: {
+            incidentId: incidentReport?.id,
+            activeStep: 1,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -418,8 +484,9 @@ const IncidentInspectionDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`incidentInspectionDraft_${incidentReport?.id}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -549,6 +616,30 @@ const IncidentInspectionDialog = ({
               <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1.5 }}>
                 Tình trạng chi tiết thiết bị & vật tư linh kiện kiểm tra sự cố
               </Typography>
+              {formik.submitCount > 0 &&
+                (!formik.values.danhSachChiTiet ||
+                  formik.values.danhSachChiTiet.length === 0) && (
+                  <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+                    Danh sách tài sản không được để trống
+                  </Alert>
+                )}
+              {formik.submitCount > 0 && assetsWithNoVatTu.length > 0 && (
+                <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+                  Có {assetsWithNoVatTu.length} thiết bị chưa chọn vật tư / linh
+                  kiện nào. Mỗi tài sản phải có ít nhất 1 vật tư.
+                </Alert>
+              )}
+              {formik.submitCount > 0 && hasMissingMaterial && (
+                <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+                  Vui lòng chọn đầy đủ tên vật tư / linh kiện trong danh sách.
+                </Alert>
+              )}
+              {formik.submitCount > 0 && hasQtyMismatch && (
+                <Alert severity="error" sx={{ mb: 1.5, py: 0.5 }}>
+                  Tổng số lượng Sửa chữa + Thay mới phải khớp với Số lượng (và
+                  phải lớn hơn 0).
+                </Alert>
+              )}
               <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
                   <TableHead>
@@ -791,7 +882,7 @@ const IncidentInspectionDialog = ({
             color="primary"
             onClick={() => formik.handleSubmit()}
           >
-            {initData?.id ? "Cập nhật biên bản" : "Tạo biên bản"}
+            {isEdit ? "Cập nhật biên bản" : "Tạo biên bản"}
           </Button>
         </DialogActions>
       </Dialog>
