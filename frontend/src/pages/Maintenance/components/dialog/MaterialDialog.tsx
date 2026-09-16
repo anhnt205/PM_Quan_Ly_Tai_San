@@ -85,11 +85,17 @@ const MaterialDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
-  const draftId = initData?.id || acceptanceRecord?.id || "new";
+  const draftKey = `materialDraft_${acceptanceRecord?.id || initData?.id || "default"}`;
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    return tab?.formData?.[`materialDraft_${draftId}`] ?? null;
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
       0,
@@ -129,7 +135,7 @@ const MaterialDialog = ({
       danhSachChiTiet: [] as ChiTietVatTuThuHoiData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: MaterialValidation,
+    validationSchema: MaterialValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -189,7 +195,7 @@ const MaterialDialog = ({
         })),
       };
 
-      if (initData) {
+      if (isEdit) {
         updateMutation.mutate(record, {
           onSuccess: () => handleClose(),
         });
@@ -205,16 +211,16 @@ const MaterialDialog = ({
     if (!open) return;
     if (savedDraft) {
       formik.setValues({
-        id: initData?.id || "",
-        idCongTy: initData?.idCongTy || CongTy.CT001,
-        idNghiemThu: acceptanceRecord?.id || "",
-        idDonViQuanLy: plan?.tenDonViGiao || "",
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idCongTy: savedDraft.idCongTy ?? (initData?.idCongTy ?? CongTy.CT001),
+        idNghiemThu: savedDraft.idNghiemThu || acceptanceRecord?.id || "",
+        idDonViQuanLy: savedDraft.idDonViQuanLy || plan?.tenDonViGiao || "",
         idNguoiLap: "",
         nguoiLapXacNhan: false,
         idGiamDoc: "",
         giamDocXacNhan: false,
         share: false,
-        trangThai: initData?.trangThai || 0,
+        trangThai: savedDraft.trangThai ?? (initData?.trangThai ?? 0),
         soPhieu: savedDraft.soPhieu,
         ngayDanhGia: savedDraft.ngayDanhGia,
         viTri: savedDraft.viTri,
@@ -228,13 +234,11 @@ const MaterialDialog = ({
         tenMauBienBan:
           savedDraft.tenMauBienBan ||
           mauMacDinh?.ten ||
-          "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
+          "ĐÁNH GIÁ VẬT TƯ THU HỒI SAU SỬA CHỮA",
         congTy:
           savedDraft.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList?.length
-          ? savedDraft.nguoiKyList
-          : [],
+        danhSachChiTiet: savedDraft.danhSachChiTiet || [],
+        nguoiKyList: savedDraft.nguoiKyList || [],
       });
       return;
     }
@@ -485,8 +489,9 @@ const MaterialDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`materialDraft_${draftId}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -498,32 +503,16 @@ const MaterialDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`materialDraft_${draftId}`]: {
-            idNghiemThu: formik.values.idNghiemThu,
-            idBienPhapMayMoc: acceptanceRecord?.idBienPhapMayMoc,
-            materialParentAccId: acceptanceRecord?.id,
-            soPhieu: formik.values.soPhieu,
-            ngayDanhGia: formik.values.ngayDanhGia,
-            viTri: formik.values.viTri,
-            capSuaChua: formik.values.capSuaChua,
-            tenThietBi: formik.values.tenThietBi,
-            kieu: formik.values.kieu,
-            soDangKi: formik.values.soDangKi,
-            soLuongPhucHoi: formik.values.soLuongPhucHoi,
-            soLuongPheLieu: formik.values.soLuongPheLieu,
-            soLuongHuy: formik.values.soLuongHuy,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
-            tenMauBienBan:
-              formik.values.tenMauBienBan ||
-              mauMacDinh?.ten ||
-              "ĐÁNH GIÁ CHẤT LƯỢNG VẬT TƯ PHỤ TÙNG THU HỒI SAU SỬA CHỮA",
-            congTy:
-              formik.values.congTy ||
-              mauMacDinh?.congTy ||
-              currentBrandConfig.company,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "material",
+          lastMinimizedWorkflowContext: {
+            activeStep: 5,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -818,7 +807,7 @@ const MaterialDialog = ({
             color="warning"
             onClick={() => formik.handleSubmit()}
           >
-            {initData ? "Cập nhật biên bản" : "Tạo biên bản"}
+            {isEdit ? "Cập nhật biên bản" : "Tạo biên bản"}
           </Button>
         </DialogActions>
       </Dialog>

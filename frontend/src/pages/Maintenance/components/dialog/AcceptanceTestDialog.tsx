@@ -81,14 +81,18 @@ const AcceptanceTestDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftKey = `acceptanceDraft_${bienPhap?.id || inspectionRecord?.id || initData?.id || "default"}`;
+
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return (
-      tab?.formData?.[
-        `acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`
-      ] ?? null
-    );
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
 
   const { data: apiDepartments = [] } = useAllDepartmentsQuery();
   const { data: apiUsers = [] } = useAllStaffsQuery();
@@ -132,7 +136,7 @@ const AcceptanceTestDialog = ({
       danhSachTaiSan: [] as AcceptanceTestRecordAssetData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: AcceptanceMachineValidation,
+    validationSchema: AcceptanceMachineValidation,
     onSubmit: (values) => {
       const idNguoiLapVal =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -184,7 +188,7 @@ const AcceptanceTestDialog = ({
         ngayTao: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       };
 
-      if (initData) {
+      if (isEdit) {
         updateMutation.mutate(payload, {
           onSuccess: () => handleClose(),
         });
@@ -198,46 +202,6 @@ const AcceptanceTestDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    if (initData) {
-      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
-      formik.setValues({
-        id: initData.id ?? "",
-        idCongTy: initData.idCongTy ?? CongTy.CT001,
-        idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
-        idGiamDinhMayMoc: initData.idGiamDinhMayMoc ?? "",
-        soPhieu: initData.soPhieu ?? "",
-        ngayNghiemThu: initData.ngayNghiemThu ?? "",
-        viTri: initData.viTri ?? "",
-        tenThietBi: initData.tenThietBi ?? "",
-        soDangKi: initData.soDangKi ?? "",
-        capSuaChua: initData.capSuaChua ?? "",
-        ketQua: initData.ketQua ?? "đảm bảo yêu cầu kỹ thuật",
-        noiDung: initData.noiDung ?? "",
-        idNguoiLap: initData.idNguoiLap ?? "",
-        nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
-        idGiamDoc: initData.idGiamDoc ?? "",
-        giamDocXacNhan: initData.giamDocXacNhan ?? false,
-        share: initData.share ?? false,
-        trangThai: initData.trangThai ?? 0,
-        tenMauBienBan:
-          initData?.tenMauBienBan ||
-          mauMacDinh?.ten ||
-          "NGHIỆM THU CHẠY THỬ VÀ BÀN GIAO THIẾT BỊ SAU SỬA CHỮA",
-        congTy:
-          initData?.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
-        danhSachTaiSan: (initData.danhSachTaiSan || []).map((ts) => ({
-          ...ts,
-          danhSachVatTu: (ts.danhSachVatTu || []).map((vt) => ({ ...vt })),
-        })) as AcceptanceTestRecordAssetData[],
-        nguoiKyList: (listInfo ?? []).map((item: any) => ({
-          userId: item.idNhanVien,
-          userName: item.hoTen,
-          departmentId: item.idDonVi,
-          departmentName: item.donVi,
-        })),
-      });
-      return;
-    }
     // Tính danhSachTaiSan từ inspectionRecord — luôn làm trước
     const list: AcceptanceTestRecordAssetData[] = [];
     (inspectionRecord?.danhSachChiTiet || []).forEach(
@@ -310,28 +274,51 @@ const AcceptanceTestDialog = ({
 
     if (savedDraft) {
       formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idBienPhapMayMoc: bienPhap?.id || "",
-        idGiamDinhMayMoc: inspectionRecord?.id || "",
-        idNguoiLap: "",
-        nguoiLapXacNhan: false,
-        idGiamDoc: "",
-        giamDocXacNhan: false,
-        share: false,
-        trangThai: 0,
-        soPhieu: savedDraft.soPhieu,
-        ngayNghiemThu: savedDraft.ngayNghiemThu,
-        viTri: savedDraft.viTri,
-        tenThietBi: savedDraft.tenThietBi,
-        soDangKi: savedDraft.soDangKi,
-        capSuaChua: savedDraft.capSuaChua,
-        ketQua: savedDraft.ketQua,
-        noiDung: savedDraft.noiDung,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-        danhSachTaiSan: savedDraft.danhSachTaiSan,
-        nguoiKyList: savedDraft.nguoiKyList,
+        ...savedDraft,
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idCongTy: savedDraft.idCongTy ?? (initData?.idCongTy ?? CongTy.CT001),
+        idBienPhapMayMoc: savedDraft.idBienPhapMayMoc || bienPhap?.id || "",
+        idGiamDinhMayMoc: savedDraft.idGiamDinhMayMoc || inspectionRecord?.id || "",
+        danhSachTaiSan: savedDraft.danhSachTaiSan || list,
+        nguoiKyList: savedDraft.nguoiKyList || signersListFromParent,
+      });
+      return;
+    }
+
+    if (initData) {
+      const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
+      formik.setValues({
+        id: initData.id ?? "",
+        idCongTy: initData.idCongTy ?? CongTy.CT001,
+        idBienPhapMayMoc: initData.idBienPhapMayMoc ?? "",
+        idGiamDinhMayMoc: initData.idGiamDinhMayMoc ?? "",
+        soPhieu: initData.soPhieu ?? "",
+        ngayNghiemThu: initData.ngayNghiemThu ?? "",
+        viTri: initData.viTri ?? "",
+        tenThietBi: initData.tenThietBi ?? "",
+        soDangKi: initData.soDangKi ?? "",
+        capSuaChua: initData.capSuaChua ?? "",
+        ketQua: initData.ketQua ?? "đảm bảo yêu cầu kỹ thuật",
+        noiDung: initData.noiDung ?? "",
+        idNguoiLap: initData.idNguoiLap ?? "",
+        nguoiLapXacNhan: initData.nguoiLapXacNhan ?? false,
+        idGiamDoc: initData.idGiamDoc ?? "",
+        giamDocXacNhan: initData.giamDocXacNhan ?? false,
+        share: initData.share ?? false,
+        trangThai: initData.trangThai ?? 0,
+        tenMauBienBan:
+          initData?.tenMauBienBan ||
+          mauMacDinh?.ten ||
+          `BIÊN BẢN NGHIỆM THU CHẠY THỬ THIẾT BỊ`,
+        congTy:
+          initData?.congTy || mauMacDinh?.congTy || currentBrandConfig.company,
+        danhSachTaiSan: initData.danhSachTaiSan ?? [],
+        nguoiKyList: (listInfo ?? []).map((item: any) => ({
+          userId: item.idNhanVien,
+          userName: item.hoTen,
+          departmentId: item.idDonVi,
+          departmentName: item.donVi,
+        })),
       });
       return;
     }
@@ -424,8 +411,9 @@ const AcceptanceTestDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -436,25 +424,16 @@ const AcceptanceTestDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceDraft_${bienPhap?.id || inspectionRecord?.id}`]: {
-            idBienPhapMayMoc: formik.values.idBienPhapMayMoc,
-            idGiamDinhMayMoc: formik.values.idGiamDinhMayMoc,
-            idGiamDinh: inspectionRecord?.id,
-            acceptanceParentBienPhapId: bienPhap?.id || inspectionRecord?.id,
-            soPhieu: formik.values.soPhieu,
-            ngayNghiemThu: formik.values.ngayNghiemThu,
-            viTri: formik.values.viTri,
-            tenThietBi: formik.values.tenThietBi,
-            soDangKi: formik.values.soDangKi,
-            capSuaChua: formik.values.capSuaChua,
-            ketQua: formik.values.ketQua,
-            noiDung: formik.values.noiDung,
-            tenMauBienBan: formik.values.tenMauBienBan,
-            congTy: formik.values.congTy,
-            danhSachTaiSan: formik.values.danhSachTaiSan,
-            nguoiKyList: formik.values.nguoiKyList,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "acceptance",
+          lastMinimizedWorkflowContext: {
+            activeStep: 4,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -768,7 +747,7 @@ const AcceptanceTestDialog = ({
           >
             {createMutation.isPending || updateMutation.isPending
               ? "Đang lưu..."
-              : initData
+              : isEdit
                 ? "Cập nhật"
                 : "Tạo biên bản"}
           </Button>

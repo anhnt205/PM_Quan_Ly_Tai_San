@@ -61,12 +61,18 @@ const BienPhapMayMocDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftKey = `bienPhapMayMocDraft_${inspectionRecord?.id || initData?.id || "default"}`;
+
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return (
-      tab?.formData?.[`bienPhapMayMocDraft_${inspectionRecord?.id}`] ?? null
-    );
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
       0,
@@ -105,7 +111,7 @@ const BienPhapMayMocDialog = ({
 
   const formik = useFormik({
     initialValues,
-    // validationSchema: MachineMeasuresValidation,
+    validationSchema: MachineMeasuresValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";
@@ -141,7 +147,7 @@ const BienPhapMayMocDialog = ({
         ngayCapNhat: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       };
 
-      if (initData?.id) {
+      if (isEdit) {
         updateMutation.mutate(payload, { onSuccess: handleClose });
       } else {
         createMutation.mutate(payload, { onSuccess: handleClose });
@@ -151,6 +157,17 @@ const BienPhapMayMocDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        ...initialValues,
+        ...savedDraft,
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idGiamDinhMayMoc: savedDraft.idGiamDinhMayMoc || inspectionRecord?.id || "",
+      });
+      return;
+    }
+
     if (initData) {
       const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
       formik.setValues({
@@ -186,26 +203,6 @@ const BienPhapMayMocDialog = ({
       }),
     );
 
-    if (savedDraft) {
-      formik.setValues({
-        ...initialValues,
-        idGiamDinhMayMoc: inspectionRecord?.id || "",
-        soPhieu: savedDraft.soPhieu,
-        soDeNghi: savedDraft.soDeNghi,
-        donViSuaChua: savedDraft.donViSuaChua,
-        donViPhoiHop: savedDraft.donViPhoiHop,
-        hinhThuc: savedDraft.hinhThuc,
-        thoiGianBatDau: savedDraft.thoiGianBatDau,
-        thoiGianKetThuc: savedDraft.thoiGianKetThuc,
-        thoiGianNgay: savedDraft.thoiGianNgay,
-        ghiChu: savedDraft.ghiChu,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-        nguoiKyList: savedDraft.nguoiKyList,
-      });
-      return;
-    }
-
     formik.setValues({
       ...initialValues,
       nguoiKyList: signersListFromParent,
@@ -217,8 +214,9 @@ const BienPhapMayMocDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapMayMocDraft_${inspectionRecord?.id}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -231,22 +229,16 @@ const BienPhapMayMocDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapMayMocDraft_${inspectionRecord?.id}`]: {
-            idGiamDinhMayMoc: formik.values.idGiamDinhMayMoc,
-            soPhieu: formik.values.soPhieu,
-            soDeNghi: formik.values.soDeNghi,
-            donViSuaChua: formik.values.donViSuaChua,
-            donViPhoiHop: formik.values.donViPhoiHop,
-            hinhThuc: formik.values.hinhThuc,
-            thoiGianBatDau: formik.values.thoiGianBatDau,
-            thoiGianKetThuc: formik.values.thoiGianKetThuc,
-            thoiGianNgay: formik.values.thoiGianNgay,
-            ghiChu: formik.values.ghiChu,
-            tenMauBienBan: formik.values.tenMauBienBan,
-            congTy: formik.values.congTy,
-            nguoiKyList: formik.values.nguoiKyList,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "bienPhapMayMoc",
+          lastMinimizedWorkflowContext: {
+            activeStep: 3,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -465,12 +457,12 @@ const BienPhapMayMocDialog = ({
           <Button
             variant="contained"
             color="warning"
-            disabled={isPending || formik.values.nguoiKyList.length === 0}
+            disabled={isPending}
             onClick={() => formik.submitForm()}
           >
             {isPending
               ? "Đang lưu..."
-              : initData?.id
+              : isEdit
                 ? "Cập nhật"
                 : "Tạo biện pháp"}
           </Button>

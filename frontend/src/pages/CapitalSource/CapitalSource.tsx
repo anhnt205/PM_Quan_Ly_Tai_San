@@ -8,70 +8,97 @@ import {
   IconButton,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+import { GridColDef, GridRowParams } from "@mui/x-data-grid";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { showConfirmAlert } from "../../components/Alert";
+import DraftIndicator from "../../components/common/DraftIndicator";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
-import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import CapitalSourceForm from "./components/CapitalSourceForm";
+import { useDebounce } from "../../hooks/useDebounce";
+import { RootState } from "../../redux/store";
+import { useTabForm } from "../../redux/useTabForm";
+import { CongTy } from "../../utils/const";
+import { hasDraftData } from "../../utils/draftUtils";
+import CapitalSourceForm, { CapitalSourceItem } from "./components/CapitalSourceForm";
 import {
-  useAllCapitalSourceQuery,
   useCapitalSourceMutation,
   useCapitalSourcePageQuery,
 } from "./Mutation";
-import { showConfirmAlert } from "../../components/Alert";
-import { useDebounce } from "../../hooks/useDebounce";
-import { useSelector } from "react-redux";
-import { RootState } from "../../redux/store";
-import { useTabForm } from "../../redux/useTabForm";
-import { hasDraftData } from "../../utils/draftUtils";
-import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface CapitalSourceTabState {
   showForm: boolean;
-  selectedCapitalSource: any | null;
-  readOnly: boolean;
-  isCopy: boolean;
-  draftForm?: Record<string, any>;
-  showBulkForm: boolean;
-  bulkEditType?: "create" | "edit";
-  bulkItems?: any[];
-  bulkDraftData?: Record<string, any>;
+  formMode: "create" | "edit";
+  items: CapitalSourceItem[];
+  draftData?: {
+    items: CapitalSourceItem[];
+    formMode: "create" | "edit";
+  };
 }
 
 export default function CapitalSource() {
   const { formData, setField } =
     useTabForm<CapitalSourceTabState>("/nguon_von");
   const showForm = formData.showForm ?? false;
-  const selectedCapitalSource = formData.selectedCapitalSource ?? null;
-  const readOnly = formData.readOnly ?? false;
-  const isCopy = formData.isCopy ?? false;
-  const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedCapitalSource = (v: any) =>
-    setField({ selectedCapitalSource: v });
-  const setReadOnly = (v: boolean) => setField({ readOnly: v });
-  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const formMode = formData.formMode ?? "create";
+  const items = formData.items ?? [];
 
-  const showBulkForm = formData.showBulkForm ?? false;
-  const bulkEditType = formData.bulkEditType ?? "create";
-  const bulkItems = formData.bulkItems ?? [];
-  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
-  const setBulkEditType = (v: "create" | "edit") =>
-    setField({ bulkEditType: v });
-  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
+
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
-  const handleBulkMinimize = () => setShowBulkForm(false);
-  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
+  const itemsRef = useRef<CapitalSourceItem[]>(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  const handleMinimize = () => {
+    const currentItems = itemsRef.current;
+    if (currentItems && currentItems.length > 0) {
+      setField({
+        draftData: {
+          items: currentItems,
+          formMode,
+        },
+        showForm: false,
+      });
+    } else {
+      setShowForm(false);
+    }
+  };
+
+  const handleRestoreFromDraft = () => {
+    const draft = formData.draftData;
+    if (draft?.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      itemsRef.current = draft.items;
+      setField({
+        items: draft.items,
+        formMode: draft.formMode || "create",
+        showForm: true,
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setField({
+      showForm: false,
+      draftData: undefined,
+      items: [],
+    });
+  };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftData?.items);
 
   const {
     createMutation,
@@ -93,48 +120,118 @@ export default function CapitalSource() {
       debouncedSearchValue,
     );
 
-  const handleRowClick = (params: GridRowParams) => {
-    setSelectedCapitalSource(params.row);
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          setImportErrors(error.message.split("\n"));
+          setShowErrorDialog(true);
+        }
+      },
+    });
   };
 
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      handleRestoreFromDraft();
+      return;
+    }
+    const emptyItem: CapitalSourceItem = {
+      id: "",
+      tenNguonKinhPhi: "",
+      ghiChu: "",
+      idCongTy: CongTy.CT001,
+      hieuLuc: true,
+      isActive: true,
+    };
+    itemsRef.current = [emptyItem];
+    setField({
+      formMode: "create",
+      items: [emptyItem],
+      showForm: true,
+    });
+  };
+
+  const handleEditRow = (row: any) => {
+    const editItem: CapitalSourceItem = {
+      id: row.id,
+      tenNguonKinhPhi: row.tenNguonKinhPhi,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    };
+    itemsRef.current = [editItem];
+    setField({
+      formMode: "edit",
+      items: [editItem],
+      showForm: true,
+    });
+  };
+
+  const handleCopyRow = (row: any) => {
+    const copiedItem: CapitalSourceItem = {
+      id: "",
+      tenNguonKinhPhi: row.tenNguonKinhPhi,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    };
+    itemsRef.current = [copiedItem];
+    setField({
+      formMode: "create",
+      items: [copiedItem],
+      showForm: true,
+    });
   };
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
-    const itemsToEdit = capitalSourcesPage.items
+    const selectedRows = capitalSourcesPage.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
-    setBulkEditType("edit");
-    setBulkItems(itemsToEdit);
-    setShowBulkForm(true);
+
+    const editItems: CapitalSourceItem[] = selectedRows.map((row: any) => ({
+      id: row.id,
+      tenNguonKinhPhi: row.tenNguonKinhPhi,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    }));
+
+    itemsRef.current = editItems;
+    setField({
+      formMode: "edit",
+      items: editItems,
+      showForm: true,
+    });
   };
 
-  const handleSave = (values: any) => {
-    if (Array.isArray(values)) {
-      if (bulkEditType === "create") {
-        createBatchMutation.mutate(values);
+  const handleSave = async (savedItems: CapitalSourceItem[]) => {
+    try {
+      if (formMode === "create") {
+        if (savedItems.length === 1) {
+          await createMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await createBatchMutation.mutateAsync(savedItems as any);
+        }
       } else {
-        updateBatchMutation.mutate(values);
+        if (savedItems.length === 1) {
+          await updateMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await updateBatchMutation.mutateAsync(savedItems as any);
+        }
       }
-      setShowBulkForm(false);
-      setBulkItems([]);
+      setField({
+        showForm: false,
+        draftData: undefined,
+        items: [],
+      });
       setSelectedIds([]);
-      setField({ bulkDraftData: undefined });
-    } else {
-      if (selectedCapitalSource && !isCopy) {
-        updateMutation.mutate(values);
-      } else {
-        createMutation.mutate(values);
-      }
-      setShowForm(false);
-      setSelectedCapitalSource(null);
-      setIsCopy(false);
-      setField({ draftForm: undefined });
+    } catch (error) {
+      console.error("Lỗi khi lưu nguồn vốn:", error);
     }
   };
 
@@ -157,7 +254,7 @@ export default function CapitalSource() {
     {
       field: "ghiChu",
       headerName: "Ghi chú",
-      width: 300,
+      width: 250,
       align: "center",
       headerAlign: "center",
     },
@@ -185,7 +282,7 @@ export default function CapitalSource() {
     {
       field: "active",
       headerName: "Hiệu lực",
-      width: 200,
+      width: 180,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => {
@@ -193,13 +290,10 @@ export default function CapitalSource() {
         return (
           <Chip
             label={isActive ? "Có hiệu lực" : "Không hiệu lực"}
-            size="small" // Nên để small cho gọn trong bảng
+            size="small"
             sx={{
               bgcolor: isActive ? "#baf7cbff" : "#f5f5f5",
-
               color: isActive ? "#137333" : "#616161",
-
-              // Bỏ viền nếu không cần
               border: "none",
             }}
           />
@@ -217,22 +311,18 @@ export default function CapitalSource() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setIsCopy(false);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              const { id, ...copyData } = params.row;
-              setSelectedCapitalSource({ ...copyData, id: "" });
-              setIsCopy(true);
-              setReadOnly(false);
-              setShowForm(true);
+              handleCopyRow(params.row);
             }}
+            title="Sao chép"
           >
             <ContentCopy color="primary" />
           </IconButton>
@@ -244,6 +334,7 @@ export default function CapitalSource() {
                 deleteOneMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -256,108 +347,92 @@ export default function CapitalSource() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý nguồn vốn"
-        onNewClick={() => {
-          if (isBulkMinimized) {
-            setShowBulkForm(true);
-            return;
-          }
-          if (isMinimized) {
-            setShowForm(true);
-            return;
-          }
-          setBulkEditType("create");
-          setBulkItems([{}]);
-          setShowBulkForm(true);
-          setSelectedCapitalSource(null);
-          setReadOnly(false);
-        }}
+        onNewClick={handleStartCreate}
         onExport={() => exportMutation.mutate()}
-        onImport={(file) => importExcelMutation.mutate(file)}
+        onImport={handleImport}
         showExcel={true}
       />
+
+      <ImportErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errors={importErrors}
+      />
+
+      <Dialog
+        open={exportMutation.isPending || importExcelMutation.isPending}
+        PaperProps={{
+          sx: {
+            borderRadius: 0,
+            boxShadow: "none",
+            border: "1px solid #d9d9d9",
+            minWidth: "240px",
+          },
+        }}
+      >
+        <DialogContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <CircularProgress size={20} color="inherit" thickness={4} />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Đang xử lý dữ liệu nguồn vốn...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Box p={2}>
         <Dialog
-          open={exportMutation.isPending || importExcelMutation.isPending}
-          PaperProps={{
-            sx: {
-              borderRadius: 0,
-              boxShadow: "none",
-              border: "1px solid #d9d9d9",
-              minWidth: "200px",
+          open={showForm}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
+          maxWidth="sm"
+          fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
             },
           }}
         >
-          <DialogContent>
-            <Box display="flex" alignItems="center" gap={2}>
-              <CircularProgress size={20} color="inherit" thickness={4} />
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Đang xử lý dữ liệu nguồn vốn...
-              </Typography>
-            </Box>
-          </DialogContent>
-        </Dialog>
-        <Dialog
-          open={showForm}
-          onClose={handleMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <CapitalSourceForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedCapitalSource(null);
-                setReadOnly(false);
-                setIsCopy(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedCapitalSource={selectedCapitalSource}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
+            {showForm && (
+              <CapitalSourceForm
+                key={`${formMode}-${items.map((i) => i.id).join("-") || "new"}`}
+                mode={formMode}
+                initialItems={items}
+                onSave={handleSave}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onItemsChange={(newItems) => {
+                  itemsRef.current = newItems;
+                }}
+                initialFormData={formData.draftData}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
-        <Dialog
-          open={showBulkForm}
-          onClose={handleBulkMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <CapitalSourceForm
-              onEdit={() => {}}
-              onCancel={() => {
-                setBulkItems([]);
-                setSelectedIds([]);
-                setField({ bulkDraftData: undefined });
-                setShowBulkForm(false);
-              }}
-              onMinimize={handleBulkMinimize}
-              selectedCapitalSource={null}
-              readOnly={false}
-              onSave={handleSave}
-              isBulkMode={true}
-              bulkItems={bulkItems}
-              onBulkItemsChange={(items) => {
-                setField({
-                  bulkDraftData: { items, bulkEditType },
-                  bulkItems: items,
-                });
-              }}
-              bulkEditType={bulkEditType}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {isBulkMinimized ? (
-          <DraftIndicator onClick={() => setShowBulkForm(true)} />
-        ) : (
-          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        {isMinimized && (
+          <DraftIndicator onClick={handleRestoreFromDraft} />
         )}
 
         <TableCustom
@@ -369,7 +444,7 @@ export default function CapitalSource() {
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
-          onRowClick={handleRowClick}
+          onRowClick={(params: GridRowParams) => handleEditRow(params.row)}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}
@@ -377,7 +452,7 @@ export default function CapitalSource() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
-          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate()}
           onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
@@ -385,3 +460,4 @@ export default function CapitalSource() {
     </Box>
   );
 }
+

@@ -13,7 +13,7 @@ import { useRef, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import StaffForm from "./components/StaffForm";
+
 import StaffBulkForm from "./components/StaffBulkForm";
 import { useStaffMutation, useStaffPagesQuery } from "./Mutation";
 import { showConfirmAlert, showErrorAlert } from "../../components/Alert";
@@ -79,7 +79,6 @@ export default function Staff() {
     updateManyMutation,
     deleteOneMutation,
     deleteManyMutation,
-    uploadMutation,
     exportMutation,
     importExcelMutation,
     deleteAllMutation,
@@ -101,7 +100,8 @@ export default function Staff() {
     setShowForm(true);
   };
 
-  const handleSave = (values: any) => {
+  const handleSave = (items: any[]) => {
+    const values = items[0];
     if (selectedStaff && !isCopy) {
       updateMutation.mutate(values);
     } else {
@@ -113,9 +113,6 @@ export default function Staff() {
     setField({ draftForm: undefined });
   };
 
-  const handleEdit = () => {
-    setReadOnly(false);
-  };
 
   const handleBulkEdit = () => {
     const rowsToEdit = selectedRows.length
@@ -146,6 +143,7 @@ export default function Staff() {
   };
 
   const bulkFormValuesRef = useRef<any>(null);
+  const formValuesRef = useRef<any>(null);
 
   const handleBulkClose = (event: any, reason?: string) => {
     if (reason === "backdropClick" || reason === "escapeKeyDown") {
@@ -187,8 +185,9 @@ export default function Staff() {
   const isBulkMinimized = !showBulkForm && hasDraftData(formData.draftBulkForm);
 
   const handleMinimize = () => {
+    // Lưu draft từ ref trước khi ẩn
+    setField({ draftForm: formValuesRef.current });
     setShowForm(false);
-    // Không xóa draftForm, không reset selectedStaff
   };
 
   const columns: GridColDef[] = [
@@ -382,11 +381,19 @@ export default function Staff() {
         </Dialog>
         <Dialog
           open={showForm}
-          onClose={() => {
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              // Ẩn tạm — giữ draft
+              setField({ draftForm: formValuesRef.current });
+              setShowForm(false);
+              return;
+            }
+            // Trường hợp khác: đóng hẳn
             setShowForm(false);
             setSelectedStaff(null);
             setReadOnly(false);
             setIsCopy(false);
+            setField({ draftForm: undefined });
           }}
           maxWidth="md"
           fullWidth
@@ -398,7 +405,9 @@ export default function Staff() {
           }}
         >
           <DialogContent sx={{ p: 0 }}>
-            <StaffForm
+            <StaffBulkForm
+              mode={selectedStaff && !isCopy ? "edit" : "add"}
+              initialItems={selectedStaff ? [selectedStaff] : undefined}
               onCancel={() => {
                 setShowForm(false);
                 setSelectedStaff(null);
@@ -407,12 +416,10 @@ export default function Staff() {
                 setField({ draftForm: undefined });
               }}
               onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedStaff={selectedStaff}
-              readOnly={readOnly}
               onSave={handleSave}
-              onUpload={uploadMutation.mutate}
-              onFormChange={(values) => setField({ draftForm: values })}
+              onFormChange={(values) => {
+                formValuesRef.current = values;
+              }}
               initialFormData={formData.draftForm}
             />
           </DialogContent>

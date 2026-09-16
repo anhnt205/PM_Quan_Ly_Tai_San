@@ -14,6 +14,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import AddIcon from "@mui/icons-material/Add";
 import LockIcon from "@mui/icons-material/Lock";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { WorkflowStepData, AttachmentItem } from "./types";
@@ -24,6 +25,7 @@ interface Props {
   onDownload?: () => void;
   onDownloadAttachment?: (file: AttachmentItem) => void;
   onEdit?: () => void;
+  onDelete?: () => void;
   onCreateNext?: () => void;
   onCreateAlternativeNext?: () => void;
 }
@@ -34,6 +36,7 @@ export const StepDetailCard: React.FC<Props> = ({
   onDownload,
   onDownloadAttachment,
   onEdit,
+  onDelete,
   onCreateNext,
   onCreateAlternativeNext,
 }) => {
@@ -143,15 +146,15 @@ export const StepDetailCard: React.FC<Props> = ({
                 sx={{
                   textTransform: "none",
                   fontWeight: 700,
-                  bgcolor: "#10b981",
+                  // bgcolor: "#10b981",
                   color: "#ffffff",
                   borderRadius: 2,
                   px: 2,
                   boxShadow: "none",
-                  "&:hover": {
-                    bgcolor: "#059669",
-                    boxShadow: "none",
-                  },
+                  // "&:hover": {
+                  //   bgcolor: "#059669",
+                  //   boxShadow: "none",
+                  // },
                 }}
               >
                 + Lập {step.nextStepName || "Biên bản tiếp theo"}
@@ -183,6 +186,24 @@ export const StepDetailCard: React.FC<Props> = ({
                   + Lập {step.alternativeNextStepName || "BB Nghiệm thu"}
                 </Button>
               )}
+
+            {/* Nút xóa biên bản — chỉ hiển khi Nháp hoặc Hủy */}
+            {(isDraft || isCancelled) && onDelete && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<DeleteOutlineIcon sx={{ fontSize: 18 }} />}
+                onClick={onDelete}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 2,
+                }}
+              >
+                Xóa biên bản
+              </Button>
+            )}
 
             {/* Nút chỉnh sửa nếu là bản nháp */}
             {isDraft && onEdit && (

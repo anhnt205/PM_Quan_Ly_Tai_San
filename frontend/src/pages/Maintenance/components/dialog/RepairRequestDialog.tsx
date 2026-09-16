@@ -69,29 +69,36 @@ const RepairRequestDialog = ({
     useBienBanSuaChuaPageQuery(0, 9999, "", LOAI_BIEN_BAN_TYPE.SUA_CHUA, true);
   const mauMacDinh = repairReportPage?.data?.items?.[0];
 
+  const savedDraft = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.[`repairDraft_${plan.id}`] ?? null;
+  });
+
+  const initialValues = {
+    id: "",
+    idCongTy: CongTy.CT001,
+    soPhieu: "",
+    idKeHoach: plan?.id || "",
+    thang: selectedMonth,
+    nam: plan?.nam || 2026,
+    ghiChu: "",
+    idNguoiLap: "",
+    nguoiLapXacNhan: false,
+    idGiamDoc: "",
+    giamDocXacNhan: false,
+    share: false,
+    trangThai: 0,
+    tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
+    congTy: mauMacDinh?.congTy || currentBrandConfig.company,
+    ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+    ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
+    danhSachTaiSan: [] as any[],
+    nguoiKyList: [] as any[],
+  };
+
   const formik = useFormik({
-    initialValues: {
-      id: "",
-      idCongTy: CongTy.CT001,
-      soPhieu: "",
-      idKeHoach: plan?.id || "",
-      thang: selectedMonth,
-      nam: plan?.nam || 2026,
-      ghiChu: "",
-      idNguoiLap: "",
-      nguoiLapXacNhan: false,
-      idGiamDoc: "",
-      giamDocXacNhan: false,
-      share: false,
-      trangThai: 0,
-      tenMauBienBan: mauMacDinh?.ten || "ĐỀ NGHỊ SỬA CHỮA, BẢO DƯỠNG THIẾT BỊ",
-      congTy: mauMacDinh?.congTy || currentBrandConfig.company,
-      ngayTao: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      ngayCapNhat: dayjs(new Date()).format("YYYY-MM-DD HH:mm:ss"),
-      danhSachTaiSan: [] as any[],
-      nguoiKyList: [] as any[],
-    },
-    // validationSchema: MaintenanceValidation,
+    initialValues,
+    validationSchema: MaintenanceValidation,
     onSubmit: (values) => {
       const idNguoiLapBieu =
         values.nguoiKyList.length > 0 ? values.nguoiKyList[0].userId : "";
@@ -133,13 +140,24 @@ const RepairRequestDialog = ({
     },
   });
 
-  const savedDraft = useAppSelector((state) => {
-    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    return tab?.formData?.[`repairDraft_${plan.id}`] ?? null;
-  });
+  const isEdit = Boolean(
+    initialData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
 
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        ...initialValues,
+        ...savedDraft,
+        id: savedDraft.id ?? (initialData?.id ?? ""),
+      });
+      return;
+    }
+
     if (initialData) {
       const listInfo = listSigneInfo(initialData, apiUsers, apiDepartments);
       const signersList = (listInfo || []).map((item, idx) => ({
@@ -277,7 +295,11 @@ const RepairRequestDialog = ({
     dispatch(
       updateTabFormData({
         path: tabPath,
-        data: { [`repairDraft_${plan.id}`]: null, lastMinimizedDialog: null },
+        data: {
+          [`repairDraft_${plan.id}`]: null,
+          lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
+        },
       }),
     );
     formik.resetForm();
@@ -290,13 +312,18 @@ const RepairRequestDialog = ({
         path: tabPath,
         data: {
           [`repairDraft_${plan.id}`]: {
-            soPhieu: formik.values.soPhieu,
-            ghiChu: formik.values.ghiChu,
-            tenMauBienBan: formik.values.tenMauBienBan,
-            congTy: formik.values.congTy,
-            nguoiKyList: formik.values.nguoiKyList,
+            ...formik.values,
+            id: formik.values.id || initialData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "repair",
+          lastMinimizedWorkflowContext: {
+            planId: plan?.id,
+            plan: plan,
+            selectedMonth: selectedMonth,
+            activeStep: 1,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -357,7 +384,10 @@ const RepairRequestDialog = ({
                   <Box
                     sx={{ display: "flex", flexDirection: "column", gap: 2 }}
                   >
-                    <FieldInput title="Số giấy đề nghị" name="soPhieu" />
+                    <FieldInput
+                      title="Số giấy đề nghị *"
+                      name="soPhieu"
+                    />
                     <Typography variant="body2" color="text.secondary">
                       Căn cứ Kế hoạch SCBD tháng <b>{selectedMonth}</b> năm{" "}
                       <b>{plan.nam}</b>
@@ -410,7 +440,7 @@ const RepairRequestDialog = ({
           color="primary"
           onClick={() => formik.handleSubmit()}
         >
-          Tạo &amp; Gửi duyệt
+          {isEdit ? "Cập nhật & Gửi duyệt" : "Tạo & Gửi duyệt"}
         </Button>
       </DialogActions>
     </Dialog>

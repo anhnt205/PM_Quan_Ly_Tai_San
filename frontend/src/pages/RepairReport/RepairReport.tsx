@@ -1,6 +1,6 @@
-import { Delete, Edit } from "@mui/icons-material";
+import { ContentCopy, Delete, Edit } from "@mui/icons-material";
 import { Box, Dialog, DialogContent, IconButton } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
@@ -17,11 +17,13 @@ import {
 } from "./Mutation";
 import RepairReportForm from "./components/RepairReportForm";
 import { BienBanSuaChua } from "./types";
+import { LOAI_BIEN_BAN_OPTIONS } from "../../utils/const";
 
 interface RepairReportTabState {
   showForm: boolean;
   selectedRepairReport: any | null;
   readOnly: boolean;
+  isCopy: boolean;
   draftForm?: Record<string, any>;
 }
 
@@ -33,10 +35,9 @@ export default function RepairReport() {
   const showForm = formData.showForm ?? false;
   const selectedRepairReport = formData.selectedRepairReport ?? null;
   const readOnly = formData.readOnly ?? false;
+  const isCopy = formData.isCopy ?? false;
 
   const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedRepairReport = (v: any) =>
-    setField({ selectedRepairReport: v });
   const setReadOnly = (v: boolean) => setField({ readOnly: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -48,8 +49,42 @@ export default function RepairReport() {
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
+  const formValuesRef = useRef<any>(
+    formData.draftForm || selectedRepairReport || null,
+  );
+  useEffect(() => {
+    if (formData.draftForm) {
+      formValuesRef.current = formData.draftForm;
+    } else if (selectedRepairReport) {
+      formValuesRef.current = selectedRepairReport;
+    }
+  }, [formData.draftForm, selectedRepairReport]);
+
+  const handleMinimize = (values?: any) => {
+    const currentValues =
+      values || formValuesRef.current || selectedRepairReport;
+    setField({
+      draftForm: currentValues || { isDraft: true },
+      showForm: false,
+    });
+  };
+
+  const handleClose = () => {
+    formValuesRef.current = null;
+    setField({
+      showForm: false,
+      selectedRepairReport: null,
+      readOnly: false,
+      isCopy: false,
+      draftForm: undefined,
+    });
+  };
+
+  const isMinimized =
+    !showForm &&
+    (hasDraftData(formData.draftForm) ||
+      Boolean(formData.selectedRepairReport) ||
+      Boolean(formData.draftForm));
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
 
@@ -69,27 +104,70 @@ export default function RepairReport() {
     );
 
   const handleRowClick = (params: GridRowParams) => {
-    setSelectedRepairReport(params.row);
-    setReadOnly(true);
-    setShowForm(true);
+    formValuesRef.current = params.row;
+    setField({
+      selectedRepairReport: params.row,
+      readOnly: true,
+      isCopy: false,
+      draftForm: undefined,
+      showForm: true,
+    });
+  };
+
+  const handleEditRow = (row: any) => {
+    formValuesRef.current = row;
+    setField({
+      selectedRepairReport: row,
+      readOnly: false,
+      isCopy: false,
+      draftForm: undefined,
+      showForm: true,
+    });
+  };
+
+  const handleCopyRow = (row: any) => {
+    const { id, ...rest } = row;
+    const copied = { ...rest, ma: "", id: undefined };
+    formValuesRef.current = copied;
+    setField({
+      selectedRepairReport: copied,
+      readOnly: false,
+      isCopy: true,
+      draftForm: undefined,
+      showForm: true,
+    });
+  };
+
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      setShowForm(true);
+      return;
+    }
+    formValuesRef.current = null;
+    setField({
+      selectedRepairReport: null,
+      readOnly: false,
+      isCopy: false,
+      draftForm: undefined,
+      showForm: true,
+    });
   };
 
   const handleSave = async (values: any) => {
     try {
-      if (selectedRepairReport) {
-        await updateMutation.mutateAsync(values);
+      if (selectedRepairReport?.id && !isCopy) {
+        await updateMutation.mutateAsync({
+          ...values,
+          id: selectedRepairReport.id,
+        });
       } else {
         await createMutation.mutateAsync(values);
       }
-      setShowForm(false);
-      setSelectedRepairReport(null);
-      setField({ draftForm: undefined });
+      handleClose();
     } catch {
-      // Alert is handled in mutation hooks; keep form open for user correction/retry.
+      // Alert is handled in mutation hooks
     }
   };
-
-  const handleEdit = () => setReadOnly(false);
 
   const columns: GridColDef[] = [
     {
@@ -108,6 +186,26 @@ export default function RepairReport() {
       headerAlign: "center",
     },
     {
+      field: "loaiBienBan",
+      headerName: "Loại biên bản",
+      minWidth: 180,
+      align: "center",
+      headerAlign: "center",
+      renderCell: (params) => {
+        const option = LOAI_BIEN_BAN_OPTIONS.find(
+          (opt) => opt.id === params.value,
+        );
+        return option?.label || params.value;
+      },
+    },
+    {
+      field: "congTy",
+      headerName: "Công ty",
+      minWidth: 150,
+      align: "center",
+      headerAlign: "center",
+    },
+    {
       field: "macDinh",
       headerName: "Mặc định",
       width: 120,
@@ -118,7 +216,7 @@ export default function RepairReport() {
     {
       field: "action",
       headerName: "Hành động",
-      width: 130,
+      width: 150,
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
@@ -126,11 +224,20 @@ export default function RepairReport() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
+          </IconButton>
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCopyRow(params.row);
+            }}
+            title="Sao chép"
+          >
+            <ContentCopy color="primary" />
           </IconButton>
           <IconButton
             onClick={async (e) => {
@@ -140,6 +247,7 @@ export default function RepairReport() {
                 deleteMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -152,40 +260,60 @@ export default function RepairReport() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Mẫu biên bản sửa chữa"
-        onNewClick={() => {
-          if (isMinimized) {
-            setShowForm(true);
-            return;
-          }
-          setSelectedRepairReport(null);
-          setReadOnly(false);
-          setShowForm(true);
-        }}
+        onNewClick={handleStartCreate}
       />
 
       <Box p={2}>
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
           maxWidth="lg"
           fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
+            },
+          }}
         >
-          <DialogContent sx={{ p: 0 }}>
-            <RepairReportForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedRepairReport(null);
-                setReadOnly(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              editData={selectedRepairReport}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values: any) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm as BienBanSuaChua}
-            />
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
+            {showForm && (
+              <RepairReportForm
+                key={`${selectedRepairReport?.id || "new"}-${isCopy ? "copy" : "edit"}-${readOnly}`}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onEdit={() => setReadOnly(false)}
+                editData={selectedRepairReport}
+                readOnly={readOnly}
+                isCopy={isCopy}
+                onSave={handleSave}
+                onFormChange={(values: any) => {
+                  formValuesRef.current = values;
+                  setField({ draftForm: values });
+                }}
+                initialFormData={formData.draftForm as BienBanSuaChua}
+              />
+            )}
           </DialogContent>
         </Dialog>
 

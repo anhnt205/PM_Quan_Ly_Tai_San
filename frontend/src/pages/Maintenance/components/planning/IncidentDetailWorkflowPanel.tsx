@@ -60,6 +60,9 @@ import BienPhapPhuongTienDialog from "../dialog/BienPhapPhuongTienDialog";
 import AcceptanceTestDialog from "../dialog/AcceptanceTestDialog";
 import NghiemThuPhuongTienDialog from "../dialog/NghiemThuPhuongTienDialog";
 import MaterialDialog from "../dialog/MaterialDialog";
+import DraftIndicator from "../../../../components/common/DraftIndicator";
+import { useLocation } from "react-router-dom";
+import { useAppSelector } from "../../../../redux/store";
 
 // Modular workflow components from workflowTree
 import {
@@ -96,6 +99,48 @@ export const IncidentDetailWorkflowPanel: React.FC<Props> = ({
   const [openBienPhapDialog, setOpenBienPhapDialog] = useState(false);
   const [openMaterialDialog, setOpenMaterialDialog] = useState(false);
   const [openAcceptanceDialog, setOpenAcceptanceDialog] = useState(false);
+
+  const location = useLocation();
+  const tabPath = location.pathname;
+
+  const lastMinimizedDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedDialog ?? null;
+  });
+
+  const lastMinimizedWorkflowContext = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedWorkflowContext ?? null;
+  });
+
+  const handleRestoreMinimized = () => {
+    if (lastMinimizedWorkflowContext?.isEdit !== undefined) {
+      setIsEditMode(lastMinimizedWorkflowContext.isEdit);
+    }
+    if (lastMinimizedWorkflowContext?.activeStep) {
+      setActiveStep(lastMinimizedWorkflowContext.activeStep);
+    }
+    if (lastMinimizedDialog === "incidentInspection") {
+      setOpenIncidentInspectionDialog(true);
+    } else if (
+      lastMinimizedDialog === "inspection" ||
+      lastMinimizedDialog === "inspectionVehicle"
+    ) {
+      setOpenInspectionDialog(true);
+    } else if (
+      lastMinimizedDialog === "bienPhapMayMoc" ||
+      lastMinimizedDialog === "bienPhapPhuongTien"
+    ) {
+      setOpenBienPhapDialog(true);
+    } else if (
+      lastMinimizedDialog === "acceptance" ||
+      lastMinimizedDialog === "acceptanceVehicle"
+    ) {
+      setOpenAcceptanceDialog(true);
+    } else if (lastMinimizedDialog === "material") {
+      setOpenMaterialDialog(true);
+    }
+  };
 
   // Data for PDF Generators
   const { data: staffs = [] } = useAllStaffsQuery();
@@ -857,6 +902,10 @@ export const IncidentDetailWorkflowPanel: React.FC<Props> = ({
           initData={isEditMode ? currentMaterial || null : null}
           plan={plan}
         />
+      )}
+      {/* ── Nút khôi phục soạn thảo khi tạm ẩn dialog ── */}
+      {lastMinimizedDialog && (
+        <DraftIndicator onClick={handleRestoreMinimized} />
       )}
     </Box>
   );

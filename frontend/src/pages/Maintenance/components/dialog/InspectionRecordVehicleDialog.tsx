@@ -88,10 +88,11 @@ const InspectionRecordVehicleDialog = ({
   const dispatch = useAppDispatch();
 
   const idBienBan = incidentInspection?.id || repairRequest?.id || "";
+  const draftKey = `inspectionVehicleDraft_${repairRequest?.id || incidentInspection?.id || initData?.id || idBienBan || "default"}`;
 
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return tab?.formData?.[`inspectionVehicleDraft_${idBienBan}`] ?? null;
+    return tab?.formData?.[draftKey] ?? null;
   });
 
   const parentAsset =
@@ -134,7 +135,7 @@ const InspectionRecordVehicleDialog = ({
       danhSachChiTiet: [] as VehicleInspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: VehicleInspectionValidation,
+    validationSchema: VehicleInspectionValidation,
     onSubmit: (values) => {
       if (hasValidationError()) return;
       const idNguoiLapBieu =
@@ -195,7 +196,7 @@ const InspectionRecordVehicleDialog = ({
         nguoiKyList: intermediateSigners,
       };
 
-      if (initData) {
+      if (isEdit) {
         updateMutation.mutateAsync(record).then(() => handleClose());
       } else {
         createMutation.mutateAsync(record).then(() => handleClose());
@@ -203,8 +204,49 @@ const InspectionRecordVehicleDialog = ({
     },
   });
 
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
+
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idCongTy: savedDraft.idCongTy ?? (initData?.idCongTy ?? CongTy.CT001),
+        idBienBan: savedDraft.idBienBan ?? idBienBan,
+        loaiBienBan: incidentInspection
+          ? TypeBienBan.SU_CO
+          : TypeBienBan.SUA_CHUA,
+        soPhieu: savedDraft.soPhieu ?? "",
+        ngayGiamDinh: savedDraft.ngayGiamDinh ?? "",
+        viTri: savedDraft.viTri ?? "",
+        capBaoDuong: savedDraft.capBaoDuong ?? "",
+        donViSuaChua: savedDraft.donViSuaChua ?? "",
+        noiDungKhac: savedDraft.noiDungKhac ?? "",
+        idTaiSan: parentAsset?.idTaiSan || "",
+        tenTaiSan: parentAsset?.tenTaiSan || "",
+        tinhTrang: savedDraft.tinhTrang ?? "",
+        share: false,
+        trangThai: savedDraft.trangThai ?? (initData?.trangThai ?? 0),
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ??
+          (initData?.tenMauBienBan ??
+            mauMacDinh?.ten ??
+            `BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA`),
+        congTy:
+          savedDraft.congTy ??
+          (initData?.congTy ??
+            mauMacDinh?.congTy ??
+            currentBrandConfig.company),
+        danhSachChiTiet: savedDraft.danhSachChiTiet ?? [],
+        nguoiKyList: savedDraft.nguoiKyList ?? [],
+      });
+      return;
+    }
 
     if (initData) {
       const listInfo = listSigneInfo(initData, apiUsers, apiDepartments);
@@ -238,33 +280,6 @@ const InspectionRecordVehicleDialog = ({
           departmentId: item.idDonVi,
           departmentName: item.donVi,
         })),
-      });
-      return;
-    }
-
-    if (savedDraft) {
-      formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idBienBan,
-        loaiBienBan: incidentInspection
-          ? TypeBienBan.SU_CO
-          : TypeBienBan.SUA_CHUA,
-        soPhieu: savedDraft.soPhieu,
-        ngayGiamDinh: savedDraft.ngayGiamDinh,
-        viTri: savedDraft.viTri,
-        capBaoDuong: savedDraft.capBaoDuong,
-        donViSuaChua: savedDraft.donViSuaChua,
-        noiDungKhac: savedDraft.noiDungKhac,
-        idTaiSan: parentAsset?.idTaiSan || "",
-        tenTaiSan: parentAsset?.tenTaiSan || "",
-        tinhTrang: savedDraft.tinhTrang,
-        share: false,
-        trangThai: 0,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
       });
       return;
     }
@@ -388,8 +403,9 @@ const InspectionRecordVehicleDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`inspectionVehicleDraft_${idBienBan}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -402,27 +418,21 @@ const InspectionRecordVehicleDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`inspectionVehicleDraft_${idBienBan}`]: {
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
             idBienBan,
-            soPhieu: formik.values.soPhieu,
-            ngayGiamDinh: formik.values.ngayGiamDinh,
-            viTri: formik.values.viTri,
-            capBaoDuong: formik.values.capBaoDuong,
-            donViSuaChua: formik.values.donViSuaChua,
-            noiDungKhac: formik.values.noiDungKhac,
-            tinhTrang: formik.values.tinhTrang,
-            tenMauBienBan:
-              formik.values.tenMauBienBan ||
-              mauMacDinh?.ten ||
-              "BIÊN BẢN GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
-            congTy:
-              formik.values.congTy ||
-              mauMacDinh?.congTy ||
-              currentBrandConfig.company,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
+            isEdit: isEdit,
           },
-          lastMinimizedDialog: "inspection",
+          lastMinimizedDialog: "inspectionVehicle",
+          lastMinimizedWorkflowContext: {
+            planId: plan?.id,
+            plan: plan,
+            selectedMonth: repairRequest?.thang,
+            repairId: repairRequest?.id,
+            activeStep: 2,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -750,7 +760,7 @@ const InspectionRecordVehicleDialog = ({
             color="primary"
             onClick={() => formik.handleSubmit()}
           >
-            {initData ? "Cập nhật" : "Tạo biên bản"}
+            {isEdit ? "Cập nhật" : "Tạo biên bản"}
           </Button>
         </DialogActions>
       </Dialog>

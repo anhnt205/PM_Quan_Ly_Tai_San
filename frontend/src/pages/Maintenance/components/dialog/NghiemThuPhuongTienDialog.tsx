@@ -80,11 +80,17 @@ const NghiemThuPhuongTienDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
-  const draftId = bienPhap?.id || inspectionRecord?.id || "new";
+  const draftKey = `acceptanceVehicleDraft_${bienPhap?.id || inspectionRecord?.id || initData?.id || "new"}`;
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return tab?.formData?.[`acceptanceVehicleDraft_${draftId}`] ?? null;
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
   const [parentInspection, setParentInspection] = useState<any>(null);
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
@@ -123,7 +129,7 @@ const NghiemThuPhuongTienDialog = ({
 
   const formik = useFormik({
     initialValues,
-    // validationSchema: AcceptanceVehicleValidation,
+    validationSchema: AcceptanceVehicleValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";
@@ -154,7 +160,7 @@ const NghiemThuPhuongTienDialog = ({
         ngayCapNhat: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       };
 
-      if (values.id) {
+      if (isEdit) {
         updateMutation.mutate(payload, { onSuccess: handleClose });
       } else {
         createMutation.mutate(payload, { onSuccess: handleClose });
@@ -164,6 +170,18 @@ const NghiemThuPhuongTienDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        ...initialValues,
+        ...savedDraft,
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idBienPhapPhuongTien: savedDraft.idBienPhapPhuongTien || bienPhap?.id || "",
+        idGiamDinhPhuongTien: savedDraft.idGiamDinhPhuongTien || inspectionRecord?.id || "",
+        idTaiSan: savedDraft.idTaiSan || bienPhap?.idTaiSan || "",
+      });
+      return;
+    }
 
     if (initData) {
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
@@ -180,26 +198,6 @@ const NghiemThuPhuongTienDialog = ({
           departmentName: item.donVi,
         })),
       } as any);
-      return;
-    }
-
-    if (savedDraft) {
-      formik.setValues({
-        ...initialValues,
-        idBienPhapPhuongTien: bienPhap?.id || "",
-        idGiamDinhPhuongTien: inspectionRecord?.id || "",
-        idTaiSan: bienPhap?.idTaiSan || "",
-        soPhieu: savedDraft.soPhieu,
-        noiDung: savedDraft.noiDung,
-        tinhTrang: savedDraft.tinhTrang,
-        congViecPhatSinh: savedDraft.congViecPhatSinh,
-        chiPhiNhanCong: savedDraft.chiPhiNhanCong,
-        ketLuan: savedDraft.ketLuan,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
-      });
       return;
     }
 
@@ -290,8 +288,9 @@ const NghiemThuPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceVehicleDraft_${draftId}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -304,27 +303,16 @@ const NghiemThuPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`acceptanceVehicleDraft_${draftId}`]: {
-            idBienPhapPhuongTien: bienPhap?.id || "",
-            idGiamDinhPhuongTien: formik.values.idGiamDinhPhuongTien,
-            soPhieu: formik.values.soPhieu,
-            noiDung: formik.values.noiDung,
-            tinhTrang: formik.values.tinhTrang,
-            congViecPhatSinh: formik.values.congViecPhatSinh,
-            chiPhiNhanCong: formik.values.chiPhiNhanCong,
-            ketLuan: formik.values.ketLuan,
-            tenMauBienBan:
-              formik.values.tenMauBienBan ||
-              mauMacDinh?.ten ||
-              "NGHIỆM THU SẢN PHẨM",
-            congTy:
-              formik.values.congTy ||
-              mauMacDinh?.congTy ||
-              currentBrandConfig.company,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "acceptanceVehicle",
+          lastMinimizedWorkflowContext: {
+            activeStep: 4,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -707,7 +695,7 @@ const NghiemThuPhuongTienDialog = ({
           >
             {isPending
               ? "Đang lưu..."
-              : initData?.id
+              : isEdit
                 ? "Cập nhật"
                 : "Tạo nghiệm thu"}
           </Button>

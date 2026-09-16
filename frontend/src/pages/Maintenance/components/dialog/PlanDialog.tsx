@@ -57,13 +57,18 @@ interface PlanAsset {
 interface Props {
   open: boolean;
   onClose: () => void;
+  onMinimize?: () => void;
   onSave: (plan: any, isEdit?: boolean) => void;
   initialData?: MaintenancePlanData | null;
 }
 
-const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
-  const isEdit = !!initialData;
-
+const CreatePlanDialog = ({
+  open,
+  onClose,
+  onMinimize,
+  onSave,
+  initialData,
+}: Props) => {
   const { data: departments = [] } = useAllDepartmentsQuery();
   const { data: users = [] } = useAllStaffsQuery();
 
@@ -77,7 +82,13 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
 
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t) => t.path === tabPath);
-    return tab?.formData?.[draftKey] ?? null;
+    const fd = tab?.formData;
+    if (!fd) return null;
+    if (fd.planDraft) return fd.planDraft;
+    if (initialData?.id && fd[`planDraft_${initialData.id}`]) {
+      return fd[`planDraft_${initialData.id}`];
+    }
+    return fd.planDraft_new ?? null;
   });
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
@@ -104,6 +115,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         tenMauMacDinh ??
         `KẾ HOẠCH SỬA CHỮA BẢO DƯỠNG THIẾT BỊ NĂM ${new Date().getFullYear()}`,
     },
+    validationSchema: PlanMaintenanceValidation,
     onSubmit: (values) => {
       // 1. Ánh xạ chi tiết tài sản với 12 tháng
       const danhSachTaiSan = values.danhSachTaiSan.map((a: PlanAsset) => ({
@@ -176,8 +188,17 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
     formik.values.idDonViGiao,
   );
 
+  const isEdit = Boolean(initialData?.id || formik.values.id);
+
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      if (!initialData?.id || savedDraft.id === initialData.id) {
+        formik.setValues(savedDraft);
+        return;
+      }
+    }
 
     if (initialData) {
       const listInfo = listSigneInfo(initialData, users, departments);
@@ -228,19 +249,16 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       return;
     }
 
-    if (savedDraft) {
-      formik.setValues(savedDraft);
-      return;
-    }
-
     formik.resetForm();
-  }, [open, initialData, users, departments, savedDraft]);
+  }, [open, initialData?.id, savedDraft]);
 
   const handleClose = () => {
     dispatch(
       updateTabFormData({
         path: tabPath,
         data: {
+          planDraft: null,
+          planDraftId: null,
           [draftKey]: null,
           lastMinimizedDialog: null,
         },
@@ -255,12 +273,18 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
       updateTabFormData({
         path: tabPath,
         data: {
+          planDraft: formik.values,
+          planDraftId: initialData?.id || formik.values.id || null,
           [draftKey]: formik.values,
           lastMinimizedDialog: "plan",
         },
       }),
     );
-    onClose();
+    if (onMinimize) {
+      onMinimize();
+    } else {
+      onClose();
+    }
   };
 
   return (
@@ -280,7 +304,7 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
         }}
       >
         <Typography variant="h6" fontWeight={600}>
-          Tạo kế hoạch mới
+          {isEdit ? "Chỉnh sửa kế hoạch" : "Tạo kế hoạch mới"}
         </Typography>
         <Box sx={{ display: "flex", gap: 0.5 }}>
           <IconButton size="small" onClick={handleMinimize}>
@@ -327,12 +351,12 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                     alignItems: "end",
                   }}
                 >
-                  <FieldInput title="Mã phiếu" name="soKeHoach" />
-                  <FieldInput title="Tên kế hoạch" name="tenKeHoach" />
-                  <FieldInput title="Số quyết định" name="soQuyetDinh" />
-                  <FieldYear title="Năm" name="nam" />
+                  <FieldInput title="Mã phiếu *" name="soKeHoach" />
+                  <FieldInput title="Tên kế hoạch *" name="tenKeHoach" />
+                  <FieldInput title="Số quyết định *" name="soQuyetDinh" />
+                  <FieldYear title="Năm *" name="nam" />
                   <FieldAutoCompleted
-                    title="Nhóm tài sản"
+                    title="Nhóm tài sản *"
                     data={[
                       { id: AssetGroup.MAYMOC, text: "Máy móc" },
                       { id: AssetGroup.PHUONGTIEN, text: "Phương tiện" },
@@ -357,12 +381,13 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                 </Typography>
                 <Box sx={{ display: "flex", gap: 2 }}>
                   <FieldAutoCompleted
-                    title="Đơn vị quản lý (Nguồn)"
+                    title="Đơn vị quản lý (Nguồn) *"
                     data={departments}
                     labelkey="tenPhongBan"
                     name="idDonViGiao"
                     onChange={(value) => {
-                      formik.setFieldValue("assets", []);
+                      formik.setFieldValue("danhSachTaiSan", []);
+                      formik.setFieldTouched("danhSachTaiSan", true);
                     }}
                   />
                 </Box>
@@ -371,14 +396,29 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
               <Box
                 sx={{
                   border: "1px solid",
-                  borderColor: "divider",
+                  borderColor: Boolean(
+                    formik.errors.danhSachTaiSan &&
+                      (formik.touched.danhSachTaiSan || formik.submitCount > 0),
+                  )
+                    ? "error.main"
+                    : "divider",
                   borderRadius: 3,
                   p: 3,
                 }}
               >
                 <Typography variant="subtitle1" fontWeight={600} mb={2}>
-                  2. Chọn thiết bị
+                  2. Chọn thiết bị *
                 </Typography>
+                {Boolean(
+                  formik.errors.danhSachTaiSan &&
+                    (formik.touched.danhSachTaiSan || formik.submitCount > 0),
+                ) && (
+                  <Alert severity="error" sx={{ mb: 2 }}>
+                    {typeof formik.errors.danhSachTaiSan === "string"
+                      ? formik.errors.danhSachTaiSan
+                      : "Vui lòng chọn ít nhất một thiết bị / tài sản"}
+                  </Alert>
+                )}
                 {!formik.values.idDonViGiao ? (
                   <Alert severity="info">
                     Vui lòng chọn đơn vị quản lý trước
@@ -387,9 +427,10 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
                   <StepAssets
                     idDonViGiao={formik.values.idDonViGiao}
                     assets={formik.values.danhSachTaiSan}
-                    onAssetsChange={(assets) =>
-                      formik.setFieldValue("danhSachTaiSan", assets)
-                    }
+                    onAssetsChange={(assets) => {
+                      formik.setFieldValue("danhSachTaiSan", assets);
+                      formik.setFieldTouched("danhSachTaiSan", true);
+                    }}
                     allDeptDevices={fullDeptAssets}
                   />
                 )}
@@ -414,9 +455,10 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
             ) : (
               <StepSchedule
                 assets={formik.values.danhSachTaiSan}
-                onAssetsChange={(assets) =>
-                  formik.setFieldValue("danhSachTaiSan", assets)
-                }
+                onAssetsChange={(assets) => {
+                  formik.setFieldValue("danhSachTaiSan", assets);
+                  formik.setFieldTouched("danhSachTaiSan", true);
+                }}
                 deptDevices={fullDeptAssets}
                 departments={departments}
               />
@@ -442,6 +484,13 @@ const CreatePlanDialog = ({ open, onClose, onSave, initialData }: Props) => {
               nam={formik.values.nam}
             />
           </Box>
+
+          {formik.submitCount > 0 && Object.keys(formik.errors).length > 0 && (
+            <Alert severity="error" sx={{ mt: 3 }}>
+              Vui lòng nhập đầy đủ các trường thông tin bắt buộc, chọn ít nhất 1
+              tài sản và 1 người duyệt.
+            </Alert>
+          )}
         </FormikProvider>
       </DialogContent>
 

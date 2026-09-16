@@ -191,6 +191,39 @@ export default function MaintenancePlanRepair() {
     return tab?.formData?.lastMinimizedIncidentDialog ?? null;
   });
 
+  const lastMinimizedWorkflowContext = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedWorkflowContext ?? null;
+  });
+
+  const isWorkflowMinimized = [
+    "repair",
+    "inspection",
+    "inspectionVehicle",
+    "bienPhapMayMoc",
+    "bienPhapPhuongTien",
+    "acceptance",
+    "acceptanceVehicle",
+    "material",
+  ].includes(lastMinimizedDialog);
+
+  // Tự động khôi phục kế hoạch nếu có workflow dialog đang tạm ẩn
+  useEffect(() => {
+    if (!selectedPlan && lastMinimizedWorkflowContext?.plan) {
+      setSelectedPlan(lastMinimizedWorkflowContext.plan);
+    }
+  }, [lastMinimizedWorkflowContext]);
+
+  const handleRestoreAnyDraft = () => {
+    if (lastMinimizedIncidentDialog === "incident") {
+      setShowIncidentDialog(true);
+    } else if (lastMinimizedDialog === "plan") {
+      setShowForm(true);
+    } else if (isWorkflowMinimized && lastMinimizedWorkflowContext?.plan) {
+      setSelectedPlan(lastMinimizedWorkflowContext.plan);
+    }
+  };
+
   // su co
   const {
     createMutation: createIncidentMutation,
@@ -220,11 +253,15 @@ export default function MaintenancePlanRepair() {
     activeTab === 1,
   );
 
-  const handleSaveIncident = async (selectedIncident: IncidenData) => {
-    if (selectedIncident.id) {
-      await updateIncidentMutation.mutateAsync(selectedIncident);
+  const handleSaveIncident = async (incidentData: IncidenData) => {
+    const finalId = incidentData.id || selectedIncident?.id || "";
+    if (finalId) {
+      await updateIncidentMutation.mutateAsync({
+        ...incidentData,
+        id: finalId,
+      });
     } else {
-      await createIncidentMutation.mutateAsync(selectedIncident);
+      await createIncidentMutation.mutateAsync(incidentData);
     }
     setShowForm(false);
     setSelectedIncident(null);
@@ -455,7 +492,10 @@ export default function MaintenancePlanRepair() {
     <>
       <PageAction
         title="Lập kế hoạch sửa chữa bảo dưỡng"
-        onNewClick={() => setShowForm(true)}
+        onNewClick={() => {
+          setSelectedPlan(null);
+          setShowForm(true);
+        }}
         extraActions={
           <Button
             size="small"
@@ -1581,6 +1621,9 @@ export default function MaintenancePlanRepair() {
       <CreatePlanDialog
         open={showForm}
         initialData={selectedPlan}
+        onMinimize={() => {
+          setShowForm(false);
+        }}
         onClose={() => {
           setShowForm(false);
           setSelectedPlan(null);
@@ -1605,16 +1648,9 @@ export default function MaintenancePlanRepair() {
       />
 
       {(lastMinimizedDialog === "plan" ||
-        lastMinimizedIncidentDialog === "incident") && (
-        <DraftIndicator
-          onClick={() => {
-            if (lastMinimizedIncidentDialog === "incident") {
-              setShowIncidentDialog(true);
-            } else {
-              setShowForm(true);
-            }
-          }}
-        />
+        lastMinimizedIncidentDialog === "incident" ||
+        (isWorkflowMinimized && !selectedPlan)) && (
+        <DraftIndicator onClick={handleRestoreAnyDraft} />
       )}
     </>
   );

@@ -88,13 +88,11 @@ const InspectionRecordDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftKey = `inspectionDraft_${repairRequest?.id || incidentInspection?.id || initData?.id || "default"}`;
+
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return (
-      tab?.formData?.[
-        `inspectionDraft_${repairRequest?.id || incidentInspection?.id}`
-      ] ?? null
-    );
+    return tab?.formData?.[draftKey] ?? null;
   });
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
@@ -134,7 +132,7 @@ const InspectionRecordDialog = ({
       danhSachChiTiet: [] as InspectionRecordDetailData[],
       nguoiKyList: [] as any[],
     },
-    // validationSchema: MachineInspectionValidation,
+    validationSchema: MachineInspectionValidation,
     onSubmit: (values) => {
       if (hasValidationError()) return;
       const idNguoiLapBieu =
@@ -198,7 +196,7 @@ const InspectionRecordDialog = ({
         nguoiKyList: intermediateSigners,
       };
 
-      if (initData) {
+      if (isEdit) {
         updateMutation.mutate(record, {
           onSuccess: () => {
             handleClose();
@@ -214,6 +212,12 @@ const InspectionRecordDialog = ({
     },
   });
 
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
+
   const apiUsersRef = useRef(apiUsers);
   const apiDepartmentsRef = useRef(apiDepartments);
   useEffect(() => {
@@ -225,6 +229,49 @@ const InspectionRecordDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idCongTy: savedDraft.idCongTy ?? (initData?.idCongTy ?? CongTy.CT001),
+        idBienBan:
+          savedDraft.idBienBan ??
+          (initData?.idBienBan ??
+            (incidentInspection?.id || repairRequest?.id || "")),
+        loaiBienBan:
+          savedDraft.loaiBienBan ??
+          (initData?.loaiBienBan ??
+            (incidentInspection ? TypeBienBan.SU_CO : TypeBienBan.SUA_CHUA)),
+        idNguoiLap: savedDraft.idNguoiLap ?? (initData?.idNguoiLap ?? ""),
+        nguoiLapXacNhan:
+          savedDraft.nguoiLapXacNhan ?? (initData?.nguoiLapXacNhan ?? false),
+        idGiamDoc: savedDraft.idGiamDoc ?? (initData?.idGiamDoc ?? ""),
+        giamDocXacNhan:
+          savedDraft.giamDocXacNhan ?? (initData?.giamDocXacNhan ?? false),
+        share: savedDraft.share ?? (initData?.share ?? false),
+        trangThai: savedDraft.trangThai ?? (initData?.trangThai ?? 0),
+        soPhieu: savedDraft.soPhieu ?? "",
+        ngayGiamDinh: savedDraft.ngayGiamDinh ?? "",
+        viTri: savedDraft.viTri ?? "",
+        soDeLaiPhucHoi: savedDraft.soDeLaiPhucHoi ?? 0,
+        soDeLamPheLieu: savedDraft.soDeLamPheLieu ?? 0,
+        soLuongHuy: savedDraft.soLuongHuy ?? 0,
+        danhSachChiTiet: savedDraft.danhSachChiTiet ?? [],
+        nguoiKyList: savedDraft.nguoiKyList ?? [],
+        tenMauBienBan:
+          savedDraft.tenMauBienBan ??
+          (initData?.tenMauBienBan ??
+            mauMacDinh?.ten ??
+            "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA"),
+        congTy:
+          savedDraft.congTy ??
+          (initData?.congTy ??
+            mauMacDinh?.congTy ??
+            currentBrandConfig.company),
+      });
+      return;
+    }
+
     if (initData) {
       const listInfo = listSigneInfo(
         initData,
@@ -277,35 +324,6 @@ const InspectionRecordDialog = ({
       id: "",
       idBienBanChiTiet: e.id,
     })) as InspectionRecordDetailData[];
-
-    if (savedDraft) {
-      formik.setValues({
-        id: "",
-        idCongTy: CongTy.CT001,
-        idBienBan: incidentInspection?.id || repairRequest?.id || "",
-        loaiBienBan: incidentInspection
-          ? TypeBienBan.SU_CO
-          : TypeBienBan.SUA_CHUA,
-        idNguoiLap: "",
-        nguoiLapXacNhan: false,
-        idGiamDoc: "",
-        giamDocXacNhan: false,
-        share: false,
-        trangThai: 0,
-        // restore từ draft
-        soPhieu: savedDraft.soPhieu,
-        ngayGiamDinh: savedDraft.ngayGiamDinh,
-        viTri: savedDraft.viTri,
-        soDeLaiPhucHoi: savedDraft.soDeLaiPhucHoi,
-        soDeLamPheLieu: savedDraft.soDeLamPheLieu,
-        soLuongHuy: savedDraft.soLuongHuy,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
-        tenMauBienBan: savedDraft.tenMauBienBan,
-        congTy: savedDraft.congTy,
-      });
-      return;
-    }
 
     const parentRecord = incidentInspection || repairRequest;
     const listInfoFromParent = parentRecord
@@ -428,32 +446,60 @@ const InspectionRecordDialog = ({
   };
 
   function hasValidationError() {
+    if (
+      !formik.values.danhSachChiTiet ||
+      formik.values.danhSachChiTiet.length === 0
+    ) {
+      return true;
+    }
     for (const entry of formik.values.danhSachChiTiet) {
-      if (entry.danhSachVatTu) {
-        for (const vt of entry.danhSachVatTu) {
-          const soLuong = vt.soLuong || 0;
-          const suaChua = vt.soLuongSuaChua || 0;
-          const thayMoi = vt.soLuongThayMoi || 0;
-          if (suaChua + thayMoi > soLuong) {
-            return true;
-          }
-          if (!vt.idChiTietVatTu) {
-            return true;
-          }
+      // Mỗi tài sản phải có ít nhất 1 vật tư
+      if (!entry.danhSachVatTu || entry.danhSachVatTu.length === 0) {
+        return true;
+      }
+      for (const vt of entry.danhSachVatTu) {
+        const soLuong = Number(vt.soLuong || 0);
+        const suaChua = Number(vt.soLuongSuaChua || 0);
+        const thayMoi = Number(vt.soLuongThayMoi || 0);
+        if (soLuong <= 0 || suaChua + thayMoi !== soLuong) {
+          return true;
+        }
+        if (!vt.idChiTietVatTu) {
+          return true;
         }
       }
     }
     return false;
   }
 
+  // Kiểm tra tài sản nào chưa có vật tư
+  const assetsWithNoVatTu = formik.values.danhSachChiTiet.filter(
+    (e) => !e.danhSachVatTu || e.danhSachVatTu.length === 0,
+  );
+
+  // Kiểm tra có vật tư nào chưa khớp số lượng
+  const hasQtyMismatch = formik.values.danhSachChiTiet.some((e) =>
+    (e.danhSachVatTu || []).some((vt) => {
+      const soLuong = Number(vt.soLuong || 0);
+      const suaChua = Number(vt.soLuongSuaChua || 0);
+      const thayMoi = Number(vt.soLuongThayMoi || 0);
+      return soLuong <= 0 || suaChua + thayMoi !== soLuong;
+    }),
+  );
+
+  // Kiểm tra có hàng vật tư nào chưa chọn vật tư
+  const hasMissingMaterial = formik.values.danhSachChiTiet.some((e) =>
+    (e.danhSachVatTu || []).some((vt) => !vt.idChiTietVatTu),
+  );
+
   const handleClose = () => {
     dispatch(
       updateTabFormData({
         path: tabPath,
         data: {
-          [`inspectionDraft_${repairRequest?.id || incidentInspection?.id}`]:
-            null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -466,26 +512,20 @@ const InspectionRecordDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`inspectionDraft_${repairRequest?.id || incidentInspection?.id}`]: {
-            soPhieu: formik.values.soPhieu,
-            ngayGiamDinh: formik.values.ngayGiamDinh,
-            viTri: formik.values.viTri,
-            soDeLaiPhucHoi: formik.values.soDeLaiPhucHoi,
-            soDeLamPheLieu: formik.values.soDeLamPheLieu,
-            soLuongHuy: formik.values.soLuongHuy,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
-            idBienBan: formik.values.idBienBan,
-            tenMauBienBan:
-              formik.values.tenMauBienBan ||
-              mauMacDinh?.ten ||
-              "GIÁM ĐỊNH KỸ THUẬT VÀ BÀN GIAO THIẾT BỊ ĐƯA VÀO SỬA CHỮA",
-            congTy:
-              formik.values.congTy ||
-              mauMacDinh?.congTy ||
-              currentBrandConfig.company,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "inspection",
+          lastMinimizedWorkflowContext: {
+            planId: plan?.id,
+            plan: plan,
+            selectedMonth: repairRequest?.thang,
+            repairId: repairRequest?.id,
+            activeStep: 2,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -564,7 +604,7 @@ const InspectionRecordDialog = ({
                   Thông tin chung
                 </Typography>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                  <FieldInput title="Số biên bản" name="soPhieu" />
+                  <FieldInput title="Số biên bản *" name="soPhieu" />
                   <FieldDate
                     title="Ngày giám định"
                     selectedDate={formik.values.ngayGiamDinh}
@@ -572,7 +612,7 @@ const InspectionRecordDialog = ({
                       formik.setFieldValue("ngayGiamDinh", val)
                     }
                   />
-                  <FieldInput title="Địa điểm (Tại...)" name="viTri" />
+                  <FieldInput title="Địa điểm (Tại...) *" name="viTri" />
                   {repairRequest ? (
                     <Typography variant="body2" color="text.secondary">
                       Căn cứ vào giấy đề nghị: <b>{repairRequest.soPhieu}</b> —
@@ -718,100 +758,125 @@ const InspectionRecordDialog = ({
                           </TableCell>
                         </TableRow>
                       ) : (
-                        entry.danhSachVatTu.map((vt, vtIdx) => (
-                          <TableRow key={vt.id}>
-                            <TableCell
-                              align="right"
-                              sx={{ color: "text.secondary", pr: 2 }}
+                        entry.danhSachVatTu.map((vt, vtIdx) => {
+                          const soLuong = Number(vt.soLuong || 0);
+                          const suaChua = Number(vt.soLuongSuaChua || 0);
+                          const thayMoi = Number(vt.soLuongThayMoi || 0);
+                          const isRowError =
+                            formik.submitCount > 0 &&
+                            (!vt.idChiTietVatTu ||
+                              soLuong <= 0 ||
+                              suaChua + thayMoi !== soLuong);
+
+                          return (
+                            <TableRow
+                              key={vt.id}
+                              sx={{
+                                bgcolor: isRowError ? "#fff1f0" : undefined,
+                              }}
                             >
-                              {assetIdx + 1}.{vtIdx + 1}
-                            </TableCell>
-                            <TableCell sx={{ width: "220px" }}>
-                              <FieldAutoCompleted
-                                title=""
-                                data={allToolDetail}
-                                labelkey="tenTaiSan"
-                                labelOption="idTaiSan"
-                                limitOptions={10}
-                                value={vt.idChiTietVatTu}
-                                noBorder={true}
-                                onChange={(value) => {
-                                  if (value) {
-                                    updateMaterial(assetIdx, vt.id!, {
-                                      idChiTietVatTu: value.id,
-                                      idVatTu: value.idTaiSan,
-                                      tenVatTu: value.tenTaiSan,
-                                      donViTinh: value.donViTinh,
-                                    });
-                                  } else {
-                                    updateMaterial(assetIdx, vt.id!, {
-                                      idChiTietVatTu: "",
-                                      idVatTu: "",
-                                      tenVatTu: "",
-                                      donViTinh: "",
-                                    });
-                                  }
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>{vt.donViTinh || "—"}</TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuong`}
-                                type="number"
-                                noBorder={true}
+                              <TableCell
+                                align="right"
+                                sx={{ color: "text.secondary", pr: 2 }}
+                              >
+                                {assetIdx + 1}.{vtIdx + 1}
+                              </TableCell>
+                              <TableCell sx={{ width: "220px" }}>
+                                <FieldAutoCompleted
+                                  title=""
+                                  data={allToolDetail}
+                                  labelkey="tenTaiSan"
+                                  labelOption="idTaiSan"
+                                  limitOptions={10}
+                                  value={vt.idChiTietVatTu}
+                                  noBorder={true}
+                                  onChange={(value) => {
+                                    if (value) {
+                                      updateMaterial(assetIdx, vt.id!, {
+                                        idChiTietVatTu: value.id,
+                                        idVatTu: value.idTaiSan,
+                                        tenVatTu: value.tenTaiSan,
+                                        donViTinh: value.donViTinh,
+                                      });
+                                    } else {
+                                      updateMaterial(assetIdx, vt.id!, {
+                                        idChiTietVatTu: "",
+                                        idVatTu: "",
+                                        tenVatTu: "",
+                                        donViTinh: "",
+                                      });
+                                    }
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>{vt.donViTinh || "—"}</TableCell>
+                              <TableCell>
+                                <FieldInput
+                                  title=""
+                                  name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuong`}
+                                  type="number"
+                                  noBorder={true}
                                 disabled={true}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.tinhTrang`}
-                                noBorder={true}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                type="number"
-                                name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
-                                noBorder={true}
-                                onChange={(val) => {
-                                  const numRepair = Number(val || 0);
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <FieldInput
+                                  title=""
+                                  name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.tinhTrang`}
+                                  noBorder={true}
+                                  onChange={(val) => {
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      tinhTrang: val,
+                                    });
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <FieldInput
+                                  type="number"
+                                  name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongSuaChua`}
+                                  noBorder={true}
+                                  onChange={(val) => {
+                                    const numRepair = Number(val || 0);
                                   const numReplace = Number(
                                     vt.soLuongThayMoi || 0,
                                   );
-                                  updateMaterial(assetIdx, vt.id!, {
-                                    soLuongSuaChua: numRepair,
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      soLuongSuaChua: numRepair,
                                     soLuong: numRepair + numReplace,
-                                  });
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                type="number"
-                                name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
-                                noBorder={true}
-                                onChange={(val) => {
+                                    });
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <FieldInput
+                                  type="number"
+                                  name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.soLuongThayMoi`}
+                                  noBorder={true}
+                                  onChange={(val) => {
                                   const numRepair = Number(
                                     vt.soLuongSuaChua || 0,
                                   );
-                                  const numReplace = Number(val || 0);
-                                  updateMaterial(assetIdx, vt.id!, {
-                                    soLuongThayMoi: numReplace,
+                                    const numReplace = Number(val || 0);
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      soLuongThayMoi: numReplace,
                                     soLuong: numRepair + numReplace,
-                                  });
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell>
-                              <FieldInput
-                                title=""
-                                name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.ghiChu`}
-                                noBorder={true}
-                              />
-                            </TableCell>
+                                    });
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell>
+                                <FieldInput
+                                  title=""
+                                  name={`danhSachChiTiet.${assetIdx}.danhSachVatTu.${vtIdx}.ghiChu`}
+                                  noBorder={true}
+                                  onChange={(val) => {
+                                    updateMaterial(assetIdx, vt.id!, {
+                                      ghiChu: val,
+                                    });
+                                  }}
+                                />
+                              </TableCell>
                             <TableCell align="center">
                               <IconButton
                                 size="small"
@@ -824,13 +889,35 @@ const InspectionRecordDialog = ({
                               </IconButton>
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
+                        );
+                      })
+                    )}
                     </React.Fragment>
                   ))}
                 </TableBody>
               </Table>
             </TableContainer>
+
+            {/* Cảnh báo tài sản chưa có vật tư */}
+            {assetsWithNoVatTu.length > 0 && formik.submitCount > 0 && (
+              <Alert severity="error" sx={{ mt: 1.5 }}>
+                <strong>Bắt buộc:</strong> Chọn ít nhất 1 vật tư cho tài sản giám định
+              </Alert>
+            )}
+
+            {/* Cảnh báo số lượng chưa khớp */}
+            {hasQtyMismatch && formik.submitCount > 0 && (
+              <Alert severity="error" sx={{ mt: 1.5 }}>
+                <strong>Lỗi số lượng:</strong> Tổng số lượng sửa chữa và thay mới phải khớp với số lượng vật tư (SL &gt; 0).
+              </Alert>
+            )}
+
+            {/* Cảnh báo chưa chọn vật tư */}
+            {hasMissingMaterial && formik.submitCount > 0 && (
+              <Alert severity="error" sx={{ mt: 1.5 }}>
+                <strong>Bắt buộc:</strong> Cần chọn vật tư
+              </Alert>
+            )}
           </Box>
 
           {/* Preview */}
@@ -857,14 +944,9 @@ const InspectionRecordDialog = ({
           <Button
             variant="contained"
             color="primary"
-            disabled={
-              formik.values.nguoiKyList.length === 0 ||
-              repairRequest?.danhSachTaiSan?.length === 0 ||
-              hasValidationError()
-            }
             onClick={() => formik.handleSubmit()}
           >
-            {initData ? "Cập nhật" : "Tạo biên bản"}
+            {isEdit ? "Cập nhật" : "Tạo biên bản"}
           </Button>
         </DialogActions>
       </Dialog>

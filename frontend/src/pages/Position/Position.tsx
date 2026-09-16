@@ -12,7 +12,7 @@ import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import PositionForm from "./components/PositionForm";
 import { ContentCopy, Delete, Edit } from "@mui/icons-material";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { showConfirmAlert } from "../../components/Alert";
 import {
   useAllPositionsQuery,
@@ -129,10 +129,27 @@ export default function Position() {
     setReadOnly(false);
   };
 
+  const formValuesRef = useRef<any>(null);
+  const bulkItemsRef = useRef<any[]>([]);
+
   const isMinimized = !showForm && hasDraftData(formData.draftForm);
   const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
-  const handleMinimize = () => setShowForm(false);
-  const handleBulkMinimize = () => setShowBulkForm(false);
+
+  const handleMinimize = () => {
+    // Lưu draft từ ref trước khi ẩn
+    if (formValuesRef.current) {
+      setField({ draftForm: formValuesRef.current });
+    }
+    setShowForm(false);
+  };
+
+  const handleBulkMinimize = () => {
+    // Lưu bulk items vào draft trước khi ẩn
+    if (bulkItemsRef.current.length > 0) {
+      setField({ bulkDraftData: { items: bulkItemsRef.current, bulkEditType } });
+    }
+    setShowBulkForm(false);
+  };
 
   const handleRestoreFromDraft = () => {
     if (isBulkMinimized) {
@@ -390,9 +407,20 @@ export default function Position() {
         {/* Dialog single */}
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              // Ẩn tạm — giữ draft
+              handleMinimize();
+              return;
+            }
+            setShowForm(false);
+            setSelectedPosition(null);
+            setReadOnly(false);
+            setField({ draftForm: undefined });
+          }}
           maxWidth="md"
           fullWidth
+          PaperProps={{ sx: { borderRadius: "16px", border: "2px solid #1FA463" } }}
         >
           <DialogContent sx={{ p: 0 }}>
             {selectedPosition || !readOnly ? (
@@ -409,7 +437,9 @@ export default function Position() {
                 selectedPosition={selectedPosition}
                 readOnly={readOnly}
                 onSave={handleSave}
-                onFormChange={(values) => setField({ draftForm: values })}
+                onFormChange={(values) => {
+                  formValuesRef.current = values;
+                }}
                 initialFormData={formData.draftForm}
                 isBulkMode={false}
               />
@@ -419,10 +449,21 @@ export default function Position() {
         {/* Dialog bulk */}
         <Dialog
           open={showBulkForm}
-          onClose={handleBulkMinimize}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleBulkMinimize();
+              return;
+            }
+            setBulkMode(false);
+            setBulkItems([]);
+            setSelectedIds([]);
+            setField({ bulkDraftData: undefined });
+            setShowBulkForm(false);
+          }}
           maxWidth="md"
           fullWidth
           keepMounted={false}
+          PaperProps={{ sx: { borderRadius: "16px", border: "2px solid #1FA463" } }}
         >
           <DialogContent sx={{ p: 0 }}>
             {showBulkForm && (
@@ -445,6 +486,7 @@ export default function Position() {
                 isBulkMode={true}
                 bulkItems={bulkItems}
                 onBulkItemsChange={(items) => {
+                  bulkItemsRef.current = items;
                   setBulkItems(items);
                   setField({ bulkDraftData: { items, bulkEditType } });
                 }}

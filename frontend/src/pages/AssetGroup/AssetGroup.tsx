@@ -10,13 +10,13 @@ import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
 import { Delete, ContentCopy, Edit } from "@mui/icons-material";
-import AssetGroupForm from "./components/AssetGroupForm";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import AssetGroupForm, {
+  AssetGroupItem,
+} from "./components/AssetGroupForm";
 import {
-  useAllAssetGroupQuery,
   useAssetGroupMutation,
   useAssetGroupPageQuery,
-  useLyLichQuery,
 } from "./Mutation";
 import { showConfirmAlert } from "../../components/Alert";
 import ImportErrorDialog from "../../components/common/ImportErrorDialog";
@@ -26,34 +26,26 @@ import { useSelector } from "react-redux";
 import { useTabForm } from "../../redux/useTabForm";
 import { hasDraftData } from "../../utils/draftUtils";
 import DraftIndicator from "../../components/common/DraftIndicator";
+import { CongTy } from "../../utils/const";
 
 interface AssetGroupTabState {
   showForm: boolean;
-  selectedAssetGroup: any | null;
-  readOnly: boolean;
-  bulkMode: boolean;
-  bulkEditType?: "create" | "edit";
-  bulkItems?: any[];
-  bulkDraftData?: Record<string, any>;
+  formMode: "create" | "edit";
+  items: AssetGroupItem[];
+  draftData?: {
+    items: AssetGroupItem[];
+    formMode: "create" | "edit";
+  };
 }
 
 export default function AssetGroup() {
   const { formData, setField } =
     useTabForm<AssetGroupTabState>("/nhom_tai_san");
   const showForm = formData.showForm ?? false;
-  const selectedAssetGroup = formData.selectedAssetGroup ?? null;
-  const readOnly = formData.readOnly ?? false;
-  const bulkMode = formData.bulkMode ?? false;
-  const bulkEditType = formData.bulkEditType ?? "create";
-  const bulkItems = formData.bulkItems ?? [];
+  const formMode = formData.formMode ?? "create";
+  const items = formData.items ?? [];
 
   const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedAssetGroup = (v: any) => setField({ selectedAssetGroup: v });
-  const setReadOnly = (v: boolean) => setField({ readOnly: v });
-  const setBulkMode = (v: boolean) => setField({ bulkMode: v });
-  const setBulkEditType = (v: "create" | "edit") =>
-    setField({ bulkEditType: v });
-  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -66,33 +58,60 @@ export default function AssetGroup() {
     pageSize: 10,
     page: 0,
   });
-  // Thêm handleMinimize
+
+  const itemsRef = useRef<AssetGroupItem[]>(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
   const handleMinimize = () => {
-    setShowForm(false);
+    const currentItems = itemsRef.current;
+    if (currentItems && currentItems.length > 0) {
+      setField({
+        draftData: {
+          items: currentItems,
+          formMode,
+        },
+        showForm: false,
+      });
+    } else {
+      setShowForm(false);
+    }
   };
+
   const handleRestoreFromDraft = () => {
-    const draft = formData.bulkDraftData;
-    if (draft?.items && Array.isArray(draft.items)) {
-      setBulkItems(draft.items);
+    const draft = formData.draftData;
+    if (draft?.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      itemsRef.current = draft.items;
+      setField({
+        items: draft.items,
+        formMode: draft.formMode || "create",
+        showForm: true,
+      });
     }
-    if (draft?.bulkEditType) {
-      setBulkEditType(draft.bulkEditType);
-    }
-    setBulkMode(true);
-    setShowForm(true);
   };
-  const isMinimized = !showForm && hasDraftData(formData.bulkDraftData);
+
+  const handleClose = () => {
+    setField({
+      showForm: false,
+      draftData: undefined,
+      items: [],
+    });
+  };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftData?.items);
 
   const {
     createMutation,
+    createBatchMutation,
     updateMutation,
+    updateBatchMutation,
     deleteOneMutation,
     deleteManyMutation,
     importExcelMutation,
     exportMutation,
     deleteAllMutation,
-  } = useAssetGroupMutation(
-  );
+  } = useAssetGroupMutation();
 
   const debouncedSearchValue = useDebounce(searchValue, 600);
   const { data: assetGroupPage = { items: [], totalItems: 0 }, isLoading } =
@@ -114,97 +133,103 @@ export default function AssetGroup() {
     });
   };
 
-  const handleRowClick = (params: GridRowParams) => {
-    // Cancel bulk mode khi click vào single row
-    if (bulkMode) {
-      setBulkMode(false);
-      setBulkItems([]);
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      handleRestoreFromDraft();
+      return;
     }
-    setSelectedAssetGroup(params.row);
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
+    const emptyItem: AssetGroupItem = {
+      id: "",
+      tenNhom: "",
+      idCongTy: CongTy.CT001,
+      idLyLich: "",
+    };
+    itemsRef.current = [emptyItem];
+    setField({
+      formMode: "create",
+      items: [emptyItem],
+      showForm: true,
+    });
   };
 
-  const handleSave = (values: any) => {
-    if (bulkMode) {
-      // Bulk save - handle both create and edit
-      if (bulkEditType === "create") {
-        // Create multiple items
-        Promise.all(values.map((item: any) => createMutation.mutateAsync(item)))
-          .then(() => {
-            setBulkMode(false);
-            setBulkItems([]);
-            setShowForm(false);
-            setField({ bulkDraftData: undefined });
-          })
-          .catch((error) => {
-            console.error("Bulk create error:", error);
-          });
-      } else {
-        // Edit multiple items
-        Promise.all(values.map((item: any) => updateMutation.mutateAsync(item)))
-          .then(() => {
-            setBulkMode(false);
-            setBulkItems([]);
-            setShowForm(false);
-            setSelectedIds([]);
-            setField({ bulkDraftData: undefined });
-          })
-          .catch((error) => {
-            console.error("Bulk update error:", error);
-          });
-      }
-    } else {
-      // Single edit mode
-      updateMutation.mutate(values);
-      setShowForm(false);
-      setSelectedAssetGroup(null);
-      setField({ bulkDraftData: undefined });
-    }
+  const handleEditRow = (row: any) => {
+    const editItem: AssetGroupItem = {
+      id: row.id,
+      tenNhom: row.tenNhom,
+      idCongTy: row.idCongTy || CongTy.CT001,
+      idLyLich: row.idLyLich || row.lyLich?.id || "",
+    };
+    itemsRef.current = [editItem];
+    setField({
+      formMode: "edit",
+      items: [editItem],
+      showForm: true,
+    });
+  };
+
+  const handleCopyRow = (row: any) => {
+    const copiedItem: AssetGroupItem = {
+      id: "",
+      tenNhom: row.tenNhom,
+      idCongTy: row.idCongTy || CongTy.CT001,
+      idLyLich: row.idLyLich || row.lyLich?.id || "",
+    };
+    itemsRef.current = [copiedItem];
+    setField({
+      formMode: "create",
+      items: [copiedItem],
+      showForm: true,
+    });
   };
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
 
-    // Get selected items from table
-    const itemsToEdit = assetGroupPage.items
+    const selectedRows = assetGroupPage.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
 
-    setBulkMode(true);
-    setBulkEditType("edit");
-    setBulkItems(itemsToEdit);
-    setShowForm(true);
+    const editItems: AssetGroupItem[] = selectedRows.map((row: any) => ({
+      id: row.id,
+      tenNhom: row.tenNhom,
+      idCongTy: row.idCongTy || CongTy.CT001,
+      idLyLich: row.idLyLich || row.lyLich?.id || "",
+    }));
+
+    itemsRef.current = editItems;
+    setField({
+      formMode: "edit",
+      items: editItems,
+      showForm: true,
+    });
   };
 
-  const handleCopyItem = (item: any) => {
-    // Copy item to bulk create mode (without id)
-    const { id, ...copyData } = item;
-    const copiedItem = {
-      ...copyData,
-      id: "",
-    };
-    setBulkMode(true);
-    setBulkEditType("create");
-    setBulkItems([copiedItem]);
-    setShowForm(true);
-    setSelectedAssetGroup(null);
-    setReadOnly(false);
-  };
-
-  const handleStartBulkCreate = () => {
-    if (isMinimized) {
-      handleRestoreFromDraft();
-      return;
+  const handleSave = async (savedItems: AssetGroupItem[]) => {
+    try {
+      if (formMode === "create") {
+        if (savedItems.length === 1) {
+          await createMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await createBatchMutation.mutateAsync(savedItems as any);
+        }
+      } else {
+        if (savedItems.length === 1) {
+          await updateMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await updateBatchMutation.mutateAsync(savedItems as any);
+        }
+      }
+      setField({
+        showForm: false,
+        draftData: undefined,
+        items: [],
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Lỗi khi lưu nhóm tài sản:", error);
     }
-    setBulkMode(true);
-    setBulkEditType("create");
-    setBulkItems([{}]);
-    setShowForm(true);
-    setSelectedAssetGroup(null);
-    setReadOnly(false);
   };
+
   const columns: GridColDef[] = [
     {
       field: "id",
@@ -228,7 +253,7 @@ export default function AssetGroup() {
       minWidth: 150,
       align: "center",
       headerAlign: "center",
-      valueGetter: (value: any, row: any) => row?.lyLich?.tenLyLich || "N/A",
+      valueGetter: (_value: any, row: any) => row?.lyLich?.tenLyLich || "N/A",
     },
     {
       field: "ngayTao",
@@ -265,21 +290,27 @@ export default function AssetGroup() {
       align: "center",
       headerAlign: "center",
       renderCell: (params) => (
-        <Box display="flex" gap={1} justifyContent="center" alignItems="center">
+        <Box
+          display="flex"
+          gap={1}
+          justifyContent="center"
+          alignItems="center"
+        >
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleCopyItem(params.row);
+              handleCopyRow(params.row);
             }}
+            title="Sao chép"
           >
             <ContentCopy color="primary" />
           </IconButton>
@@ -291,6 +322,7 @@ export default function AssetGroup() {
                 deleteOneMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -301,17 +333,26 @@ export default function AssetGroup() {
 
   return (
     <Box sx={{ width: "100%" }}>
-      <Box sx={{ display: "flex", gap: 2, alignItems: "center", px: 2, py: 1 }}>
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          alignItems: "center",
+          px: 2,
+          py: 1,
+        }}
+      >
         <Box sx={{ flex: 1 }}>
           <PageAction
             title="Quản lý nhóm tài sản"
-            onNewClick={handleStartBulkCreate}
+            onNewClick={handleStartCreate}
             onExport={() => exportMutation.mutate()}
             onImport={handleImport}
             showExcel={true}
           />
         </Box>
       </Box>
+
       <ImportErrorDialog
         open={showErrorDialog}
         onClose={() => setShowErrorDialog(false)}
@@ -342,8 +383,16 @@ export default function AssetGroup() {
       <Box p={2}>
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
-          maxWidth={bulkMode ? "sm" : "md"}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              // Ẩn tạm — giữ draft
+              handleMinimize();
+            } else {
+              // Đóng hẳn — xóa draft
+              handleClose();
+            }
+          }}
+          maxWidth="sm"
           fullWidth
           slotProps={{
             paper: {
@@ -352,6 +401,8 @@ export default function AssetGroup() {
                 display: "flex",
                 flexDirection: "column",
                 overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
               },
             },
           }}
@@ -365,47 +416,26 @@ export default function AssetGroup() {
               flex: 1,
             }}
           >
-            {bulkMode || selectedAssetGroup ? (
+            {showForm && (
               <AssetGroupForm
-                key={
-                  bulkMode
-                    ? `bulk-${bulkItems.length}`
-                    : `single-${selectedAssetGroup?.id || "view"}`
-                }
-                onCancel={() => {
-                  // Clear all data FIRST before closing form
-                  if (bulkMode) {
-                    setBulkMode(false);
-                    setBulkItems([]);
-                    setSelectedIds([]);
-                  } else {
-                    setSelectedAssetGroup(null);
-                    setReadOnly(false);
-                  }
-                  setField({ bulkDraftData: undefined });
-                  // Then close form
-                  setShowForm(false);
-                }}
-                onMinimize={handleMinimize}
-                onEdit={() => setReadOnly(false)}
-                selectedAssetGroup={selectedAssetGroup}
-                readOnly={readOnly}
+                key={`${formMode}-${items.map((i) => i.id).join("-") || "new"}`}
+                mode={formMode}
+                initialItems={items}
                 onSave={handleSave}
-                onFormChange={undefined}
-                initialFormData={bulkMode ? formData.bulkDraftData : undefined}
-                isBulkMode={bulkMode}
-                bulkItems={bulkItems}
-                onBulkItemsChange={(items) => {
-                  setBulkItems(items);
-                  setField({ bulkDraftData: { items, bulkEditType } });
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onItemsChange={(newItems) => {
+                  itemsRef.current = newItems;
                 }}
-                bulkEditType={bulkEditType}
+                initialFormData={formData.draftData}
               />
-            ) : null}
+            )}
           </DialogContent>
         </Dialog>
 
-        {isMinimized && <DraftIndicator onClick={handleRestoreFromDraft} />}
+        {isMinimized && (
+          <DraftIndicator onClick={handleRestoreFromDraft} />
+        )}
 
         <TableCustom
           tableId="assetGroup"
@@ -416,7 +446,7 @@ export default function AssetGroup() {
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
-          onRowClick={handleRowClick}
+          onRowClick={(params: GridRowParams) => handleEditRow(params.row)}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}

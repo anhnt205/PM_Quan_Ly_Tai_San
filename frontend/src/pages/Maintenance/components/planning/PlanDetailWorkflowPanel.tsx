@@ -12,7 +12,10 @@ import {
   MenuItem,
 } from "@mui/material";
 import PostAddIcon from "@mui/icons-material/PostAdd";
+import { useLocation } from "react-router-dom";
 import { currentBrandConfig } from "../../../../config/brandConfig";
+import { useAppSelector } from "../../../../redux/store";
+import DraftIndicator from "../../../../components/common/DraftIndicator";
 
 import {
   MaintenancePlanData,
@@ -23,17 +26,24 @@ import {
   useMaintenanceRepairMutation,
   useMaintenanceInspectionByBienBanQuery,
   useMaintenanceVehicleInspectionByBienBanQuery,
+  useMaintenanceInspectionMutation,
+  useMaintenanceVehicleInspectionMutation,
   useMaintenanceAcceptanceByBienPhapQuery,
   useMaintenanceAcceptanceByGiamDinhQuery,
   useMaintenanceAcceptanceVehicleByBienPhapQuery,
   useMaintenanceAcceptanceVehicleByGiamDinhQuery,
   useMaintenanceMaterialAssessmentByInspectionQuery,
+  useMaintenanceMaterialAssessmentMutation,
+  useMaintenanceAcceptanceTestMutation,
+  useMaintenanceAcceptanceTestVehicleMutation,
 } from "../../mutation";
 import {
   useBienPhapMayMocByGiamDinhQuery,
+  useBienPhapMayMocMutation,
 } from "../../mutation/MachineMeasure";
 import {
   useBienPhapPhuongTienByGiamDinhQuery,
+  useBienPhapPhuongTienMutation,
 } from "../../mutation/VehicleMeasure";
 import { AssetGroup } from "../../../../utils/const";
 
@@ -54,7 +64,7 @@ import {
 
 import SignDocumentForm from "../signdocument/SignDocumentForm";
 import S3Service from "../../../../services/S3Service";
-import { showSuccessAlert, showErrorAlert } from "../../../../components/Alert";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from "../../../../components/Alert";
 
 import RepairRequestDialog from "../dialog/RepairRequestDialog";
 import InspectionRecordDialog from "../dialog/InspectionRecordDialog";
@@ -112,6 +122,73 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
   const [openMaterialDialog, setOpenMaterialDialog] = useState(false);
   const [openAcceptanceDialog, setOpenAcceptanceDialog] = useState(false);
 
+  const location = useLocation();
+  const tabPath = location.pathname;
+
+  const lastMinimizedDialog = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedDialog ?? null;
+  });
+
+  const lastMinimizedWorkflowContext = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedWorkflowContext ?? null;
+  });
+
+  // Tự động đồng bộ ngữ cảnh từ bản tạm ẩn nếu có
+  useEffect(() => {
+    if (lastMinimizedWorkflowContext) {
+      if (lastMinimizedWorkflowContext.selectedMonth) {
+        setSelectedMonth(lastMinimizedWorkflowContext.selectedMonth);
+      }
+      if (lastMinimizedWorkflowContext.selectedRepairIndex !== undefined) {
+        setSelectedRepairIndex(lastMinimizedWorkflowContext.selectedRepairIndex);
+      }
+      if (lastMinimizedWorkflowContext.activeStep) {
+        setActiveStep(lastMinimizedWorkflowContext.activeStep);
+      }
+      if (lastMinimizedWorkflowContext.isEdit !== undefined) {
+        setIsEditMode(lastMinimizedWorkflowContext.isEdit);
+      }
+    }
+  }, [lastMinimizedWorkflowContext]);
+
+  const handleRestoreMinimized = () => {
+    if (lastMinimizedWorkflowContext?.isEdit !== undefined) {
+      setIsEditMode(lastMinimizedWorkflowContext.isEdit);
+    }
+    if (lastMinimizedWorkflowContext?.activeStep) {
+      setActiveStep(lastMinimizedWorkflowContext.activeStep);
+    }
+    if (lastMinimizedWorkflowContext?.selectedMonth) {
+      setSelectedMonth(lastMinimizedWorkflowContext.selectedMonth);
+    }
+    if (lastMinimizedWorkflowContext?.selectedRepairIndex !== undefined) {
+      setSelectedRepairIndex(lastMinimizedWorkflowContext.selectedRepairIndex);
+    }
+
+    if (lastMinimizedDialog === "repair") {
+      setOpenRepairDialog(true);
+    } else if (
+      lastMinimizedDialog === "inspection" ||
+      lastMinimizedDialog === "inspectionVehicle"
+    ) {
+      setOpenInspectionDialog(true);
+    } else if (
+      lastMinimizedDialog === "bienPhapMayMoc" ||
+      lastMinimizedDialog === "bienPhapPhuongTien"
+    ) {
+      setOpenBienPhapDialog(true);
+    } else if (
+      lastMinimizedDialog === "acceptance" ||
+      lastMinimizedDialog === "acceptanceVehicle"
+    ) {
+      setOpenAcceptanceDialog(true);
+    } else if (lastMinimizedDialog === "material") {
+      setOpenMaterialDialog(true);
+    }
+  };
+
   // Data for PDF Generators
   const { data: staffs = [] } = useAllStaffsQuery();
   const { data: departments = [] } = useAllDepartmentsQuery();
@@ -124,7 +201,22 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
   const {
     createMutation: createRepairMutation,
     updateMutation: updateRepairMutation,
+    deleteMutation: deleteRepairMutation,
   } = useMaintenanceRepairMutation();
+  const { deleteMutation: deleteMachineInspectionMutation } =
+    useMaintenanceInspectionMutation();
+  const { deleteMutation: deleteVehicleInspectionMutation } =
+    useMaintenanceVehicleInspectionMutation();
+  const { deleteMutation: deleteMachineMeasureMutation } =
+    useBienPhapMayMocMutation();
+  const { deleteMutation: deleteVehicleMeasureMutation } =
+    useBienPhapPhuongTienMutation();
+  const { deleteMutation: deleteMachineAcceptanceMutation } =
+    useMaintenanceAcceptanceTestMutation();
+  const { deleteMutation: deleteVehicleAcceptanceMutation } =
+    useMaintenanceAcceptanceTestVehicleMutation();
+  const { deleteMutation: deleteMaterialMutation } =
+    useMaintenanceMaterialAssessmentMutation();
 
   // Lấy toàn bộ ID tài sản trong kế hoạch để tự động chọn tất cả khi tạo đề nghị
   const allPlanDeviceIds = useMemo(() => {
@@ -670,6 +762,77 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
     }
   };
 
+  const handleActionDelete = () => {
+    if (activeStep === 1) {
+      if (!currentRepair?.id) return;
+      const status = currentRepair.trangThai;
+      if (status !== 0 && status !== 2) return;
+      showConfirmAlert(
+        "Bạn có chắc chắn muốn xóa giấy đề nghị sửa chữa này?",
+      ).then((res) => {
+        if (res?.isConfirmed) {
+          deleteRepairMutation.mutate(currentRepair);
+        }
+      });
+    } else if (activeStep === 2) {
+      if (!currentInspection?.id) return;
+      const status = currentInspection.trangThai;
+      if (status !== 0 && status !== 2) return;
+      showConfirmAlert(
+        "Bạn có chắc chắn muốn xóa biên bản giám định này?",
+      ).then((res) => {
+        if (res?.isConfirmed) {
+          if (isMachine) {
+            deleteMachineInspectionMutation.mutate(currentInspection.id);
+          } else {
+            deleteVehicleInspectionMutation.mutate(currentInspection.id);
+          }
+        }
+      });
+    } else if (activeStep === 3) {
+      if (!currentBienPhap?.id) return;
+      const status = currentBienPhap.trangThai;
+      if (status !== 0 && status !== 2) return;
+      showConfirmAlert(
+        "Bạn có chắc chắn muốn xóa biện pháp sửa chữa này?",
+      ).then((res) => {
+        if (res?.isConfirmed) {
+          if (isMachine) {
+            deleteMachineMeasureMutation.mutate(currentBienPhap.id);
+          } else {
+            deleteVehicleMeasureMutation.mutate(currentBienPhap.id);
+          }
+        }
+      });
+    } else if (activeStep === 4) {
+      if (!currentAcceptance?.id) return;
+      const status = currentAcceptance.trangThai;
+      if (status !== 0 && status !== 2) return;
+      showConfirmAlert(
+        "Bạn có chắc chắn muốn xóa biên bản nghiệm thu này?",
+      ).then((res) => {
+        if (res?.isConfirmed) {
+          if (isMachine) {
+            deleteMachineAcceptanceMutation.mutate(currentAcceptance.id);
+          } else {
+            deleteVehicleAcceptanceMutation.mutate(currentAcceptance.id);
+          }
+        }
+      });
+    } else if (activeStep === 5) {
+      if (!currentMaterial?.id) return;
+      const status = currentMaterial.trangThai;
+      if (status !== 0 && status !== 2) return;
+      showConfirmAlert(
+        "Bạn có chắc chắn muốn xóa biên bản đánh giá vật tư này?",
+      ).then((res) => {
+        if (res?.isConfirmed) {
+          deleteMaterialMutation.mutate(currentMaterial.id);
+        }
+      });
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -859,6 +1022,7 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
         step={selectedStepData}
         onViewDetail={() => handleActionViewDetail(selectedStepData)}
         onEdit={handleActionEdit}
+        onDelete={handleActionDelete}
         onCreateNext={handleActionCreateNext}
         onCreateAlternativeNext={handleActionCreateAlternativeNext}
         onDownload={() => handleDownloadPdf(selectedStepData)}
@@ -909,11 +1073,18 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
           open={openRepairDialog}
           onClose={() => setOpenRepairDialog(false)}
           plan={plan}
-          initialData={isEditMode ? currentRepair || null : null}
+          initialData={
+            (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+              ? currentRepair || null
+              : null
+          }
           selectedDeviceIds={allPlanDeviceIds}
           selectedMonth={currentRepair?.thang || new Date().getMonth() + 1}
           onSubmit={async (req) => {
-            if (isEditMode && currentRepair?.id) {
+            if (
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit) &&
+              currentRepair?.id
+            ) {
               await updateRepairMutation.mutateAsync(req);
             } else {
               await createRepairMutation.mutateAsync(req);
@@ -930,7 +1101,11 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
             open={openInspectionDialog}
             onClose={() => setOpenInspectionDialog(false)}
             repairRequest={currentRepair || null}
-            initData={isEditMode ? currentInspection || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentInspection || null
+                : null
+            }
             plan={plan}
           />
         ) : (
@@ -938,7 +1113,11 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
             open={openInspectionDialog}
             onClose={() => setOpenInspectionDialog(false)}
             repairRequest={currentRepair || null}
-            initData={isEditMode ? currentInspection || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentInspection || null
+                : null
+            }
             plan={plan}
           />
         ))}
@@ -950,14 +1129,22 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
             open={openBienPhapDialog}
             onClose={() => setOpenBienPhapDialog(false)}
             inspectionRecord={currentInspection || null}
-            initData={isEditMode ? currentBienPhap || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentBienPhap || null
+                : null
+            }
           />
         ) : (
           <BienPhapPhuongTienDialog
             open={openBienPhapDialog}
             onClose={() => setOpenBienPhapDialog(false)}
             inspectionRecord={currentInspection || null}
-            initData={isEditMode ? currentBienPhap || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentBienPhap || null
+                : null
+            }
           />
         ))}
 
@@ -970,7 +1157,11 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
             repairRequest={currentRepair}
             inspectionRecord={currentInspection || ({} as any)}
             bienPhap={currentBienPhap || null}
-            initData={isEditMode ? currentAcceptance || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentAcceptance || null
+                : null
+            }
           />
         ) : (
           <NghiemThuPhuongTienDialog
@@ -978,7 +1169,11 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
             onClose={() => setOpenAcceptanceDialog(false)}
             bienPhap={currentBienPhap}
             inspectionRecord={currentInspection}
-            initData={isEditMode ? currentAcceptance || null : null}
+            initData={
+              (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+                ? currentAcceptance || null
+                : null
+            }
           />
         ))}
 
@@ -989,9 +1184,18 @@ export const PlanDetailWorkflowPanel: React.FC<Props> = ({
           onClose={() => setOpenMaterialDialog(false)}
           repairRequest={currentRepair || ({} as any)}
           acceptanceRecord={currentAcceptance || null}
-          initData={isEditMode ? currentMaterial || null : null}
+          initData={
+            (isEditMode || lastMinimizedWorkflowContext?.isEdit)
+              ? currentMaterial || null
+              : null
+          }
           plan={plan}
         />
+      )}
+
+      {/* ── Nút khôi phục soạn thảo khi tạm ẩn dialog ── */}
+      {lastMinimizedDialog && (
+        <DraftIndicator onClick={handleRestoreMinimized} />
       )}
     </Box>
   );

@@ -1,18 +1,10 @@
 import {
-  Add,
-  ArrowDropDown,
-  ArrowDropUp,
   Close,
-  Delete,
   InfoOutlineRounded,
   Remove,
 } from "@mui/icons-material";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
-  Button,
   Grid,
   IconButton,
   Paper,
@@ -23,12 +15,11 @@ import {
   TableRow,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
 import { FormikProvider, useFormik } from "formik";
-import ViewBtn from "../../../components/Button/ViewBtn";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
 import FieldDateTime from "../../../components/TextField/FieldDateTime";
 import EditButton from "../../../components/Button/EditButton";
@@ -63,45 +54,50 @@ export default function ToolForm({
   departments: any[];
   toolGroups: any[];
   onFormChange?: (values: any) => void;
-  initialFormData?: Record<string, any>;
-  onMinimize: () => void;
+  initialFormData?: any;
+  onMinimize: (values?: any) => void;
 }) {
-  const [expanded, setExpanded] = useState(true);
   const { user } = useSelector((state: RootState) => state.user);
 
   const { data: toolTypes = [] } = useAllToolTypeQuery();
   const { data: allUnits = [] } = useAllUnitsQuery();
 
+  const source =
+    initialFormData && Object.keys(initialFormData).length > 0
+      ? initialFormData
+      : selectedTool;
+
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      id: initialFormData?.id ?? "",
-      idDonVi: initialFormData?.idDonVi ?? "",
-      ten: initialFormData?.ten ?? "",
+      id: source?.id ?? "",
+      idDonVi: source?.idDonVi ?? "",
+      ten: source?.ten ?? "",
       ngayNhap:
-        initialFormData?.ngayNhap ??
+        source?.ngayNhap ??
         dayjs(new Date()).format("YYYY-MM-DDTHH:mm:ss"),
-      donViTinh: initialFormData?.donViTinh ?? "",
-      soLuong: initialFormData?.soLuong ?? 0,
-      donViTinh2: initialFormData?.donViTinh2 ?? "",
-      soLuong2: initialFormData?.soLuong2 ?? 0,
-      idNhomCCDC: initialFormData?.idNhomCCDC ?? "",
-      giaTri: initialFormData?.giaTri ?? 0,
-      soKyHieu: initialFormData?.soKyHieu ?? "",
-      kyHieu: initialFormData?.kyHieu ?? "",
-      congSuat: initialFormData?.congSuat ?? "",
-      nuocSanXuat: initialFormData?.nuocSanXuat ?? "",
-      namSanXuat: initialFormData?.namSanXuat ?? 0,
-      ghiChu: initialFormData?.ghiChu ?? "",
-      idCongTy: initialFormData?.idCongTy ?? CongTy.CT001,
-      ngayTao: initialFormData?.ngayTao ?? "",
-      ngayCapNhat: initialFormData?.ngayCapNhat ?? "",
-      nguoiTao: initialFormData?.nguoiTao ?? "",
-      nguoiCapNhat: initialFormData?.nguoiCapNhat ?? user?.username ?? "",
-      isActive: initialFormData?.isActive ?? true,
-      idLoaiCCDCCon: initialFormData?.idLoaiCCDCCon ?? "",
-      hienTrang: initialFormData?.hienTrang ?? 0,
-      chiTietTaiSanList: initialFormData?.chiTietTaiSanList?.length
-        ? initialFormData.chiTietTaiSanList
+      donViTinh: source?.donViTinh ?? "",
+      soLuong: source?.soLuong ?? 0,
+      donViTinh2: source?.donViTinh2 ?? "",
+      soLuong2: source?.soLuong2 ?? 0,
+      idNhomCCDC: source?.idNhomCCDC ?? "",
+      giaTri: source?.giaTri ?? 0,
+      soKyHieu: source?.soKyHieu ?? "",
+      kyHieu: source?.kyHieu ?? "",
+      congSuat: source?.congSuat ?? "",
+      nuocSanXuat: source?.nuocSanXuat ?? "",
+      namSanXuat: source?.namSanXuat ?? 0,
+      ghiChu: source?.ghiChu ?? "",
+      idCongTy: source?.idCongTy ?? CongTy.CT001,
+      ngayTao: source?.ngayTao ?? "",
+      ngayCapNhat: source?.ngayCapNhat ?? "",
+      nguoiTao: source?.nguoiTao ?? "",
+      nguoiCapNhat: source?.nguoiCapNhat ?? user?.username ?? "",
+      isActive: source?.isActive ?? true,
+      idLoaiCCDCCon: source?.idLoaiCCDCCon ?? "",
+      hienTrang: source?.hienTrang ?? 0,
+      chiTietTaiSanList: source?.chiTietTaiSanList?.length
+        ? source.chiTietTaiSanList
         : [
             {
               id: "",
@@ -112,24 +108,20 @@ export default function ToolForm({
               isInserted: true,
             },
           ],
-      chiTietDonViSoHuuList: initialFormData?.chiTietDonViSoHuuList ?? [],
+      chiTietDonViSoHuuList: source?.chiTietDonViSoHuuList ?? [],
     },
     validationSchema: ToolValidation,
     onSubmit(values) {
       onSave({
         ...values,
-        // Đảm bảo số lượng tổng của CCDC cũng là số
         soLuong: Number(values.soLuong || 0),
         soLuong2: Number(values.soLuong2 || 0),
         giaTri: Number(values.giaTri || 0),
 
         chiTietTaiSanList: values.chiTietTaiSanList.map((item: any) => ({
           ...item,
-          // Ép kiểu số cho từng dòng chi tiết để tránh lỗi Backend
           soLuong: Number(item.soLuong || 0),
           namSanXuat: Number(item.namSanXuat || 0),
-
-          // Giữ nguyên logic mapping ID
           idDonVi: values.idDonVi,
           idTaiSan: values.id,
         })),
@@ -137,20 +129,27 @@ export default function ToolForm({
     },
   });
 
-  const debouncedValues = useDebounce(formik.values, 1500);
+  const debouncedValues = useDebounce(formik.values, 600);
   useEffect(() => {
-    if (!selectedTool) {
-      onFormChange?.(debouncedValues);
-    }
+    onFormChange?.(debouncedValues);
   }, [debouncedValues]);
 
   useEffect(() => {
     if (selectedTool) {
+      // Ưu tiên bản nháp dở dang nếu có
+      if (initialFormData && Object.keys(initialFormData).length > 0) {
+        formik.setValues({
+          ...formik.values,
+          ...initialFormData,
+        });
+        return;
+      }
+
       formik.setValues({
         ...selectedTool,
         donViTinh2: selectedTool.donViTinh2 ?? "",
         soLuong2: selectedTool.soLuong2 ?? 0,
-        chiTietTaiSanList: selectedTool.chiTietTaiSanList.map(
+        chiTietTaiSanList: (selectedTool.chiTietTaiSanList || []).map(
           (item: any, index: number) => {
             const ownerRecord = selectedTool.chiTietDonViSoHuuList?.find(
               (o: any) => o.idTsCon === item.id,
@@ -177,24 +176,22 @@ export default function ToolForm({
   }, [formik.values.chiTietTaiSanList]);
 
   const handleFieldChange = (eOrValue: any, originalIndex: number) => {
-    // 1. Cập nhật giá trị vào Formik
     if (eOrValue?.target) {
-      // Nếu là Event (từ FieldInput cũ)
       formik.handleChange(eOrValue);
-    } else {
-      // Nếu là giá trị số trực tiếp (từ TextFieldNumber mới)
-      // Lưu ý: TextFieldNumber của bạn đã tự setFieldValue bên trong rồi,
-      // nên ở đây ta có thể bỏ qua hoặc set lại cho chắc chắn.
     }
 
-    // 2. Logic đánh dấu isUpdated (Dùng chung cho cả 2)
     const currentRow = formik.values.chiTietTaiSanList[originalIndex] as any;
-    if (!currentRow.isInserted) {
+    if (!currentRow?.isInserted) {
       formik.setFieldValue(
         `chiTietTaiSanList.${originalIndex}.isUpdated`,
         true,
       );
     }
+  };
+
+  const handleMinimizeClick = () => {
+    onFormChange?.(formik.values);
+    onMinimize(formik.values);
   };
 
   return (
@@ -233,7 +230,7 @@ export default function ToolForm({
               Chi tiết CCDC - Vật tư
             </Typography>
             <Box display="flex" gap={0.5}>
-              <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
+              <IconButton size="small" onClick={handleMinimizeClick} title="Ẩn tạm">
                 <Remove fontSize="small" />
               </IconButton>
               <IconButton size="small" onClick={onCancel} title="Đóng">
@@ -257,7 +254,7 @@ export default function ToolForm({
               <CancelBtn onClick={onCancel} />
             </Box>
 
-            {/* Status bar Nháp/Khóa — giữ nguyên */}
+            {/* Status bar Nháp/Khóa */}
             <Box
               sx={{
                 display: "flex",
@@ -450,7 +447,6 @@ export default function ToolForm({
                   <TableCell>Công suất</TableCell>
                   <TableCell>Nước sản xuất</TableCell>
                   <TableCell>Năm sản xuất</TableCell>
-                  <TableCell width={50}></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

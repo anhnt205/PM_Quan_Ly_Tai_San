@@ -544,7 +544,7 @@ export default function AssetManager() {
                     id: "",
                     isNew: true,
                     fileDinhKemList: [],
-                    taiSanConList: copyData.taiSanConList.map((item: any) => ({
+                    taiSanConList: (copyData.taiSanConList || []).map((item: any) => ({
                       ...item,
                       id: "",
                       idTaiSanCha: "",
@@ -639,10 +639,32 @@ export default function AssetManager() {
       <Box p={2}>
         <Dialog
           open={showForm}
-          onClose={handleMinimize}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              setShowForm(false);
+              setSelectedAssets([]);
+              setReadOnly(true);
+              setIsCopy(false);
+              setField({ draftForm: undefined });
+            }
+          }}
           maxWidth="xl"
           fullWidth
-          PaperProps={{ sx: { height: "90vh" } }}
+          slotProps={{
+            paper: {
+              sx: {
+                height: "90vh",
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
+            },
+          }}
         >
           <DialogContent
             sx={{
@@ -650,6 +672,7 @@ export default function AssetManager() {
               overflow: "hidden",
               display: "flex",
               flexDirection: "column",
+              flex: 1,
             }}
           >
             <AssetManagerForm
@@ -657,12 +680,13 @@ export default function AssetManager() {
                 setShowForm(false);
                 setSelectedAssets([]);
                 setReadOnly(true);
-                setIsCopy(false); // ← thêm
+                setIsCopy(false);
                 setField({ draftForm: undefined });
               }}
-              onMinimize={handleMinimize} // ← thêm
+              onMinimize={handleMinimize}
               selectedAssets={selectedAssets}
               readOnly={readOnly}
+              isCopy={isCopy}
               onEdit={handleEdit}
               onSave={handleSave}
               allDepartments={allDepartments}

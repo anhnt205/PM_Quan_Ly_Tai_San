@@ -77,7 +77,7 @@ public class HienTrangKyThuatDAO {
             htkt.getMoTa(),
             htkt.getNgayCapNhat(),
             htkt.getNguoiCapNhat(),
-            htkt.getIsActive(),
+            htkt.getIsActive() != null ? htkt.getIsActive() : true,
             htkt.getId());
     }
 

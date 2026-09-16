@@ -9,67 +9,95 @@ import {
   Typography,
 } from "@mui/material";
 import { GridColDef, GridRowParams } from "@mui/x-data-grid";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { showConfirmAlert } from "../../components/Alert";
+import DraftIndicator from "../../components/common/DraftIndicator";
+import ImportErrorDialog from "../../components/common/ImportErrorDialog";
 import PageAction from "../../components/common/PageAction";
 import TableCustom from "../../components/common/TableCustom";
 import { useDebounce } from "../../hooks/useDebounce";
 import { RootState } from "../../redux/store";
 import { useTabForm } from "../../redux/useTabForm";
-import ProjectForm from "./components/ProjectForm";
+import { CongTy } from "../../utils/const";
+import { hasDraftData } from "../../utils/draftUtils";
+import ProjectForm, { ProjectItem } from "./components/ProjectForm";
 import {
-  useAllProjectsQuery,
   useProjectMutation,
   useProjectsPageQuery,
 } from "./Mutation";
-import { hasDraftData } from "../../utils/draftUtils";
-import DraftIndicator from "../../components/common/DraftIndicator";
 
 interface ProjectTabState {
   showForm: boolean;
-  selectedProject: any | null;
-  readOnly: boolean;
-  isCopy: boolean;
-  draftForm?: Record<string, any>;
-  showBulkForm: boolean;
-  bulkEditType?: "create" | "edit";
-  bulkItems?: any[];
-  bulkDraftData?: Record<string, any>;
+  formMode: "create" | "edit";
+  items: ProjectItem[];
+  draftData?: {
+    items: ProjectItem[];
+    formMode: "create" | "edit";
+  };
 }
 
 export default function Project() {
   const { formData, setField } = useTabForm<ProjectTabState>("/du_an");
   const showForm = formData.showForm ?? false;
-  const selectedProject = formData.selectedProject ?? null;
-  const readOnly = formData.readOnly ?? false;
-  const isCopy = formData.isCopy ?? false;
-  const setShowForm = (v: boolean) => setField({ showForm: v });
-  const setSelectedProject = (v: any) => setField({ selectedProject: v });
-  const setReadOnly = (v: boolean) => setField({ readOnly: v });
-  const setIsCopy = (v: boolean) => setField({ isCopy: v });
+  const formMode = formData.formMode ?? "create";
+  const items = formData.items ?? [];
 
-  const showBulkForm = formData.showBulkForm ?? false;
-  const bulkEditType = formData.bulkEditType ?? "create";
-  const bulkItems = formData.bulkItems ?? [];
-  const setShowBulkForm = (v: boolean) => setField({ showBulkForm: v });
-  const setBulkEditType = (v: "create" | "edit") =>
-    setField({ bulkEditType: v });
-  const setBulkItems = (v: any[]) => setField({ bulkItems: v });
+  const setShowForm = (v: boolean) => setField({ showForm: v });
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const { user } = useSelector((state: RootState) => state.user);
+
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
 
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
-  const handleMinimize = () => setShowForm(false);
-  const isMinimized = !showForm && hasDraftData(formData.draftForm);
-  const handleBulkMinimize = () => setShowBulkForm(false);
-  const isBulkMinimized = !showBulkForm && hasDraftData(formData.bulkDraftData);
+  const itemsRef = useRef<ProjectItem[]>(items);
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
+
+  const handleMinimize = () => {
+    const currentItems = itemsRef.current;
+    if (currentItems && currentItems.length > 0) {
+      setField({
+        draftData: {
+          items: currentItems,
+          formMode,
+        },
+        showForm: false,
+      });
+    } else {
+      setShowForm(false);
+    }
+  };
+
+  const handleRestoreFromDraft = () => {
+    const draft = formData.draftData;
+    if (draft?.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      itemsRef.current = draft.items;
+      setField({
+        items: draft.items,
+        formMode: draft.formMode || "create",
+        showForm: true,
+      });
+    }
+  };
+
+  const handleClose = () => {
+    setField({
+      showForm: false,
+      draftData: undefined,
+      items: [],
+    });
+  };
+
+  const isMinimized = !showForm && hasDraftData(formData.draftData?.items);
 
   const {
     createMutation,
@@ -91,49 +119,119 @@ export default function Project() {
       debouncedSearchValue,
     );
 
-  const handleRowClick = (params: GridRowParams) => {
-    setSelectedProject(params.row);
-    window.scrollTo({ top: 140, behavior: "smooth" });
-    setReadOnly(true);
-    setShowForm(true);
+  const handleImport = (file: File) => {
+    importExcelMutation.mutate(file, {
+      onError: (error: any) => {
+        if (error.message && error.message.includes("\n")) {
+          setImportErrors(error.message.split("\n"));
+          setShowErrorDialog(true);
+        }
+      },
+    });
   };
 
-  const handleSave = (values: any) => {
-    if (Array.isArray(values)) {
-      if (bulkEditType === "create") {
-        createBatchMutation.mutate(values);
-      } else {
-        updateBatchMutation.mutate(values);
-      }
-      setShowBulkForm(false);
-      setBulkItems([]);
-      setSelectedIds([]);
-      setField({ bulkDraftData: undefined });
-    } else {
-      if (selectedProject && !isCopy) {
-        updateMutation.mutate(values);
-      } else {
-        createMutation.mutate(values);
-      }
-      setShowForm(false);
-      setSelectedProject(null);
-      setIsCopy(false);
-      setField({ draftForm: undefined });
+  const handleStartCreate = () => {
+    if (isMinimized) {
+      handleRestoreFromDraft();
+      return;
     }
+    const emptyItem: ProjectItem = {
+      id: "",
+      tenDuAn: "",
+      ghiChu: "",
+      idCongTy: CongTy.CT001,
+      hieuLuc: true,
+      isActive: true,
+    };
+    itemsRef.current = [emptyItem];
+    setField({
+      formMode: "create",
+      items: [emptyItem],
+      showForm: true,
+    });
   };
 
-  const handleEdit = () => {
-    setReadOnly(false);
+  const handleEditRow = (row: any) => {
+    const editItem: ProjectItem = {
+      id: row.id,
+      tenDuAn: row.tenDuAn,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    };
+    itemsRef.current = [editItem];
+    setField({
+      formMode: "edit",
+      items: [editItem],
+      showForm: true,
+    });
+  };
+
+  const handleCopyRow = (row: any) => {
+    const copiedItem: ProjectItem = {
+      id: "",
+      tenDuAn: row.tenDuAn,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    };
+    itemsRef.current = [copiedItem];
+    setField({
+      formMode: "create",
+      items: [copiedItem],
+      showForm: true,
+    });
   };
 
   const handleBulkEdit = () => {
     if (selectedIds.length === 0) return;
-    const itemsToEdit = projectsPage.items
+    const selectedRows = projectsPage.items
       .filter((item: any) => selectedIds.includes(item.id))
       .sort((a: any, b: any) => a.id.localeCompare(b.id));
-    setBulkEditType("edit");
-    setBulkItems(itemsToEdit);
-    setShowBulkForm(true);
+
+    const editItems: ProjectItem[] = selectedRows.map((row: any) => ({
+      id: row.id,
+      tenDuAn: row.tenDuAn,
+      ghiChu: row.ghiChu ?? "",
+      idCongTy: row.idCongTy ?? CongTy.CT001,
+      hieuLuc: row.hieuLuc ?? true,
+      isActive: row.isActive ?? true,
+    }));
+
+    itemsRef.current = editItems;
+    setField({
+      formMode: "edit",
+      items: editItems,
+      showForm: true,
+    });
+  };
+
+  const handleSave = async (savedItems: ProjectItem[]) => {
+    try {
+      if (formMode === "create") {
+        if (savedItems.length === 1) {
+          await createMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await createBatchMutation.mutateAsync(savedItems as any);
+        }
+      } else {
+        if (savedItems.length === 1) {
+          await updateMutation.mutateAsync(savedItems[0] as any);
+        } else {
+          await updateBatchMutation.mutateAsync(savedItems as any);
+        }
+      }
+      setField({
+        showForm: false,
+        draftData: undefined,
+        items: [],
+      });
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Lỗi khi lưu dự án:", error);
+    }
   };
 
   const columns: GridColDef[] = [
@@ -170,13 +268,10 @@ export default function Project() {
         return (
           <Chip
             label={isActive ? "Có hiệu lực" : "Không hiệu lực"}
-            size="small" // Nên để small cho gọn trong bảng
+            size="small"
             sx={{
               bgcolor: isActive ? "#baf7cbff" : "#f5f5f5",
-
               color: isActive ? "#137333" : "#616161",
-
-              // Bỏ viền nếu không cần
               border: "none",
             }}
           />
@@ -194,22 +289,18 @@ export default function Project() {
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              handleRowClick({ row: params.row } as GridRowParams);
-              setIsCopy(false);
-              setReadOnly(false);
+              handleEditRow(params.row);
             }}
+            title="Chỉnh sửa"
           >
             <Edit color="primary" />
           </IconButton>
           <IconButton
             onClick={(e) => {
               e.stopPropagation();
-              const { id, ...copyData } = params.row;
-              setSelectedProject({ ...copyData, id: "" });
-              setIsCopy(true);
-              setReadOnly(false);
-              setShowForm(true);
+              handleCopyRow(params.row);
             }}
+            title="Sao chép"
           >
             <ContentCopy color="primary" />
           </IconButton>
@@ -221,6 +312,7 @@ export default function Project() {
                 deleteOneMutation.mutate(params.row.id);
               }
             }}
+            title="Xóa"
           >
             <Delete color="error" />
           </IconButton>
@@ -233,109 +325,92 @@ export default function Project() {
     <Box sx={{ width: "100%" }}>
       <PageAction
         title="Quản lý dự án"
-        onNewClick={() => {
-          if (isBulkMinimized) {
-            setShowBulkForm(true);
-            return;
-          }
-          if (isMinimized) {
-            setShowForm(true);
-            return;
-          }
-          setBulkEditType("create");
-          setBulkItems([{}]);
-          setShowBulkForm(true);
-          setSelectedProject(null);
-          setReadOnly(false);
-        }}
+        onNewClick={handleStartCreate}
         onExport={() => exportMutation.mutate()}
-        onImport={(file) => importExcelMutation.mutate(file)}
+        onImport={handleImport}
         showExcel={true}
       />
+
+      <ImportErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        errors={importErrors}
+      />
+
+      <Dialog
+        open={exportMutation.isPending || importExcelMutation.isPending}
+        PaperProps={{
+          sx: {
+            borderRadius: 0,
+            boxShadow: "none",
+            border: "1px solid #d9d9d9",
+            minWidth: "240px",
+          },
+        }}
+      >
+        <DialogContent>
+          <Box display="flex" alignItems="center" gap={2}>
+            <CircularProgress size={20} color="inherit" thickness={4} />
+            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+              Đang xử lý dữ liệu dự án...
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <Box p={2}>
         <Dialog
-          open={exportMutation.isPending || importExcelMutation.isPending}
-          PaperProps={{
-            sx: {
-              borderRadius: 0,
-              boxShadow: "none",
-              border: "1px solid #d9d9d9",
-              minWidth: "200px",
+          open={showForm}
+          onClose={(_, reason) => {
+            if (reason === "backdropClick" || reason === "escapeKeyDown") {
+              handleMinimize();
+            } else {
+              handleClose();
+            }
+          }}
+          maxWidth="sm"
+          fullWidth
+          slotProps={{
+            paper: {
+              sx: {
+                maxHeight: "90vh",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                borderRadius: "16px",
+                border: "2px solid #1FA463",
+              },
             },
           }}
         >
-          <DialogContent>
-            <Box display="flex" alignItems="center" gap={2}>
-              <CircularProgress size={20} color="inherit" thickness={4} />
-              <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                Đang xử lý dữ liệu...
-              </Typography>
-            </Box>
+          <DialogContent
+            sx={{
+              p: 0,
+              display: "flex",
+              flexDirection: "column",
+              overflow: "hidden",
+              flex: 1,
+            }}
+          >
+            {showForm && (
+              <ProjectForm
+                key={`${formMode}-${items.map((i) => i.id).join("-") || "new"}`}
+                mode={formMode}
+                initialItems={items}
+                onSave={handleSave}
+                onCancel={handleClose}
+                onMinimize={handleMinimize}
+                onItemsChange={(newItems) => {
+                  itemsRef.current = newItems;
+                }}
+                initialFormData={formData.draftData}
+              />
+            )}
           </DialogContent>
         </Dialog>
 
-        <Dialog
-          open={showForm}
-          onClose={handleMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <ProjectForm
-              onCancel={() => {
-                setShowForm(false);
-                setSelectedProject(null);
-                setReadOnly(false);
-                setIsCopy(false);
-                setField({ draftForm: undefined });
-              }}
-              onMinimize={handleMinimize}
-              onEdit={handleEdit}
-              selectedProject={selectedProject}
-              readOnly={readOnly}
-              onSave={handleSave}
-              onFormChange={(values) => setField({ draftForm: values })}
-              initialFormData={formData.draftForm}
-            />
-          </DialogContent>
-        </Dialog>
-
-        <Dialog
-          open={showBulkForm}
-          onClose={handleBulkMinimize}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogContent sx={{ p: 0 }}>
-            <ProjectForm
-              onEdit={() => {}}
-              onCancel={() => {
-                setBulkItems([]);
-                setSelectedIds([]);
-                setField({ bulkDraftData: undefined });
-                setShowBulkForm(false);
-              }}
-              onMinimize={handleBulkMinimize}
-              selectedProject={null}
-              readOnly={false}
-              onSave={handleSave}
-              isBulkMode={true}
-              bulkItems={bulkItems}
-              onBulkItemsChange={(items) => {
-                setField({
-                  bulkDraftData: { items, bulkEditType },
-                  bulkItems: items,
-                });
-              }}
-              bulkEditType={bulkEditType}
-            />
-          </DialogContent>
-        </Dialog>
-
-        {isBulkMinimized ? (
-          <DraftIndicator onClick={() => setShowBulkForm(true)} />
-        ) : (
-          isMinimized && <DraftIndicator onClick={() => setShowForm(true)} />
+        {isMinimized && (
+          <DraftIndicator onClick={handleRestoreFromDraft} />
         )}
 
         <TableCustom
@@ -347,7 +422,7 @@ export default function Project() {
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           loading={isLoading}
-          onRowClick={handleRowClick}
+          onRowClick={(params: GridRowParams) => handleEditRow(params.row)}
           selectedIds={selectedIds}
           onSelectionChange={setSelectedIds}
           onDelete={deleteManyMutation.mutate}
@@ -355,7 +430,7 @@ export default function Project() {
           setSearchValue={setSearchValue}
           onDeleteAll={deleteAllMutation.mutate}
           showDeleteAll={user?.taiKhoan?.tenDangNhap === "admin"}
-          onImportExcel={(file) => importExcelMutation.mutate(file)}
+          onImportExcel={handleImport}
           onExportExcel={() => exportMutation.mutate()}
           onBulkEdit={selectedIds.length > 1 ? handleBulkEdit : undefined}
         />
@@ -363,3 +438,4 @@ export default function Project() {
     </Box>
   );
 }
+

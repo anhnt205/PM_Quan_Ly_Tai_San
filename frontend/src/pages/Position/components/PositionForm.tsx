@@ -288,13 +288,17 @@ export default function PositionForm({
                   Item {index + 1}
                 </Typography>
                 <Box display="flex" gap={1}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleCopyItem(index)}
-                    title="Sao chép"
-                  >
-                    <ContentCopy fontSize="small" color="primary" />
-                  </IconButton>
+                  {/* Copy chỉ hiện khi tạo mới */}
+                  {bulkEditType === "create" && (
+                    <IconButton
+                      size="small"
+                      onClick={() => handleCopyItem(index)}
+                      title="Sao chép"
+                    >
+                      <ContentCopy fontSize="small" color="primary" />
+                    </IconButton>
+                  )}
+                  {/* Xóa chỉ hiện khi có nhiều dòng và (đang tạo hoặc sửa nhiều hơn 1) */}
                   {localBulkItems.length > 1 && (
                     <IconButton
                       size="small"
@@ -393,18 +397,23 @@ export default function PositionForm({
           pt={2.5}
           sx={{ borderTop: "1px solid #f1f5f9" }}
         >
-          <Button
-            variant="outlined"
-            startIcon={<Add />}
-            onClick={handleAddItem}
-            sx={{
-              bgcolor: "#1FA463",
-              color: "#fff",
-              "&:hover": { bgcolor: "#178a52" },
-            }}
-          >
-            Thêm dòng mới
-          </Button>
+          {/* Thêm dòng chỉ hiện khi tạo mới */}
+          {bulkEditType === "create" ? (
+            <Button
+              variant="outlined"
+              startIcon={<Add />}
+              onClick={handleAddItem}
+              sx={{
+                bgcolor: "#1FA463",
+                color: "#fff",
+                "&:hover": { bgcolor: "#178a52" },
+              }}
+            >
+              Thêm dòng mới
+            </Button>
+          ) : (
+            <Box />
+          )}
           <Box display="flex" gap={2}>
             <CancelBtn onClick={onCancel} />
             <SaveBtn onSave={handleBulkSave} />

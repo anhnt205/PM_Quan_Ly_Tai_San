@@ -77,12 +77,18 @@ const BienPhapPhuongTienDialog = ({
   const tabPath = location.pathname;
   const dispatch = useAppDispatch();
 
+  const draftKey = `bienPhapPhuongTienDraft_${inspectionRecord?.id || initData?.id || "default"}`;
+
   const savedDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
-    return (
-      tab?.formData?.[`bienPhapPhuongTienDraft_${inspectionRecord?.id}`] ?? null
-    );
+    return tab?.formData?.[draftKey] ?? null;
   });
+
+  const isEdit = Boolean(
+    initData?.id ||
+    savedDraft?.isEdit ||
+    (savedDraft?.id && savedDraft.id !== "")
+  );
 
   const { data: repairReportPage = { items: [], totalItems: 0 }, isLoading } =
     useBienBanSuaChuaPageQuery(
@@ -122,7 +128,7 @@ const BienPhapPhuongTienDialog = ({
 
   const formik = useFormik({
     initialValues,
-    // validationSchema: VehicleMeasuresValidation,
+    validationSchema: VehicleMeasuresValidation,
     onSubmit: async (values) => {
       const list: any[] = values.nguoiKyList ?? [];
       const idNguoiLap = list.length > 0 ? list[0].userId : "";
@@ -155,7 +161,7 @@ const BienPhapPhuongTienDialog = ({
         ngayCapNhat: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       };
 
-      if (initData?.id) {
+      if (isEdit) {
         updateMutation.mutate(payload, { onSuccess: handleClose });
       } else {
         createMutation.mutate(payload, { onSuccess: handleClose });
@@ -165,6 +171,22 @@ const BienPhapPhuongTienDialog = ({
 
   useEffect(() => {
     if (!open) return;
+
+    if (savedDraft) {
+      formik.setValues({
+        ...initialValues,
+        ...savedDraft,
+        id: savedDraft.id ?? (initData?.id ?? ""),
+        idGiamDinhPhuongTien: savedDraft.idGiamDinhPhuongTien || inspectionRecord?.id || "",
+      });
+      if (inspectionRecord?.id) {
+        api
+          .get(`/giamdinh-phuongtien/${inspectionRecord.id}`)
+          .then((res) => setParentInspection(res.data?.data || res.data))
+          .catch((err) => console.error(err));
+      }
+      return;
+    }
 
     if (initData) {
       const listInfo = listSigneInfo(initData as any, apiUsers, apiDepartments);
@@ -207,32 +229,6 @@ const BienPhapPhuongTienDialog = ({
         order: idx + 1,
       }),
     );
-
-    if (savedDraft) {
-      formik.setValues({
-        ...initialValues,
-        idGiamDinhPhuongTien: inspectionRecord?.id || "",
-        soBienBan: savedDraft.soBienBan,
-        donViQuanLy: savedDraft.donViQuanLy,
-        tienDoTuNgay: savedDraft.tienDoTuNgay,
-        tienDoDenNgay: savedDraft.tienDoDenNgay,
-        mucDich: savedDraft.mucDich,
-        yeuCau: savedDraft.yeuCau,
-        tinhTrangHienTai: savedDraft.tinhTrangHienTai,
-        noiDungThucHien: savedDraft.noiDungThucHien,
-        bienPhapAnToan: savedDraft.bienPhapAnToan,
-        idTaiSan: savedDraft.idTaiSan,
-        danhSachChiTiet: savedDraft.danhSachChiTiet,
-        nguoiKyList: savedDraft.nguoiKyList,
-      });
-      if (inspectionRecord?.id) {
-        api
-          .get(`/giamdinh-phuongtien/${inspectionRecord.id}`)
-          .then((res) => setParentInspection(res.data?.data || res.data))
-          .catch((err) => console.error(err));
-      }
-      return;
-    }
 
     formik.setValues({
       ...initialValues,
@@ -280,8 +276,9 @@ const BienPhapPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapPhuongTienDraft_${inspectionRecord?.id}`]: null,
+          [draftKey]: null,
           lastMinimizedDialog: null,
+          lastMinimizedWorkflowContext: null,
         },
       }),
     );
@@ -294,24 +291,16 @@ const BienPhapPhuongTienDialog = ({
       updateTabFormData({
         path: tabPath,
         data: {
-          [`bienPhapPhuongTienDraft_${inspectionRecord?.id}`]: {
-            idGiamDinhPhuongTien: formik.values.idGiamDinhPhuongTien,
-            soBienBan: formik.values.soBienBan,
-            donViQuanLy: formik.values.donViQuanLy,
-            tienDoTuNgay: formik.values.tienDoTuNgay,
-            tienDoDenNgay: formik.values.tienDoDenNgay,
-            mucDich: formik.values.mucDich,
-            yeuCau: formik.values.yeuCau,
-            tinhTrangHienTai: formik.values.tinhTrangHienTai,
-            noiDungThucHien: formik.values.noiDungThucHien,
-            bienPhapAnToan: formik.values.bienPhapAnToan,
-            idTaiSan: formik.values.idTaiSan,
-            tenMauBienBan: formik.values.tenMauBienBan,
-            congTy: formik.values.congTy,
-            danhSachChiTiet: formik.values.danhSachChiTiet,
-            nguoiKyList: formik.values.nguoiKyList,
+          [draftKey]: {
+            ...formik.values,
+            id: formik.values.id || initData?.id || "",
+            isEdit: isEdit,
           },
           lastMinimizedDialog: "bienPhapPhuongTien",
+          lastMinimizedWorkflowContext: {
+            activeStep: 3,
+            isEdit: isEdit,
+          },
         },
       }),
     );
@@ -722,7 +711,7 @@ const BienPhapPhuongTienDialog = ({
           >
             {isPending
               ? "Đang lưu..."
-              : initData?.id
+              : isEdit
                 ? "Cập nhật"
                 : "Tạo biện pháp"}
           </Button>

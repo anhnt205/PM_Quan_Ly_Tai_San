@@ -1,473 +1,365 @@
 import {
+  Add,
+  Close,
+  ContentCopy,
+  Delete,
   InfoOutlineRounded,
   Remove,
-  Close,
-  Add,
-  Delete,
-  ContentCopy,
 } from "@mui/icons-material";
 import {
   Box,
-  Grid,
-  IconButton,
-  Paper,
-  Typography,
   Button,
   Card,
-  TextField as MuiTextField,
-  Autocomplete,
+  Chip,
+  Grid,
+  IconButton,
+  Typography,
 } from "@mui/material";
-import { useState, useEffect } from "react";
+import { FieldArray, FormikProvider, useFormik } from "formik";
+import { useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../../redux/store";
 import SaveBtn from "../../../components/Button/SaveBtn";
 import CancelBtn from "../../../components/Button/CancelBtn";
 import FieldInput from "../../../components/TextField/FieldInput";
-import { FormikProvider, useFormik } from "formik";
-import { AssetProfileValidation } from "../validation/Validation";
-import EditButton from "../../../components/Button/EditButton";
-import { useDebounce } from "../../../hooks/useDebounce";
-import { useLyLichTemplateQuery } from "../Mutation";
-import { RootState } from "../../../redux/store";
-import { useSelector } from "react-redux";
-import AssetEbookContent from "../../AssetManager/components/AssetEbookContent";
 import FieldAutoCompleted from "../../../components/TextField/FieldAutoCompleted";
+import { useLyLichTemplateQuery } from "../Mutation";
+import { AssetProfileBulkValidation } from "../validation/Validation";
+import AssetEbookContent from "../../AssetManager/components/AssetEbookContent";
+
+export interface AssetProfileItem {
+  id?: string;
+  maLyLich: string;
+  tenLyLich: string;
+  moTa?: string;
+  idLyLichTemplate?: string;
+  idCongTy?: string;
+}
+
+export interface AssetProfileFormProps {
+  /** "create" = thêm mới (hiện nút thêm/copy/xóa), "edit" = sửa (ẩn nút thêm/copy) */
+  mode: "create" | "edit";
+  initialItems?: AssetProfileItem[];
+  onSave: (items: AssetProfileItem[]) => void;
+  onCancel: () => void;
+  onMinimize: () => void;
+  onItemsChange?: (items: AssetProfileItem[]) => void;
+  initialFormData?: any;
+}
 
 export default function AssetProfileForm({
-  onEdit,
-  onCancel,
-  selectedAssetProfile,
-  readOnly,
+  mode = "create",
+  initialItems,
   onSave,
-  initialFormData,
-  onFormChange,
+  onCancel,
   onMinimize,
-  isBulkMode,
-  bulkItems,
-  onBulkItemsChange,
-  bulkEditType,
-}: {
-  onEdit: () => void;
-  onCancel: () => void;
-  selectedAssetProfile?: any;
-  readOnly: boolean;
-  onSave: (values: any) => void;
-  onFormChange?: (values: any) => void;
-  initialFormData?: Record<string, any>;
-  onMinimize: () => void;
-  isBulkMode?: boolean;
-  bulkItems?: any[];
-  onBulkItemsChange?: (items: any[]) => void;
-  bulkEditType?: "create" | "edit";
-}) {
+  onItemsChange,
+  initialFormData,
+}: AssetProfileFormProps) {
   const { user } = useSelector((state: RootState) => state.user);
+  const isEdit = mode === "edit";
 
-  const formik = useFormik({
-    initialValues: {
-      ...(selectedAssetProfile?.id ? { id: selectedAssetProfile.id } : {}),
-      maLyLich: initialFormData?.maLyLich ?? "",
-      tenLyLich: initialFormData?.tenLyLich ?? "",
-      moTa: initialFormData?.moTa ?? "",
-      idLyLichTemplate: initialFormData?.idLyLichTemplate ?? "",
-      idCongTy: initialFormData?.idCongTy ?? user?.congTy?.id ?? "",
-    },
-    validationSchema: AssetProfileValidation,
-    onSubmit(values) {
-      onSave(values);
-    },
-  });
-
-  const debouncedValues = useDebounce(formik.values, 800);
-  useEffect(() => {
-    onFormChange?.(debouncedValues);
-  }, [debouncedValues]);
-
-  // Fetch LyLichTemplate
   const { data: lyLichTemplatesRaw } = useLyLichTemplateQuery();
   const lyLichTemplates: any[] = Array.isArray(lyLichTemplatesRaw)
     ? lyLichTemplatesRaw
     : (lyLichTemplatesRaw?.data ?? []);
 
-  useEffect(() => {
-    if (selectedAssetProfile) {
-      formik.setValues(selectedAssetProfile);
-      formik.setErrors({});
-    }
-  }, [selectedAssetProfile, readOnly]);
-
-  // Bulk
-  const normalizeItem = (item: any) => ({
-    ...(item.id ? { id: item.id } : {}),
-    maLyLich: item.maLyLich ?? "",
-    tenLyLich: item.tenLyLich ?? "",
-    moTa: item.moTa ?? "",
-    idLyLichTemplate: item.idLyLichTemplate ?? "",
-    idCongTy: item.idCongTy ?? user?.congTy?.id ?? "CT001",
+  const emptyItem = (): AssetProfileItem => ({
+    maLyLich: "",
+    tenLyLich: "",
+    moTa: "",
+    idLyLichTemplate: "",
+    idCongTy: user?.congTy?.id ?? "CT001",
   });
 
-  const [localBulkItems, setLocalBulkItems] = useState<any[]>(
-    initialFormData?.items && initialFormData.items.length > 0
-      ? initialFormData.items
-      : (bulkItems ?? []),
-  );
+  const normalizeItem = (item: any): AssetProfileItem => ({
+    ...(item?.id ? { id: item.id } : {}),
+    maLyLich: item?.maLyLich ?? "",
+    tenLyLich: item?.tenLyLich ?? "",
+    moTa: item?.moTa ?? "",
+    idLyLichTemplate: item?.idLyLichTemplate ?? "",
+    idCongTy: item?.idCongTy ?? user?.congTy?.id ?? "CT001",
+  });
 
-  const debouncedBulkItems = useDebounce(localBulkItems, 600);
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      items:
+        initialFormData?.items &&
+        Array.isArray(initialFormData.items) &&
+        initialFormData.items.length > 0
+          ? initialFormData.items.map(normalizeItem)
+          : initialItems && initialItems.length > 0
+            ? initialItems.map(normalizeItem)
+            : [emptyItem()],
+    },
+    validationSchema: AssetProfileBulkValidation,
+    onSubmit: async (values) => {
+      onSave(values.items);
+    },
+  });
+
+  const onItemsChangeRef = useRef(onItemsChange);
   useEffect(() => {
-    onBulkItemsChange?.(debouncedBulkItems);
-  }, [debouncedBulkItems]);
+    onItemsChangeRef.current = onItemsChange;
+  });
 
-  const handleAddItem = () => {
-    const newItem = normalizeItem({});
-    const updated = [...localBulkItems, newItem];
-    setLocalBulkItems(updated);
+  useEffect(() => {
+    onItemsChangeRef.current?.(formik.values.items);
+  }, [formik.values.items]);
+
+  const listEndRef = useRef<HTMLDivElement>(null);
+  const prevLengthRef = useRef(formik.values.items.length);
+  useEffect(() => {
+    if (formik.values.items.length > prevLengthRef.current) {
+      listEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+    prevLengthRef.current = formik.values.items.length;
+  }, [formik.values.items.length]);
+
+  const handleMinimize = () => {
+    onItemsChange?.(formik.values.items);
+    onMinimize();
   };
-
-  const handleCopyItem = (index: number) => {
-    const { maLyLich, ...rest } = localBulkItems[index];
-    const newItem = { ...rest, maLyLich: "" };
-    const updated = [
-      ...localBulkItems.slice(0, index + 1),
-      newItem,
-      ...localBulkItems.slice(index + 1),
-    ];
-    setLocalBulkItems(updated);
-  };
-
-  const handleDeleteItem = (index: number) => {
-    if (localBulkItems.length === 1) return;
-    const updated = localBulkItems.filter((_, i) => i !== index);
-    setLocalBulkItems(updated);
-  };
-
-  const handleBulkItemChange = (index: number, field: string, value: any) => {
-    const updated = [...localBulkItems];
-    updated[index] = { ...updated[index], [field]: value };
-    setLocalBulkItems(updated);
-  };
-
-  const validateBulkItems = async () => {
-    let hasError = false;
-    const updated = await Promise.all(
-      localBulkItems.map(async (item) => {
-        try {
-          await AssetProfileValidation.validate(item, { abortEarly: false });
-          return { ...item, errors: undefined };
-        } catch (error: any) {
-          hasError = true;
-          const errors = error.inner?.reduce((acc: any, e: any) => {
-            acc[e.path] = e.message;
-            return acc;
-          }, {}) ?? { [error.path]: error.message };
-          return { ...item, errors };
-        }
-      }),
-    );
-    setLocalBulkItems(updated);
-    onBulkItemsChange?.(updated);
-    return { hasError };
-  };
-
-  const handleBulkSave = async () => {
-    const { hasError } = await validateBulkItems();
-    if (hasError) return;
-    const cleanItems = localBulkItems.map(({ errors, ...rest }) => rest);
-    onSave(cleanItems);
-  };
-
-  if (isBulkMode) {
-    return (
-      <Box
-        sx={{
-          bgcolor: "#ffffff",
-          p: 4,
-          display: "flex",
-          flexDirection: "column",
-          gap: 3,
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pb: 2,
-            borderBottom: "1px solid #f1f5f9",
-          }}
-        >
-          <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-            {bulkEditType === "create"
-              ? `Thêm mới lý lịch tài sản (${localBulkItems.length})`
-              : `Sửa hàng loạt lý lịch tài sản (${localBulkItems.length})`}
-          </Typography>
-          <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
-              <Remove fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={onCancel} title="Đóng">
-              <Close fontSize="small" />
-            </IconButton>
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            maxHeight: "65vh",
-            overflowY: "auto",
-            overflowX: "hidden",
-            pr: 1,
-          }}
-        >
-          {localBulkItems.map((item, index) => (
-            <Card
-              key={index}
-              sx={{
-                flexShrink: 0,
-                p: 2,
-                borderRadius: "12px",
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <Box
-                display="flex"
-                justifyContent="space-between"
-                alignItems="center"
-                mb={2}
-              >
-                <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
-                  Item {index + 1}
-                </Typography>
-                <Box display="flex" gap={1}>
-                  <IconButton
-                    size="small"
-                    onClick={() => handleCopyItem(index)}
-                    title="Sao chép"
-                  >
-                    <ContentCopy fontSize="small" color="primary" />
-                  </IconButton>
-                  {localBulkItems.length > 1 && (
-                    <IconButton
-                      size="small"
-                      onClick={() => handleDeleteItem(index)}
-                      title="Xóa"
-                    >
-                      <Delete fontSize="small" color="error" />
-                    </IconButton>
-                  )}
-                </Box>
-              </Box>
-
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Mã lý lịch *"
-                    value={item.maLyLich}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "maLyLich", e.target.value)
-                    }
-                    disabled={bulkEditType === "edit"}
-                    error={!!item.errors?.maLyLich}
-                    helperText={item.errors?.maLyLich}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12, sm: 6 }}>
-                  <MuiTextField
-                    fullWidth
-                    size="small"
-                    label="Tên lý lịch *"
-                    value={item.tenLyLich}
-                    onChange={(e) =>
-                      handleBulkItemChange(index, "tenLyLich", e.target.value)
-                    }
-                    error={!!item.errors?.tenLyLich}
-                    helperText={item.errors?.tenLyLich}
-                  />
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <FieldAutoCompleted
-                    title="Chọn Template"
-                    onChange={(value) =>
-                      handleBulkItemChange(index, "idLyLichTemplate", value.id)
-                    }
-                    value={item.idLyLichTemplate}
-                    data={lyLichTemplates}
-                    labelkey="tenLyLich"
-                  />
-                </Grid>
-                {(() => {
-                  const template = lyLichTemplates.find(
-                    (t: any) => t.id === item.idLyLichTemplate,
-                  );
-                  return (
-                    template &&
-                    typeof template.maLyLich === "string" &&
-                    template.maLyLich.trim() !== "" && (
-                      <AssetEbookContent
-                        selectedAsset={null}
-                        readOnly={readOnly}
-                        onEdit={() => {}}
-                        onCancel={() => {}}
-                        onClose={() => {}}
-                        onSave={(values) => {}}
-                        allAssetModel={[]}
-                        allCurrentStatus={[]}
-                        assetGroups={[]}
-                        allDepartments={[]}
-                        allUnits={[]}
-                        allReasonIncreases={[]}
-                        isView={true}
-                      />
-                    )
-                  );
-                })()}
-              </Grid>
-            </Card>
-          ))}
-        </Box>
-
-        <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          pt={2.5}
-          sx={{ borderTop: "1px solid #f1f5f9" }}
-        >
-          <Button
-            variant="outlined"
-            startIcon={<Add />}
-            onClick={handleAddItem}
-            sx={{
-              bgcolor: "#1FA463",
-              color: "#fff",
-              "&:hover": { bgcolor: "#178a52" },
-            }}
-          >
-            Thêm dòng mới
-          </Button>
-          <Box display="flex" gap={2}>
-            <CancelBtn onClick={onCancel} />
-            <SaveBtn onSave={handleBulkSave} />
-          </Box>
-        </Box>
-      </Box>
-    );
-  }
 
   return (
-    <FormikProvider value={formik}>
+    <Box
+      sx={{
+        bgcolor: "#ffffff",
+        p: 4,
+        display: "flex",
+        flexDirection: "column",
+        gap: 3,
+        flex: 1,
+        overflow: "hidden",
+      }}
+    >
+      {/* Header */}
       <Box
         sx={{
-          bgcolor: "#ffffff",
-          p: 4,
           display: "flex",
-          flexDirection: "column",
-          gap: 3,
+          alignItems: "center",
+          justifyContent: "space-between",
+          pb: 2,
+          borderBottom: "1px solid #f1f5f9",
         }}
       >
-        {/* Header */}
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            pb: 2,
-            borderBottom: "1px solid #f1f5f9",
-          }}
-        >
+        <Box display="flex" alignItems="center" gap={1.5}>
+          <InfoOutlineRounded sx={{ color: "#1FA463" }} />
           <Typography variant="h5" sx={{ fontWeight: 700, color: "#1FA463" }}>
-            Chi tiết lý lịch tài sản
+            {isEdit && formik.values.items.length === 1
+              ? "Chỉnh sửa lý lịch tài sản"
+              : isEdit
+                ? "Sửa hàng loạt lý lịch tài sản"
+                : "Thêm mới lý lịch tài sản"}
           </Typography>
-          <Box display="flex" gap={0.5}>
-            <IconButton size="small" onClick={onMinimize} title="Ẩn tạm">
-              <Remove fontSize="small" />
-            </IconButton>
-            <IconButton size="small" onClick={onCancel} title="Đóng">
-              <Close fontSize="small" />
-            </IconButton>
-          </Box>
+          <Chip
+            label={`${formik.values.items.length} lý lịch`}
+            size="small"
+            sx={{ bgcolor: "#e8f5e9", color: "#1FA463", fontWeight: 600 }}
+          />
         </Box>
-
-        {/* Body */}
-        <Paper sx={{ p: 2, borderRadius: "12px" }}>
-          <Box display="flex" alignItems="center" gap={2} mb={2}>
-            <InfoOutlineRounded sx={{ color: "#1FA463" }} />
-            <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
-              Thông tin lý lịch tài sản
-            </Typography>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FieldInput
-                title="Mã lý lịch *"
-                name="maLyLich"
-                disabled={Boolean(selectedAssetProfile?.id)}
-              />
-            </Grid>
-            <Grid size={{ xs: 12, sm: 6 }}>
-              <FieldInput
-                title="Tên lý lịch *"
-                name="tenLyLich"
-                disabled={readOnly}
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <FieldAutoCompleted
-                title="Chọn Template"
-                name="idLyLichTemplate"
-                disabled={readOnly}
-                data={lyLichTemplates}
-                labelkey="tenLyLich"
-              />
-            </Grid>
-            {(() => {
-              const template = lyLichTemplates.find(
-                (t: any) => t.id === formik.values.idLyLichTemplate,
-              );
-              return (
-                template &&
-                typeof template.maLyLich === "string" &&
-                template.maLyLich.trim() !== "" && (
-                  <AssetEbookContent
-                    selectedAsset={null}
-                    readOnly={readOnly}
-                    onEdit={() => {}}
-                    onCancel={() => {}}
-                    onClose={() => {}}
-                    onSave={(values) => {}}
-                    allAssetModel={[]}
-                    allCurrentStatus={[]}
-                    assetGroups={[]}
-                    allDepartments={[]}
-                    allUnits={[]}
-                    allReasonIncreases={[]}
-                    isView={true}
-                  />
-                )
-              );
-            })()}
-          </Grid>
-        </Paper>
-
-        {/* Footer */}
-        <Box
-          display="flex"
-          justifyContent="flex-end"
-          gap={2}
-          pt={2.5}
-          sx={{ borderTop: "1px solid #f1f5f9" }}
-        >
-          {readOnly ? (
-            <EditButton onClick={onEdit} />
-          ) : (
-            <>
-              <CancelBtn onClick={onCancel} />
-              <SaveBtn onSave={formik.submitForm} />
-            </>
-          )}
+        <Box display="flex" gap={0.5}>
+          <IconButton size="small" onClick={handleMinimize} title="Ẩn tạm">
+            <Remove fontSize="small" />
+          </IconButton>
+          <IconButton size="small" onClick={onCancel} title="Đóng">
+            <Close fontSize="small" />
+          </IconButton>
         </Box>
       </Box>
-    </FormikProvider>
+
+      {/* Formik Provider & Danh sách items */}
+      <FormikProvider value={formik}>
+        <form
+          onSubmit={formik.handleSubmit}
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            flex: 1,
+            overflow: "hidden",
+          }}
+        >
+          <FieldArray name="items">
+            {({ remove, push, insert }) => (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  flex: 1,
+                  minHeight: 0,
+                  overflowY: "auto",
+                  pr: 0.5,
+                }}
+              >
+                {formik.values.items.map((item: any, index: number) => (
+                  <Card
+                    key={index}
+                    sx={{
+                      p: 2,
+                      flexShrink: 0,
+                      borderRadius: "12px",
+                      border: "1px solid #e0e0e0",
+                      backgroundColor: "#ffffff",
+                    }}
+                  >
+                    {/* Header từng item */}
+                    <Box
+                      display="flex"
+                      justifyContent="space-between"
+                      alignItems="center"
+                      mb={2}
+                    >
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Box
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            borderRadius: "50%",
+                            bgcolor: "#1FA463",
+                            color: "#fff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: 12,
+                            fontWeight: 700,
+                            flexShrink: 0,
+                          }}
+                        >
+                          {index + 1}
+                        </Box>
+                        <Typography sx={{ fontWeight: 600, color: "#1FA463" }}>
+                          {item.tenLyLich ||
+                            item.maLyLich ||
+                            `Lý lịch tài sản ${index + 1}`}
+                        </Typography>
+                      </Box>
+                      <Box display="flex" gap={0.5}>
+                        {/* Sao chép: chỉ hiện khi tạo mới */}
+                        {!isEdit && (
+                          <IconButton
+                            size="small"
+                            onClick={() => {
+                              const { id, ...rest } = item;
+                              insert(index + 1, {
+                                ...rest,
+                                maLyLich: "",
+                              });
+                            }}
+                            title="Sao chép"
+                            sx={{ p: 0.5, color: "primary.main" }}
+                          >
+                            <ContentCopy fontSize="small" />
+                          </IconButton>
+                        )}
+                        {/* Xóa dòng: chỉ hiện khi có nhiều hơn 1 dòng */}
+                        {formik.values.items.length > 1 && (
+                          <IconButton
+                            size="small"
+                            onClick={() => remove(index)}
+                            title="Xóa dòng"
+                            sx={{ p: 0.5, color: "error.main" }}
+                          >
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        )}
+                      </Box>
+                    </Box>
+
+                    {/* Các trường dữ liệu */}
+                    <Grid container spacing={2}>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FieldInput
+                          title="Mã lý lịch *"
+                          name={`items.${index}.maLyLich`}
+                          disabled={isEdit}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12, sm: 6 }}>
+                        <FieldInput
+                          title="Tên lý lịch *"
+                          name={`items.${index}.tenLyLich`}
+                        />
+                      </Grid>
+                      <Grid size={{ xs: 12 }}>
+                        <FieldAutoCompleted
+                          title="Chọn Template *"
+                          data={lyLichTemplates}
+                          labelkey="tenLyLich"
+                          name={`items.${index}.idLyLichTemplate`}
+                          disabled={false}
+                        />
+                      </Grid>
+                      {(() => {
+                        const template = lyLichTemplates.find(
+                          (t: any) => t.id === item.idLyLichTemplate,
+                        );
+                        return (
+                          template &&
+                          typeof template.maLyLich === "string" &&
+                          template.maLyLich.trim() !== "" && (
+                            <Grid size={{ xs: 12 }}>
+                              <AssetEbookContent
+                                selectedAsset={null}
+                                readOnly={true}
+                                onEdit={() => {}}
+                                onCancel={() => {}}
+                                onClose={() => {}}
+                                onSave={() => {}}
+                                assetGroups={[]}
+                                allDepartments={[]}
+                                isView={true}
+                              />
+                            </Grid>
+                          )
+                        );
+                      })()}
+                    </Grid>
+                  </Card>
+                ))}
+                <div ref={listEndRef} />
+              </Box>
+            )}
+          </FieldArray>
+
+          {/* Footer */}
+          <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            pt={2.5}
+            sx={{ borderTop: "1px solid #f1f5f9" }}
+          >
+            {/* Nút thêm dòng: chỉ hiện khi tạo mới */}
+            {!isEdit ? (
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => {
+                  formik.setFieldValue("items", [
+                    ...formik.values.items,
+                    emptyItem(),
+                  ]);
+                }}
+                sx={{
+                  bgcolor: "#1FA463",
+                  color: "#fff",
+                  "&:hover": { bgcolor: "#178a52" },
+                }}
+              >
+                Thêm dòng mới
+              </Button>
+            ) : (
+              <Box />
+            )}
+            <Box display="flex" gap={2}>
+              <CancelBtn onClick={onCancel} />
+              <SaveBtn onSave={formik.submitForm} />
+            </Box>
+          </Box>
+        </form>
+      </FormikProvider>
+    </Box>
   );
 }

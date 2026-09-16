@@ -50,7 +50,6 @@ interface Props {
 
 // ── Component chính ───────────────────────────────────────
 const PlanDetailPanel = ({ plan, onClose }: Props) => {
-  const [tab, setTab] = useState(0);
   const [selectedMonths, setSelectedMonths] = useState<number[]>(() => {
     if (plan?.trangThai !== 3) {
       return months;
@@ -67,6 +66,31 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return tab?.formData?.lastMinimizedDialog ?? null;
   });
+
+  const lastMinimizedWorkflowContext = useAppSelector((state) => {
+    const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
+    return tab?.formData?.lastMinimizedWorkflowContext ?? null;
+  });
+
+  const isWorkflowMinimized = [
+    "repair",
+    "inspection",
+    "inspectionVehicle",
+    "bienPhapMayMoc",
+    "bienPhapPhuongTien",
+    "acceptance",
+    "acceptanceVehicle",
+    "material",
+  ].includes(lastMinimizedDialog);
+
+  const [tab, setTab] = useState(() => (isWorkflowMinimized ? 1 : 0));
+
+  useEffect(() => {
+    if (isWorkflowMinimized) {
+      setTab(1);
+    }
+  }, [isWorkflowMinimized]);
+
   const hasRepairDraft = useAppSelector((state) => {
     const tab = state.tabs.tabs.find((t: any) => t.path === tabPath);
     return !!tab?.formData?.[`repairDraft_${plan?.id}`];
@@ -588,7 +612,10 @@ const PlanDetailPanel = ({ plan, onClose }: Props) => {
         }}
       />
 
-      {lastMinimizedDialog === "repair" && hasRepairDraft && (
+      {tab === 0 && isWorkflowMinimized && (
+        <DraftIndicator onClick={() => setTab(1)} />
+      )}
+      {tab === 0 && !isWorkflowMinimized && lastMinimizedDialog === "repair" && hasRepairDraft && (
         <DraftIndicator onClick={() => setRepairDialogOpen(true)} />
       )}
     </Box>
